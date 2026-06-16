@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "CandyWallet",
+    "slug": "candywallet",
+    "scheme": "candywallet",
+    "version": "0.1.4",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1f2227"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ru.mintcandy.decimalwallet"
+    },
+    "android": {
+      "package": "ru.mintcandy.decimalwallet",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1f2227"
+      },
+      "permissions": [
+        "CAMERA",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-local-authentication",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Камера нужна для сканирования QR-кодов переводов Decimal."
+        }
+      ],
+      "expo-asset"
+    ]
+  }
+}
