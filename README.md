@@ -221,7 +221,7 @@ Contract calls with calldata also verify that the target address has bytecode on
 
 ## Approve and One-Transaction Workflows
 
-ERC20 workflows check token balance and allowance before signing. If allowance is already enough, only the main transaction is sent. If the token/Decimal contract supports `permit` or `...ByPermit`, SDK can keep the workflow in one transaction. Otherwise ERC20 allowance must be created by a mined `approve` transaction first.
+ERC20 workflows check token balance and allowance before signing. If allowance is already enough, only the main transaction is sent. For ERC20 multisend, memo is included in that same multicall transaction. If the token supports `permit`, SDK can put `permit + transferFrom calls + memo` into one multicall transaction. Otherwise ERC20 allowance must be created by a mined `approve` transaction first.
 
 `DecimalWorkflowResult` exposes `steps`, `one_transaction`, `requires_secondary_transaction`, `transaction_count`, and `total_fee_del` so apps can show the user whether the workflow is one transaction or approve + action.
 

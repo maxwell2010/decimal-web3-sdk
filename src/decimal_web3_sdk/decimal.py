@@ -480,7 +480,12 @@ class DecimalWorkflowResult:
 
     @property
     def one_transaction(self) -> bool:
-        return not self.extra_steps_required and self.actual_steps <= 1
+        if self.extra_steps_required:
+            return False
+        transaction_count = self.transaction_count
+        if transaction_count:
+            return transaction_count <= 1
+        return self.actual_steps <= 1
 
     @property
     def transaction_count(self) -> int:

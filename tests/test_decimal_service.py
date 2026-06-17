@@ -358,6 +358,13 @@ async def test_multisend_erc20_uses_permit_inside_aggregate() -> None:
     client = FakeDecimalClient(allowance_raw=0)
     client.permit = FakePermit()
     service = DecimalService(client)
+    captured: dict[str, str] = {}
+
+    async def capture_send_contract(private_key, contract, data, value_wei, broadcast, wait_receipt):
+        captured["data"] = data
+        return TransactionResult(success=True, status="dry_run", gas=100_000, fee_wei=100_000_000_000_000)
+
+    service._send_contract = capture_send_contract
 
     result = await service.multisend_erc20(
         MultisendErc20Request(
@@ -365,6 +372,7 @@ async def test_multisend_erc20_uses_permit_inside_aggregate() -> None:
             recipients=[MultisendErc20Recipient(to=RECIPIENT, amount="1")],
             private_key=PRIVATE_KEY,
             decimals=18,
+            memo="hello",
         )
     )
 
@@ -372,6 +380,13 @@ async def test_multisend_erc20_uses_permit_inside_aggregate() -> None:
     assert result.steps == ("permit_erc20", "multisend_erc20")
     assert result.actual_steps == 2
     assert result.extra_steps_required is False
+    assert result.requires_secondary_transaction is False
+    assert result.one_transaction is True
+    assert result.transaction_count == 1
+    decoded = service._multicall_contract().decode_function_input(captured["data"])[1]["calls"]
+    assert len(decoded) == 3
+    assert decoded[-1]["target"] == "0x0000000000000000000000000000000000000000"
+    assert decoded[-1]["callData"] == b"hello"
 
 
 @pytest.mark.asyncio
@@ -391,6 +406,7 @@ async def test_multisend_erc20_falls_back_to_approve_when_permit_missing() -> No
     assert result.success is True
     assert result.steps == ("approve_erc20", "multisend_erc20")
     assert result.extra_steps_required is True
+    assert result.one_transaction is False
 
 
 @pytest.mark.asyncio

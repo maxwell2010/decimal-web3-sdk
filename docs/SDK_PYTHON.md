@@ -264,8 +264,8 @@ print(result.tx_hash, result.status, result.block_number)
 
 Некоторые EVM workflow требуют allowance: ERC20 multisend, ERC20 staking/delegate/hold, token convert. SDK сначала проверяет баланс токена и allowance, а затем выбирает путь:
 
-- Если allowance уже хватает, отправляется только основная транзакция.
-- Если токен и контракт поддерживают `permit`/`...ByPermit`, SDK может уложиться в одну транзакцию без отдельного `approve`.
+- Если allowance уже хватает, отправляется только основная транзакция. Для ERC20 multisend memo добавляется в этот же multicall.
+- Если токен поддерживает `permit`, SDK может уложить `permit + transferFrom calls + memo` в одну multicall-транзакцию без отдельного `approve`.
 - Если permit недоступен, нужен отдельный `approve`, а затем основная транзакция. Это ограничение ERC20: allowance появляется в state только после майнинга approve.
 
 ```python
