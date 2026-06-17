@@ -9,10 +9,13 @@ from web3 import Web3
 from .transactions import (
     ContractCallRequest,
     Erc20ApproveRequest,
+    FeePreflight,
+    TransactionDraft,
     TransactionResult,
     _token_preflight_failure,
     user_message_from_error,
 )
+from .mnemonic import FromMnemonicMixin
 from .wallet import checksum, private_key_to_address
 
 
@@ -280,14 +283,14 @@ MASTER_VALIDATOR_ABI: list[dict[str, Any]] = [
 
 
 @dataclass(frozen=True)
-class DelegateDelRequest:
+class DelegateDelRequest(FromMnemonicMixin):
     validator: str
     amount_del: Decimal | str | int | float
     private_key: str
 
 
 @dataclass(frozen=True)
-class HoldDelRequest:
+class HoldDelRequest(FromMnemonicMixin):
     validator: str
     amount_del: Decimal | str | int | float
     hold_timestamp: int
@@ -295,14 +298,14 @@ class HoldDelRequest:
 
 
 @dataclass(frozen=True)
-class UnbondDelRequest:
+class UnbondDelRequest(FromMnemonicMixin):
     validator: str
     amount_del: Decimal | str | int | float
     private_key: str
 
 
 @dataclass(frozen=True)
-class WithdrawHoldDelRequest:
+class WithdrawHoldDelRequest(FromMnemonicMixin):
     validator: str
     amount_del: Decimal | str | int | float
     hold_timestamp: int
@@ -316,7 +319,7 @@ class MultisendRecipient:
 
 
 @dataclass(frozen=True)
-class MultisendDelRequest:
+class MultisendDelRequest(FromMnemonicMixin):
     recipients: list[MultisendRecipient]
     private_key: str
     memo: str | None = None
@@ -329,7 +332,7 @@ class MultisendErc20Recipient:
 
 
 @dataclass(frozen=True)
-class MultisendErc20Request:
+class MultisendErc20Request(FromMnemonicMixin):
     token: str
     recipients: list[MultisendErc20Recipient]
     private_key: str
@@ -341,7 +344,7 @@ class MultisendErc20Request:
 
 
 @dataclass(frozen=True)
-class DelegateErc20Request:
+class DelegateErc20Request(FromMnemonicMixin):
     token: str
     validator: str
     amount: Decimal | str | int | float
@@ -353,7 +356,7 @@ class DelegateErc20Request:
 
 
 @dataclass(frozen=True)
-class HoldErc20Request:
+class HoldErc20Request(FromMnemonicMixin):
     token: str
     validator: str
     amount: Decimal | str | int | float
@@ -366,7 +369,7 @@ class HoldErc20Request:
 
 
 @dataclass(frozen=True)
-class UnbondErc20Request:
+class UnbondErc20Request(FromMnemonicMixin):
     token: str
     validator: str
     amount: Decimal | str | int | float
@@ -375,7 +378,7 @@ class UnbondErc20Request:
 
 
 @dataclass(frozen=True)
-class WithdrawHoldErc20Request:
+class WithdrawHoldErc20Request(FromMnemonicMixin):
     token: str
     validator: str
     amount: Decimal | str | int | float
@@ -385,7 +388,7 @@ class WithdrawHoldErc20Request:
 
 
 @dataclass(frozen=True)
-class TransferStakeErc20Request:
+class TransferStakeErc20Request(FromMnemonicMixin):
     token: str
     validator: str
     new_validator: str
@@ -396,7 +399,7 @@ class TransferStakeErc20Request:
 
 
 @dataclass(frozen=True)
-class StakeTokenToHoldRequest:
+class StakeTokenToHoldRequest(FromMnemonicMixin):
     token: str
     validator: str
     amount: Decimal | str | int | float
@@ -407,7 +410,7 @@ class StakeTokenToHoldRequest:
 
 
 @dataclass(frozen=True)
-class ResetStakeHoldRequest:
+class ResetStakeHoldRequest(FromMnemonicMixin):
     validator: str
     delegator: str
     private_key: str
@@ -416,7 +419,7 @@ class ResetStakeHoldRequest:
 
 
 @dataclass(frozen=True)
-class WithdrawStakeWithResetRequest:
+class WithdrawStakeWithResetRequest(FromMnemonicMixin):
     token: str
     validator: str
     amount: Decimal | str | int | float
@@ -426,7 +429,7 @@ class WithdrawStakeWithResetRequest:
 
 
 @dataclass(frozen=True)
-class TransferStakeWithResetRequest:
+class TransferStakeWithResetRequest(FromMnemonicMixin):
     token: str
     old_validator: str
     new_validator: str
@@ -437,7 +440,7 @@ class TransferStakeWithResetRequest:
 
 
 @dataclass(frozen=True)
-class HoldStakeWithResetRequest:
+class HoldStakeWithResetRequest(FromMnemonicMixin):
     token: str
     validator: str
     amount: Decimal | str | int | float
@@ -448,12 +451,12 @@ class HoldStakeWithResetRequest:
 
 
 @dataclass(frozen=True)
-class ValidatorSelfPauseRequest:
+class ValidatorSelfPauseRequest(FromMnemonicMixin):
     private_key: str
 
 
 @dataclass(frozen=True)
-class ValidatorPauseRequest:
+class ValidatorPauseRequest(FromMnemonicMixin):
     validator: str
     private_key: str
 
@@ -470,6 +473,35 @@ class DecimalWorkflowResult:
     secondary: TransactionResult | None = None
     error: str | None = None
     user_message: str | None = None
+
+    @property
+    def requires_secondary_transaction(self) -> bool:
+        return self.extra_steps_required
+
+    @property
+    def one_transaction(self) -> bool:
+        return not self.extra_steps_required and self.actual_steps <= 1
+
+    @property
+    def transaction_count(self) -> int:
+        return int(self.primary is not None) + int(self.secondary is not None)
+
+    @property
+    def total_fee_wei(self) -> int | None:
+        fees = [
+            item.fee_wei
+            for item in (self.primary, self.secondary)
+            if item is not None and item.fee_wei is not None
+        ]
+        if not fees:
+            return None
+        return sum(fees)
+
+    @property
+    def total_fee_del(self) -> Decimal | None:
+        if self.total_fee_wei is None:
+            return None
+        return Decimal(self.total_fee_wei) / Decimal(10**18)
 
     @property
     def tx_hash(self) -> str | None:
@@ -594,6 +626,13 @@ class DecimalService:
         if not request.recipients:
             return TransactionResult(success=False, error="At least one recipient is required")
 
+        draft = await self.build_multisend_del(request)
+        return await self._client.tx.send_draft(draft, request.private_key, broadcast, wait_receipt)
+
+    async def build_multisend_del(self, request: MultisendDelRequest) -> TransactionDraft:
+        if not request.recipients:
+            raise ValueError("At least one recipient is required")
+
         calls: list[tuple[str, int, bytes]] = []
         total_value = 0
         for recipient in request.recipients:
@@ -610,14 +649,18 @@ class DecimalService:
             )
 
         data = self._multicall_contract().functions.aggregate(calls)._encode_transaction_data()
-        return await self._send_contract(
-            request.private_key,
-            self._client.config.contracts.multicall,
-            data,
-            total_value,
-            broadcast,
-            wait_receipt,
+        return await self._client.tx.build_contract_call(
+            ContractCallRequest(
+                contract=self._client.config.contracts.multicall,
+                private_key=request.private_key,
+                data=data,
+                value_wei=total_value,
+            )
         )
+
+    async def estimate_fee_for_multisend_del(self, request: MultisendDelRequest) -> FeePreflight:
+        draft = await self.build_multisend_del(request)
+        return await self._client.tx.calculate_fee(draft)
 
     async def multisend_erc20(
         self,

@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import csv
+import asyncio
 import os
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 from .client import DecimalClient
+from .config import NetworkConfig
 from .decimal import (
     DelegateDelRequest,
     DelegateErc20Request,
@@ -26,7 +28,7 @@ from .token import (
     CreateReservelessTokenRequest,
     SellTokenRequest,
 )
-from .transactions import Erc20ApproveRequest, Erc20TransferRequest, NativeTransferRequest
+from .transactions import Erc20ApproveRequest, Erc20TransferRequest, FeePreflight, NativeTransferRequest
 from .wallet import DEFAULT_DERIVATION_PATH, mnemonic_to_private_key
 
 
@@ -45,10 +47,23 @@ class TxTrainingRecord:
     kind: str
     success: bool
     broadcast: bool
+    chain_id: int | None
+    account: str | None
+    balance_before_del: str | None
+    balance_after_del: str | None
+    nonce_before: int | None
+    nonce_after: int | None
+    preflight_fee_wei: int | None
+    preflight_fee_del: str | None
+    preflight_required_del: str | None
+    preflight_missing_del: str | None
     tx_hash: str | None
+    status: str | None
+    block_number: int | None
     gas: int | None
     fee_wei: int | None
     fee_del: str | None
+    effective_fee_del: str | None
     elapsed_ms: float
     expected_steps: int
     actual_steps: int
@@ -82,20 +97,24 @@ async def run_env_training(journal: TxTrainingJournal | None = None) -> list[TxT
     journal = journal or TxTrainingJournal(os.getenv("DECIMAL_TEST_REPORT", "reports/tx_training.csv"))
     records: list[TxTrainingRecord] = []
 
-    async with DecimalClient() as client:
+    async with DecimalClient(_training_config()) as client:
         to = os.getenv("DECIMAL_TEST_TO") or await client.address_from_private_key(private_key)
+        account = await client.address_from_private_key(private_key)
         del_amount = Decimal(os.getenv("DECIMAL_TEST_DEL_AMOUNT", "0"))
         if del_amount > 0:
-            result, elapsed = await _timed(
-                client.tx.send_del(
-                    NativeTransferRequest(to=to, amount_del=del_amount, private_key=private_key),
-                    broadcast=broadcast,
-                    wait_receipt=wait_receipt,
-                )
+            request = NativeTransferRequest(to=to, amount_del=del_amount, private_key=private_key)
+            record = await _run_tracked_case(
+                client,
+                account,
+                name="send_del",
+                kind="DEL",
+                broadcast=broadcast,
+                expected_steps=1,
+                actual_steps=1,
+                preflight_factory=lambda: client.tx.estimate_fee_for_native_transfer(request),
+                tx_factory=lambda: client.tx.send_del(request, broadcast=broadcast, wait_receipt=wait_receipt),
             )
-            records.append(
-                _record("send_del", "DEL", result, elapsed, broadcast, expected_steps=1, actual_steps=1)
-            )
+            records.append(record)
 
         token = os.getenv("DECIMAL_TEST_ERC20_TOKEN")
         token_amount = os.getenv("DECIMAL_TEST_ERC20_AMOUNT")
@@ -368,28 +387,27 @@ async def run_env_training(journal: TxTrainingJournal | None = None) -> list[TxT
 
         multisend_amount = os.getenv("DECIMAL_TEST_MULTISEND_DEL_AMOUNT")
         if multisend_amount:
-            result, elapsed = await _timed(
-                client.decimal.multisend_del(
-                    MultisendDelRequest(
-                        recipients=[MultisendRecipient(to=to, amount_del=Decimal(multisend_amount))],
-                        private_key=private_key,
-                        memo=os.getenv("DECIMAL_TEST_MULTISEND_MEMO"),
-                    ),
+            request = MultisendDelRequest(
+                recipients=[MultisendRecipient(to=to, amount_del=Decimal(multisend_amount))],
+                private_key=private_key,
+                memo=os.getenv("DECIMAL_TEST_MULTISEND_MEMO"),
+            )
+            record = await _run_tracked_case(
+                client,
+                account,
+                name="multisend_del",
+                kind="DEL_MULTISEND",
+                broadcast=broadcast,
+                expected_steps=1,
+                actual_steps=1,
+                preflight_factory=lambda: client.decimal.estimate_fee_for_multisend_del(request),
+                tx_factory=lambda: client.decimal.multisend_del(
+                    request,
                     broadcast=broadcast,
                     wait_receipt=wait_receipt,
-                )
+                ),
             )
-            records.append(
-                _record(
-                    "multisend_del",
-                    "DEL_MULTISEND",
-                    result,
-                    elapsed,
-                    broadcast,
-                    expected_steps=1,
-                    actual_steps=1,
-                )
-            )
+            records.append(record)
 
     for record in records:
         journal.append(record)
@@ -402,6 +420,76 @@ async def _timed(awaitable) -> tuple[Any, float]:
     return result, (time.perf_counter() - started) * 1000
 
 
+async def _run_tracked_case(
+    client: DecimalClient,
+    account: str,
+    *,
+    name: str,
+    kind: str,
+    broadcast: bool,
+    expected_steps: int,
+    actual_steps: int,
+    tx_factory,
+    preflight_factory=None,
+) -> TxTrainingRecord:
+    balance_before, nonce_before = await _account_state(client, account)
+    preflight = await preflight_factory() if preflight_factory is not None else None
+    result, elapsed = await _timed(tx_factory())
+    if broadcast and result.tx_hash and result.status == "pending":
+        result = await _wait_for_training_receipt(client, result)
+    balance_after, nonce_after = await _account_state(client, account)
+    return _record(
+        name,
+        kind,
+        result,
+        elapsed,
+        broadcast,
+        expected_steps=expected_steps,
+        actual_steps=actual_steps,
+        chain_id=client.config.chain_id,
+        account=account,
+        balance_before_del=balance_before,
+        balance_after_del=balance_after,
+        nonce_before=nonce_before,
+        nonce_after=nonce_after,
+        preflight=preflight,
+    )
+
+
+async def _account_state(client: DecimalClient, account: str) -> tuple[str, int]:
+    balance_wei = int(await client.balance_wei(account))
+    nonce = int(await client.transaction_count(account))
+    return str(Decimal(balance_wei) / Decimal(10**18)), nonce
+
+
+async def _wait_for_training_receipt(client: DecimalClient, result):
+    timeout = float(os.getenv("DECIMAL_TEST_RECEIPT_TIMEOUT_SECONDS", "20"))
+    poll = float(os.getenv("DECIMAL_TEST_RECEIPT_POLL_SECONDS", "1"))
+    deadline = asyncio.get_running_loop().time() + timeout
+    while asyncio.get_running_loop().time() < deadline:
+        receipt = await client.transaction_receipt(result.tx_hash)
+        if receipt is not None:
+            status = receipt.get("status")
+            gas_used = _int_or_none(receipt.get("gasUsed") or receipt.get("gas_used"))
+            gas_price = _int_or_none(receipt.get("effectiveGasPrice") or receipt.get("effective_gas_price"))
+            if gas_price is None and result.fee_wei is not None and result.gas:
+                gas_price = int(result.fee_wei) // int(result.gas)
+            effective_fee = gas_used * gas_price if gas_used is not None and gas_price is not None else None
+            return replace(
+                result,
+                status="success" if status == 1 else "failed" if status == 0 else result.status,
+                block_number=_int_or_none(receipt.get("blockNumber") or receipt.get("block_number")),
+                transaction_index=_int_or_none(receipt.get("transactionIndex") or receipt.get("transaction_index")),
+                gas_used=gas_used,
+                effective_gas_price_wei=gas_price,
+                effective_fee_wei=effective_fee,
+                effective_fee_del=Decimal(effective_fee) / Decimal(10**18) if effective_fee is not None else None,
+                receipt=dict(receipt),
+            )
+        await asyncio.sleep(poll)
+    return result
+
+
 def _record(
     name: str,
     kind: str,
@@ -410,6 +498,13 @@ def _record(
     broadcast: bool,
     expected_steps: int,
     actual_steps: int,
+    chain_id: int | None = None,
+    account: str | None = None,
+    balance_before_del: str | None = None,
+    balance_after_del: str | None = None,
+    nonce_before: int | None = None,
+    nonce_after: int | None = None,
+    preflight: FeePreflight | None = None,
 ) -> TxTrainingRecord:
     return TxTrainingRecord(
         timestamp=datetime.now(timezone.utc).isoformat(),
@@ -417,10 +512,23 @@ def _record(
         kind=kind,
         success=bool(result.success),
         broadcast=broadcast,
+        chain_id=chain_id,
+        account=account,
+        balance_before_del=balance_before_del,
+        balance_after_del=balance_after_del,
+        nonce_before=nonce_before,
+        nonce_after=nonce_after,
+        preflight_fee_wei=preflight.fee_wei if preflight is not None else None,
+        preflight_fee_del=str(preflight.fee_del) if preflight is not None else None,
+        preflight_required_del=str(preflight.required_del) if preflight is not None else None,
+        preflight_missing_del=str(preflight.missing_del) if preflight is not None else None,
         tx_hash=result.tx_hash,
+        status=result.status,
+        block_number=result.block_number,
         gas=result.gas,
         fee_wei=result.fee_wei,
         fee_del=str(result.fee_del) if result.fee_del is not None else None,
+        effective_fee_del=str(result.effective_fee_del) if result.effective_fee_del is not None else None,
         elapsed_ms=round(elapsed_ms, 3),
         expected_steps=expected_steps,
         actual_steps=actual_steps,
@@ -434,6 +542,23 @@ def _env_int(name: str) -> int | None:
     if not value:
         return None
     return int(value)
+
+
+def _int_or_none(value) -> int | None:
+    if value is None:
+        return None
+    return int(value)
+
+
+def _training_config() -> NetworkConfig:
+    network = os.getenv("DECIMAL_TEST_NETWORK", "testnet").strip().lower()
+    if network == "mainnet":
+        return NetworkConfig.mainnet()
+    if network == "devnet":
+        return NetworkConfig.devnet()
+    if network == "testnet":
+        return NetworkConfig.testnet()
+    raise RuntimeError("DECIMAL_TEST_NETWORK must be one of: testnet, devnet, mainnet")
 
 
 def _test_private_key_from_env() -> str | None:

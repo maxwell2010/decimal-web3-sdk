@@ -6,13 +6,17 @@ import pytest
 from web3 import Web3
 
 from decimal_web3_sdk.nft import (
+    AddDelReserveNftRequest,
     BurnNftRequest,
     CreateNftCollectionRequest,
     DelegateNftRequest,
+    DisableMintNftRequest,
     MintNftRequest,
+    NftBatchTransferRequest,
     NftApproveRequest,
     NftService,
     NftTransferRequest,
+    SetTokenUriNftRequest,
 )
 from decimal_web3_sdk.transactions import TransactionService
 from decimal_web3_sdk.wallet import private_key_to_address
@@ -187,3 +191,92 @@ async def test_burn_erc1155_builds_transaction_when_balance_is_enough() -> None:
 
     assert result.success is True
     assert result.raw_tx_hex is not None
+
+
+@pytest.mark.asyncio
+async def test_disable_mint_builds_transaction() -> None:
+    service = NftService(FakeNftClient())
+
+    result = await service.disable_mint(
+        DisableMintNftRequest(kind="erc721", nft=NFT, private_key=PRIVATE_KEY)
+    )
+
+    assert result.success is True
+    assert result.raw_tx_hex is not None
+
+
+@pytest.mark.asyncio
+async def test_transfer_batch_erc1155_builds_transaction_when_balances_are_enough() -> None:
+    service = NftService(FakeNftClient())
+
+    async def balance_of(nft: str, owner: str, token_id: int | None = None, kind: str = "erc721") -> int:
+        return 10
+
+    service.balance_of = balance_of  # type: ignore[method-assign]
+
+    result = await service.transfer_batch_erc1155(
+        NftBatchTransferRequest(
+            nft=NFT,
+            to=RECIPIENT,
+            token_ids=[1, 2],
+            amounts=[3, 4],
+            private_key=PRIVATE_KEY,
+        )
+    )
+
+    assert result.success is True
+    assert result.raw_tx_hex is not None
+
+
+@pytest.mark.asyncio
+async def test_transfer_batch_erc1155_validates_lengths() -> None:
+    service = NftService(FakeNftClient())
+
+    result = await service.transfer_batch_erc1155(
+        NftBatchTransferRequest(
+            nft=NFT,
+            to=RECIPIENT,
+            token_ids=[1, 2],
+            amounts=[3],
+            private_key=PRIVATE_KEY,
+        )
+    )
+
+    assert result.success is False
+    assert result.user_message == "Количество NFT и количеств должно совпадать."
+
+
+@pytest.mark.asyncio
+async def test_set_token_uri_builds_transaction() -> None:
+    service = NftService(FakeNftClient())
+
+    result = await service.set_token_uri(
+        SetTokenUriNftRequest(
+            kind="erc721",
+            nft=NFT,
+            token_id=1,
+            token_uri="ipfs://new-token",
+            private_key=PRIVATE_KEY,
+        )
+    )
+
+    assert result.success is True
+    assert result.raw_tx_hex is not None
+
+
+@pytest.mark.asyncio
+async def test_add_del_reserve_builds_payable_transaction() -> None:
+    service = NftService(FakeNftClient())
+
+    result = await service.add_del_reserve(
+        AddDelReserveNftRequest(
+            kind="erc721",
+            nft=NFT,
+            token_id=1,
+            reserve_wei=123,
+            private_key=PRIVATE_KEY,
+        )
+    )
+
+    assert result.success is True
+    assert result.required_wei == 100_000_000_000_123

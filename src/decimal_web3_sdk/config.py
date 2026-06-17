@@ -28,14 +28,41 @@ class SystemContracts:
     wdel: str = "0x1c5d8992da64c8d56ea413dd6f723061c29a7c0b"
     multicall: str = "0x7b23eb47587ca6482fc16cb3d9d426ec64d4b5fc"
     del_token: str = "0x16049a46126d69211de7c042465122badefa360c"
+    checks: str = "0x9c3326594b49AFa24db9b988Cda1258d0dcb4e40"
+    gas_center: str = "0xeF21c8573715F9c6b644d209B1E860Dbd2f7A947"
+    safe: str = "0x15949c33775154549D073168C1094C5f3b28b5CB"
+    safe_factory: str = "0x92466f09D5c82e8DdB8AaA7c5AdC63d43111F6c1"
+    multi_send: str = "0x72b80471AAFabd1469ed1C51453DC9ca66068bC0"
 
 
-OFFICIAL_MAINNET_WEB3_URLS = ["https://node.decimalchain.com/web3/"]
-OFFICIAL_TESTNET_WEB3_URLS = [
+TESTNET_SYSTEM_CONTRACTS = SystemContracts(
+    multicall="0x81FD5FAe106dFD0343B0435a1bc0ef89BB14C317",
+    checks="0xb6161CAA8Bd7167C2fa67b93b041FF9a94d6a735",
+    gas_center="0xB32439bF0C3742D0a227BFEc78276F7bA15F8Aa1",
+    safe="0xE0f30FcCAe2f9f9C7efee9af044C436841D466ee",
+    safe_factory="0x4cC406B1713d3dF67e739D6f5918B6C98F614a38",
+    multi_send="0xC0611a00CE349B9bCff3866351A2a5Aa9659c464",
+)
+
+
+DEVNET_SYSTEM_CONTRACTS = SystemContracts(
+    multicall="0xd633Ac8b1fcb48A2b3d7a676D1B527E923f66213",
+    checks="0x",
+    gas_center="0xeF21c8573715F9c6b644d209B1E860Dbd2f7A947",
+    safe="0xAaA4813B459B4af71C7C172880D504C6663c11F7",
+    safe_factory="0xAa6Fe7d309741897f5E2De994c90155b0252d104",
+    multi_send="0xf28404962e594aFAf7FE0a9eE2e760f925B3aCDc",
+)
+
+
+DEFAULT_MAINNET_WEB3_URLS = ["https://node.decimalchain.com/web3/"]
+DEFAULT_TESTNET_WEB3_URLS = [
     "https://testnet-val.decimalchain.com/web3/",
+    # Public third-party Decimal testnet RPC for chainId 202020.
+    # It is intentionally a fallback, not an official Decimal endpoint.
     "https://202020.rpc.thirdweb.com",
 ]
-OFFICIAL_DEVNET_WEB3_URLS = ["https://devnet-val.decimalchain.com/web3/"]
+DEFAULT_DEVNET_WEB3_URLS = ["https://devnet-val.decimalchain.com/web3/"]
 
 OFFICIAL_MAINNET_REST_URLS = ["http://node.decimalchain.com/rest/"]
 OFFICIAL_TESTNET_REST_URLS = ["http://testnet-val.decimalchain.com/rest/"]
@@ -68,7 +95,7 @@ class NetworkConfig:
         return cls(
             web3_urls=_csv_env(
                 "DECIMAL_WEB3_URLS",
-                OFFICIAL_MAINNET_WEB3_URLS,
+                DEFAULT_MAINNET_WEB3_URLS,
             ),
             rest_urls=_csv_env("DECIMAL_REST_URLS", OFFICIAL_MAINNET_REST_URLS),
             ws_urls=_csv_env("DECIMAL_WS_URLS", []),
@@ -83,7 +110,7 @@ class NetworkConfig:
     def testnet(cls) -> "NetworkConfig":
         return cls(
             chain_id=int(_env("DECIMAL_TESTNET_CHAIN_ID", "202020")),
-            web3_urls=_csv_env("DECIMAL_TESTNET_WEB3_URLS", OFFICIAL_TESTNET_WEB3_URLS),
+            web3_urls=_csv_env("DECIMAL_TESTNET_WEB3_URLS", DEFAULT_TESTNET_WEB3_URLS),
             rest_urls=_csv_env("DECIMAL_TESTNET_REST_URLS", OFFICIAL_TESTNET_REST_URLS),
             ws_urls=_csv_env("DECIMAL_TESTNET_WS_URLS", []),
             api_base_url=_env("DECIMAL_TESTNET_API_BASE", OFFICIAL_TESTNET_API_ROOT),
@@ -94,13 +121,14 @@ class NetworkConfig:
             ),
             api_key=os.getenv("DECIMAL_TESTNET_API_KEY"),
             name=_env("DECIMAL_TESTNET_NETWORK_NAME", "decimal-testnet"),
+            contracts=TESTNET_SYSTEM_CONTRACTS,
         )
 
     @classmethod
     def devnet(cls) -> "NetworkConfig":
         return cls(
             chain_id=int(_env("DECIMAL_DEVNET_CHAIN_ID", "202020")),
-            web3_urls=_csv_env("DECIMAL_DEVNET_WEB3_URLS", OFFICIAL_DEVNET_WEB3_URLS),
+            web3_urls=_csv_env("DECIMAL_DEVNET_WEB3_URLS", DEFAULT_DEVNET_WEB3_URLS),
             rest_urls=_csv_env("DECIMAL_DEVNET_REST_URLS", OFFICIAL_DEVNET_REST_URLS),
             ws_urls=_csv_env("DECIMAL_DEVNET_WS_URLS", []),
             api_base_url=_env("DECIMAL_DEVNET_API_BASE", OFFICIAL_DEVNET_API_ROOT),
@@ -111,6 +139,7 @@ class NetworkConfig:
             ),
             api_key=os.getenv("DECIMAL_DEVNET_API_KEY"),
             name=_env("DECIMAL_DEVNET_NETWORK_NAME", "decimal-devnet"),
+            contracts=DEVNET_SYSTEM_CONTRACTS,
         )
 
     @classmethod

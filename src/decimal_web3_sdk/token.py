@@ -5,8 +5,10 @@ from decimal import Decimal
 from typing import Any
 
 from web3 import Web3
+from web3.logs import DISCARD
 
 from .decimal import DecimalWorkflowResult
+from .mnemonic import FromMnemonicMixin
 from .transactions import ContractCallRequest, Erc20ApproveRequest, TransactionResult, _token_preflight_failure
 from .wallet import checksum, private_key_to_address
 
@@ -75,6 +77,46 @@ DECIMAL_TOKEN_ABI: list[dict[str, Any]] = [
 
 TOKEN_CENTER_ABI: list[dict[str, Any]] = [
     {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": False,
+                "internalType": "address",
+                "name": "tokenAddress",
+                "type": "address",
+            }
+        ],
+        "name": "TokenDeployed",
+        "type": "event",
+    },
+    {
+        "anonymous": False,
+        "inputs": [
+            {
+                "indexed": False,
+                "internalType": "address",
+                "name": "tokenAddress",
+                "type": "address",
+            }
+        ],
+        "name": "TokenReservelessDeployed",
+        "type": "event",
+    },
+    {
+        "inputs": [{"internalType": "string", "name": "symbol", "type": "string"}],
+        "name": "tokens",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function",
+    },
+    {
+        "inputs": [{"internalType": "address", "name": "token", "type": "address"}],
+        "name": "isTokenExists",
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+        "stateMutability": "view",
+        "type": "function",
+    },
+    {
         "inputs": [
             {
                 "components": [
@@ -129,7 +171,7 @@ TOKEN_CENTER_ABI: list[dict[str, Any]] = [
 
 
 @dataclass(frozen=True)
-class BuyTokenRequest:
+class BuyTokenRequest(FromMnemonicMixin):
     token: str
     amount_del: Decimal | str | int | float
     private_key: str
@@ -137,7 +179,7 @@ class BuyTokenRequest:
 
 
 @dataclass(frozen=True)
-class SellTokenRequest:
+class SellTokenRequest(FromMnemonicMixin):
     token: str
     amount: Decimal | str | int | float
     private_key: str
@@ -146,7 +188,7 @@ class SellTokenRequest:
 
 
 @dataclass(frozen=True)
-class ConvertTokenRequest:
+class ConvertTokenRequest(FromMnemonicMixin):
     token_in: str
     token_out: str
     amount_in: Decimal | str | int | float
@@ -158,7 +200,7 @@ class ConvertTokenRequest:
 
 
 @dataclass(frozen=True)
-class BurnTokenRequest:
+class BurnTokenRequest(FromMnemonicMixin):
     token: str
     amount: Decimal | str | int | float
     private_key: str
@@ -166,7 +208,7 @@ class BurnTokenRequest:
 
 
 @dataclass(frozen=True)
-class MintTokenRequest:
+class MintTokenRequest(FromMnemonicMixin):
     token: str
     to: str
     amount: Decimal | str | int | float
@@ -175,7 +217,7 @@ class MintTokenRequest:
 
 
 @dataclass(frozen=True)
-class UpdateTokenDetailsRequest:
+class UpdateTokenDetailsRequest(FromMnemonicMixin):
     token: str
     identity: str
     max_total_supply_raw: int
@@ -183,7 +225,7 @@ class UpdateTokenDetailsRequest:
 
 
 @dataclass(frozen=True)
-class CreateReservelessTokenRequest:
+class CreateReservelessTokenRequest(FromMnemonicMixin):
     name: str
     symbol: str
     mintable: bool
@@ -195,7 +237,7 @@ class CreateReservelessTokenRequest:
 
 
 @dataclass(frozen=True)
-class CreateTokenRequest:
+class CreateTokenRequest(FromMnemonicMixin):
     name: str
     symbol: str
     initial_mint_raw: int
@@ -362,7 +404,7 @@ class TokenService:
             int(request.cap_raw),
             request.identity,
         )._encode_transaction_data()
-        return await self._send_contract(
+        result = await self._send_contract(
             request.private_key,
             self._client.config.contracts.token_center,
             data,
@@ -370,6 +412,7 @@ class TokenService:
             broadcast,
             wait_receipt,
         )
+        return await self._with_created_token_metadata(result, request.symbol)
 
     async def create(
         self,
@@ -389,7 +432,7 @@ class TokenService:
             request.name,
         )
         data = self._token_center_contract().functions.createToken(meta)._encode_transaction_data()
-        return await self._send_contract(
+        result = await self._send_contract(
             request.private_key,
             self._client.config.contracts.token_center,
             data,
@@ -399,6 +442,7 @@ class TokenService:
             broadcast,
             wait_receipt,
         )
+        return await self._with_created_token_metadata(result, request.symbol)
 
     async def _send_contract(self, private_key: str, contract: str, data: str, value_wei: int, broadcast: bool, wait_receipt: bool) -> TransactionResult:
         draft = await self._client.tx.build_contract_call(
@@ -414,6 +458,47 @@ class TokenService:
             address=checksum(self._client.config.contracts.token_center),
             abi=TOKEN_CENTER_ABI,
         )
+
+    async def token_address_by_symbol(self, symbol: str) -> str | None:
+        """Resolve a token contract by symbol through TokenCenter, if the chain exposes it."""
+        normalized = str(symbol).strip()
+        if not normalized:
+            raise ValueError("Token symbol is required")
+        contract = self._token_center_contract()
+        for candidate in (normalized, normalized.lower(), normalized.upper()):
+            try:
+                address = await self._client.rpc.call(lambda _w3, item=candidate: contract.functions.tokens(item).call())
+            except Exception:
+                continue
+            if address and int(str(address), 16) != 0:
+                return checksum(address)
+        return None
+
+    async def _with_created_token_metadata(self, result: TransactionResult, symbol: str) -> TransactionResult:
+        token_address = self._extract_token_address(result)
+        if token_address is None and result.status in {"success", "pending"}:
+            token_address = await self.token_address_by_symbol(symbol)
+        if token_address is None:
+            return result
+        events = dict(result.events or {})
+        events.setdefault("token_created", {"tokenAddress": token_address, "symbol": symbol})
+        return _replace_transaction_result(result, token_address=token_address, events=events)
+
+    def _extract_token_address(self, result: TransactionResult) -> str | None:
+        if not result.receipt:
+            return None
+        contract = self._token_center_contract()
+        for event_name in ("TokenDeployed", "TokenReservelessDeployed"):
+            try:
+                event = getattr(contract.events, event_name)()
+                logs = event.process_receipt(result.receipt, errors=DISCARD)
+            except Exception:
+                continue
+            for log in logs:
+                address = log.get("args", {}).get("tokenAddress")
+                if address:
+                    return checksum(address)
+        return None
 
 
 def _del_to_wei(value: Decimal | str | int | float) -> int:
@@ -457,3 +542,37 @@ def _workflow_error(name: str, error: str, extra_steps_required: bool = False) -
         extra_steps_required=extra_steps_required,
         error=error,
     )
+
+
+def _replace_transaction_result(result: TransactionResult, **updates: Any) -> TransactionResult:
+    data = {
+        "success": result.success,
+        "tx_hash": result.tx_hash,
+        "status": result.status,
+        "block_number": result.block_number,
+        "transaction_index": result.transaction_index,
+        "gas_used": result.gas_used,
+        "effective_gas_price_wei": result.effective_gas_price_wei,
+        "effective_fee_wei": result.effective_fee_wei,
+        "effective_fee_del": result.effective_fee_del,
+        "fee_wei": result.fee_wei,
+        "fee_del": result.fee_del,
+        "gas": result.gas,
+        "raw_tx_hex": result.raw_tx_hex,
+        "receipt": result.receipt,
+        "events": result.events,
+        "token_address": result.token_address,
+        "error": result.error,
+        "user_message": result.user_message,
+        "native_balance_wei": result.native_balance_wei,
+        "required_wei": result.required_wei,
+        "missing_wei": result.missing_wei,
+        "token_balance_raw": result.token_balance_raw,
+        "token_required_raw": result.token_required_raw,
+        "token_missing_raw": result.token_missing_raw,
+        "token_allowance_raw": result.token_allowance_raw,
+        "token_allowance_required_raw": result.token_allowance_required_raw,
+        "token_allowance_missing_raw": result.token_allowance_missing_raw,
+    }
+    data.update(updates)
+    return TransactionResult(**data)

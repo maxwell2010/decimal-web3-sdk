@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from .decimal import DecimalWorkflowResult
+from .mnemonic import FromMnemonicMixin
 from .transactions import ContractCallRequest, TransactionResult
 from .wallet import checksum, private_key_to_address
 
@@ -251,6 +252,24 @@ ERC721_ABI: list[dict[str, Any]] = [
         "stateMutability": "nonpayable",
         "type": "function",
     },
+    {
+        "inputs": [
+            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
+            {"internalType": "string", "name": "tokenURI", "type": "string"},
+        ],
+        "name": "setTokenURI",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    },
+    {
+        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+        "name": "addReserveByDEL",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function",
+    },
+    {"inputs": [], "name": "disableMint", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
 ]
 
 
@@ -300,6 +319,19 @@ ERC1155_ABI: list[dict[str, Any]] = [
     },
     {
         "inputs": [
+            {"internalType": "address", "name": "from", "type": "address"},
+            {"internalType": "address", "name": "to", "type": "address"},
+            {"internalType": "uint256[]", "name": "ids", "type": "uint256[]"},
+            {"internalType": "uint256[]", "name": "values", "type": "uint256[]"},
+            {"internalType": "bytes", "name": "data", "type": "bytes"},
+        ],
+        "name": "safeBatchTransferFrom",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    },
+    {
+        "inputs": [
             {"internalType": "address", "name": "recipient", "type": "address"},
             {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
             {"internalType": "uint256", "name": "amountToMint", "type": "uint256"},
@@ -334,11 +366,29 @@ ERC1155_ABI: list[dict[str, Any]] = [
         "stateMutability": "nonpayable",
         "type": "function",
     },
+    {
+        "inputs": [
+            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
+            {"internalType": "string", "name": "tokenURI", "type": "string"},
+        ],
+        "name": "setTokenURI",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    },
+    {
+        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+        "name": "addReserveByDEL",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function",
+    },
+    {"inputs": [], "name": "disableMint", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
 ]
 
 
 @dataclass(frozen=True)
-class CreateNftCollectionRequest:
+class CreateNftCollectionRequest(FromMnemonicMixin):
     kind: NftKind
     symbol: str
     name: str
@@ -349,7 +399,7 @@ class CreateNftCollectionRequest:
 
 
 @dataclass(frozen=True)
-class MintNftRequest:
+class MintNftRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
     to: str
@@ -363,7 +413,7 @@ class MintNftRequest:
 
 
 @dataclass(frozen=True)
-class NftTransferRequest:
+class NftTransferRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
     to: str
@@ -374,7 +424,17 @@ class NftTransferRequest:
 
 
 @dataclass(frozen=True)
-class NftApprovalRequest:
+class NftBatchTransferRequest(FromMnemonicMixin):
+    nft: str
+    to: str
+    token_ids: list[int]
+    amounts: list[int]
+    private_key: str
+    data: bytes = b""
+
+
+@dataclass(frozen=True)
+class NftApprovalRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
     operator: str
@@ -383,7 +443,7 @@ class NftApprovalRequest:
 
 
 @dataclass(frozen=True)
-class NftApproveRequest:
+class NftApproveRequest(FromMnemonicMixin):
     nft: str
     to: str
     token_id: int
@@ -391,7 +451,7 @@ class NftApproveRequest:
 
 
 @dataclass(frozen=True)
-class BurnNftRequest:
+class BurnNftRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
     token_id: int
@@ -400,7 +460,32 @@ class BurnNftRequest:
 
 
 @dataclass(frozen=True)
-class DelegateNftRequest:
+class DisableMintNftRequest(FromMnemonicMixin):
+    kind: NftKind
+    nft: str
+    private_key: str
+
+
+@dataclass(frozen=True)
+class SetTokenUriNftRequest(FromMnemonicMixin):
+    kind: NftKind
+    nft: str
+    token_id: int
+    token_uri: str
+    private_key: str
+
+
+@dataclass(frozen=True)
+class AddDelReserveNftRequest(FromMnemonicMixin):
+    kind: NftKind
+    nft: str
+    token_id: int
+    reserve_wei: int
+    private_key: str
+
+
+@dataclass(frozen=True)
+class DelegateNftRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
     validator: str
@@ -411,7 +496,7 @@ class DelegateNftRequest:
 
 
 @dataclass(frozen=True)
-class HoldNftRequest:
+class HoldNftRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
     validator: str
@@ -423,7 +508,7 @@ class HoldNftRequest:
 
 
 @dataclass(frozen=True)
-class TransferNftStakeRequest:
+class TransferNftStakeRequest(FromMnemonicMixin):
     nft: str
     validator: str
     new_validator: str
@@ -434,7 +519,7 @@ class TransferNftStakeRequest:
 
 
 @dataclass(frozen=True)
-class WithdrawNftRequest:
+class WithdrawNftRequest(FromMnemonicMixin):
     nft: str
     validator: str
     token_id: int
@@ -548,6 +633,46 @@ class NftService:
             )._encode_transaction_data()
         return await self._send_contract(request.private_key, request.nft, data, 0, broadcast, wait_receipt)
 
+    async def transfer_batch_erc1155(
+        self,
+        request: NftBatchTransferRequest,
+        broadcast: bool = False,
+        wait_receipt: bool = False,
+    ) -> TransactionResult:
+        if len(request.token_ids) != len(request.amounts):
+            return TransactionResult(
+                success=False,
+                error="ERC1155 batch transfer requires matching token_ids and amounts lengths",
+                user_message="Количество NFT и количеств должно совпадать.",
+            )
+        if not request.token_ids:
+            return TransactionResult(
+                success=False,
+                error="ERC1155 batch transfer requires at least one token",
+                user_message="Добавьте хотя бы один NFT для отправки.",
+            )
+        owner = private_key_to_address(request.private_key)
+        for token_id, amount in zip(request.token_ids, request.amounts, strict=True):
+            balance = await self.balance_of(request.nft, owner, int(token_id), "erc1155")
+            if balance < int(amount):
+                return TransactionResult(
+                    success=False,
+                    error=(
+                        "Insufficient ERC1155 balance: "
+                        f"token_id={int(token_id)}, balance={balance}, required={int(amount)}, "
+                        f"missing={int(amount) - balance}"
+                    ),
+                    user_message="Недостаточно NFT на балансе.",
+                )
+        data = self._erc1155_contract(request.nft).functions.safeBatchTransferFrom(
+            owner,
+            checksum(request.to),
+            [int(item) for item in request.token_ids],
+            [int(item) for item in request.amounts],
+            request.data,
+        )._encode_transaction_data()
+        return await self._send_contract(request.private_key, request.nft, data, 0, broadcast, wait_receipt)
+
     async def set_approval_for_all(
         self,
         request: NftApprovalRequest,
@@ -592,6 +717,45 @@ class NftService:
         else:
             data = contract.functions.burn(int(request.token_id), int(request.amount))._encode_transaction_data()
         return await self._send_contract(request.private_key, request.nft, data, 0, broadcast, wait_receipt)
+
+    async def disable_mint(
+        self,
+        request: DisableMintNftRequest,
+        broadcast: bool = False,
+        wait_receipt: bool = False,
+    ) -> TransactionResult:
+        data = self._nft_contract(request.kind, request.nft).functions.disableMint()._encode_transaction_data()
+        return await self._send_contract(request.private_key, request.nft, data, 0, broadcast, wait_receipt)
+
+    async def set_token_uri(
+        self,
+        request: SetTokenUriNftRequest,
+        broadcast: bool = False,
+        wait_receipt: bool = False,
+    ) -> TransactionResult:
+        data = self._nft_contract(request.kind, request.nft).functions.setTokenURI(
+            int(request.token_id),
+            request.token_uri,
+        )._encode_transaction_data()
+        return await self._send_contract(request.private_key, request.nft, data, 0, broadcast, wait_receipt)
+
+    async def add_del_reserve(
+        self,
+        request: AddDelReserveNftRequest,
+        broadcast: bool = False,
+        wait_receipt: bool = False,
+    ) -> TransactionResult:
+        data = self._nft_contract(request.kind, request.nft).functions.addReserveByDEL(
+            int(request.token_id),
+        )._encode_transaction_data()
+        return await self._send_contract(
+            request.private_key,
+            request.nft,
+            data,
+            int(request.reserve_wei),
+            broadcast,
+            wait_receipt,
+        )
 
     async def delegate(
         self,

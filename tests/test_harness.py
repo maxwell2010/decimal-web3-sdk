@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from decimal_web3_sdk.test_harness import TxTrainingJournal, _record, _test_private_key_from_env
+from decimal_web3_sdk.test_harness import TxTrainingJournal, _record, _test_private_key_from_env, _training_config
 from decimal_web3_sdk.transactions import TransactionResult
 
 
@@ -40,3 +40,12 @@ def test_training_private_key_takes_precedence_over_mnemonic(monkeypatch) -> Non
     monkeypatch.setenv("DECIMAL_TEST_MNEMONIC", "test test test test test test test test test test test junk")
 
     assert _test_private_key_from_env() == "0x" + "1" * 64
+
+
+def test_training_config_defaults_to_testnet(monkeypatch) -> None:
+    monkeypatch.delenv("DECIMAL_TEST_NETWORK", raising=False)
+
+    config = _training_config()
+
+    assert config.name == "decimal-testnet"
+    assert config.chain_id == 202020

@@ -8,13 +8,14 @@ Checked from the current workstation:
 
 - `https://node.decimalchain.com/web3/` responds with `eth_chainId = 0x4b` for mainnet.
 - `https://testnet-val.decimalchain.com/web3/` is the official `dsc-js-sdk` testnet Web3 URL, but returned `403` from this environment.
-- `https://202020.rpc.thirdweb.com` responds with `eth_chainId = 0x31524` and returned block `20734833`.
+- `https://202020.rpc.thirdweb.com` is not part of the official `dsc-js-sdk` endpoint list; it is a public third-party RPC fallback for Decimal testnet chain id `202020`. It responds with `eth_chainId = 0x31524` and returned block `20734833`.
 - `https://devnet-val.decimalchain.com/web3/` is the official `dsc-js-sdk` devnet Web3 URL, but the TLS handshake failed from this environment.
 - `https://testnet-api.decimalchain.com/api/` and `https://testnet-gate.decimalchain.com/api/` returned `403` from this environment.
+- Decimal API Swagger testnet paths follow the production service paths with the `testnet-` prefix, for example `https://testnet-api.decimalchain.com/api/v1/blocks/docs/index.html`. From this environment those docs endpoints also returned `403`, so they are recorded as official references but not relied on for automated live tests yet.
 
 ## SDK Policy
 
-The SDK defaults mirror the official `dsc-js-sdk` endpoints and can be overridden:
+The SDK defaults use the official `dsc-js-sdk` Decimal endpoints first and can be overridden. The thirdweb URL is a non-official fallback only:
 
 ```powershell
 $env:DECIMAL_TESTNET_CHAIN_ID="202020"

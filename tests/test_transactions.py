@@ -52,6 +52,7 @@ class FakeTxClient:
         )
         self.token_balance_raw = token_balance_raw
         self.token_allowance_raw = token_allowance_raw
+        self.rpc = None
 
     async def transaction_count(self, address: str) -> int:
         return 7
@@ -99,6 +100,140 @@ async def test_send_del_dry_run_builds_signed_transaction() -> None:
     assert result.native_balance_wei == 10**21
     assert result.required_wei == 1_000_021_000_000_000_000
     assert result.missing_wei == 0
+    assert result.status == "dry_run"
+    assert result.is_confirmed is False
+
+
+@pytest.mark.asyncio
+async def test_send_del_broadcast_result_exposes_receipt_summary() -> None:
+    client = FakeTxClient()
+
+    async def transaction_receipt(tx_hash: str) -> dict:
+        return {
+            "transactionHash": tx_hash,
+            "status": 1,
+            "blockNumber": 123,
+            "transactionIndex": 4,
+            "gasUsed": 21_000,
+            "effectiveGasPrice": 1_000_000_000,
+        }
+
+    client.transaction_receipt = transaction_receipt  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY)
+
+    result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
+
+    assert result.success is True
+    assert result.status == "success"
+    assert result.is_successful is True
+    assert result.is_confirmed is True
+    assert result.tx_hash == "0x" + "a" * 64
+    assert result.block_number == 123
+    assert result.transaction_index == 4
+    assert result.gas_used == 21_000
+    assert result.effective_gas_price_wei == 1_000_000_000
+    assert result.effective_fee_wei == 21_000_000_000_000
+    assert result.effective_fee_del == Decimal("0.000021")
+
+
+@pytest.mark.asyncio
+async def test_broadcast_normalizes_hash_without_prefix() -> None:
+    client = FakeTxClient()
+
+    async def send_raw_transaction(raw_tx: bytes) -> str:
+        return "a" * 64
+
+    client.send_raw_transaction = send_raw_transaction  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY)
+
+    result = await client.tx.send_del(request, broadcast=True)
+
+    assert result.tx_hash == "0x" + "a" * 64
+
+
+@pytest.mark.asyncio
+async def test_contract_call_to_empty_address_fails_before_signing() -> None:
+    class EmptyCodeRpc:
+        async def call(self, fn):
+            return b""
+
+    client = FakeTxClient()
+    client.rpc = EmptyCodeRpc()
+    request = ContractCallRequest(
+        contract=TO_ADDRESS,
+        private_key=PRIVATE_KEY,
+        data="0x12345678",
+    )
+
+    draft = await client.tx.build_contract_call(request)
+    result = await client.tx.send_draft(draft, PRIVATE_KEY, broadcast=True, wait_receipt=False)
+
+    assert result.success is False
+    assert result.raw_tx_hex is None
+    assert client.sent_raw is None
+    assert result.user_message == "Контракт сети недоступен. Проверьте сеть или адрес контракта."
+
+
+@pytest.mark.asyncio
+async def test_send_del_broadcast_uses_draft_gas_price_when_receipt_has_no_effective_price() -> None:
+    client = FakeTxClient()
+
+    async def transaction_receipt(tx_hash: str) -> dict:
+        return {
+            "transactionHash": tx_hash,
+            "status": 1,
+            "blockNumber": 123,
+            "transactionIndex": 4,
+            "gasUsed": 21_000,
+        }
+
+    client.transaction_receipt = transaction_receipt  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY)
+
+    result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
+
+    assert result.status == "success"
+    assert result.effective_gas_price_wei == 1_000_000_000
+    assert result.effective_fee_wei == 21_000_000_000_000
+    assert result.effective_fee_del == Decimal("0.000021")
+
+
+@pytest.mark.asyncio
+async def test_send_del_broadcast_without_receipt_is_pending() -> None:
+    client = FakeTxClient()
+
+    async def transaction_receipt(tx_hash: str) -> None:
+        return None
+
+    client.transaction_receipt = transaction_receipt  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY)
+
+    result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
+
+    assert result.success is True
+    assert result.status == "pending"
+    assert result.is_pending is True
+    assert result.tx_hash == "0x" + "a" * 64
+    assert result.block_number is None
+
+
+@pytest.mark.asyncio
+async def test_send_del_wait_receipt_uses_configured_timeout() -> None:
+    client = FakeTxClient(safety=SafetyLimits(receipt_wait_timeout_seconds=7, receipt_poll_seconds=2))
+    seen: dict[str, float] = {}
+    original_wait = client.tx.wait_receipt
+
+    async def wait_receipt(draft, timeout_seconds: float = 1.0, poll_seconds: float = 0.2):
+        seen["timeout"] = timeout_seconds
+        seen["poll"] = poll_seconds
+        return await original_wait(draft, timeout_seconds=timeout_seconds, poll_seconds=poll_seconds)
+
+    client.tx.wait_receipt = wait_receipt  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY)
+
+    await client.tx.send_del(request, broadcast=True, wait_receipt=True)
+
+    assert seen == {"timeout": 7, "poll": 2}
 
 
 def test_native_transfer_request_can_be_created_from_mnemonic() -> None:
@@ -279,9 +414,10 @@ async def test_send_del_stops_before_sign_when_native_balance_cannot_cover_fee()
 
     assert result.success is False
     assert "Insufficient DEL" in str(result.error)
-    assert result.user_message == "Недостаточно DEL для суммы и комиссии."
+    assert result.user_message == "Недостаточно DEL на балансе."
     assert result.raw_tx_hex is None
     assert result.missing_wei is not None
+    assert client.estimate_calls == 0
     assert client.sent_raw is None
 
 

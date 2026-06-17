@@ -20,6 +20,7 @@ PRIVATE_KEY = "0x" + "1" * 64
 TOKEN_IN = "0x" + "5" * 40
 TOKEN_OUT = "0x" + "6" * 40
 TOKEN_CENTER = "0x" + "7" * 40
+CREATED_TOKEN = "0x" + "8" * 40
 
 
 class FakeTokenClient:
@@ -164,3 +165,57 @@ async def test_create_reserveless_token_builds_token_center_call() -> None:
 
     assert result.success is True
     assert result.gas == 100_000
+
+
+@pytest.mark.asyncio
+async def test_create_reserveless_token_exposes_created_token_address_from_receipt() -> None:
+    client = FakeTokenClient()
+
+    async def transaction_receipt(tx_hash: str) -> dict:
+        return {
+            "transactionHash": tx_hash,
+            "status": 1,
+            "blockNumber": 123,
+            "transactionIndex": 1,
+            "gasUsed": 100_000,
+            "effectiveGasPrice": 1_000_000_000,
+            "logs": [
+                {
+                    "address": TOKEN_CENTER,
+                    "topics": [Web3.keccak(text="TokenDeployed(address)").hex()],
+                    "data": "0x" + ("0" * 24) + CREATED_TOKEN[2:],
+                    "logIndex": 0,
+                    "transactionIndex": 1,
+                    "transactionHash": tx_hash,
+                    "blockHash": "0x" + "9" * 64,
+                    "blockNumber": 123,
+                }
+            ],
+        }
+
+    client.transaction_receipt = transaction_receipt  # type: ignore[method-assign]
+    service = TokenService(client)
+
+    result = await service.create_reserveless(
+        CreateReservelessTokenRequest(
+            name="Training",
+            symbol="TRN",
+            mintable=True,
+            burnable=True,
+            initial_mint_raw=1000,
+            cap_raw=10_000,
+            identity="sdk-test",
+            private_key=PRIVATE_KEY,
+        ),
+        broadcast=True,
+        wait_receipt=True,
+    )
+
+    assert result.status == "success"
+    assert result.token_address == Web3.to_checksum_address(CREATED_TOKEN)
+    assert result.events == {
+        "token_created": {
+            "tokenAddress": Web3.to_checksum_address(CREATED_TOKEN),
+            "symbol": "TRN",
+        }
+    }

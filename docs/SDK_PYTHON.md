@@ -2,6 +2,8 @@
 
 Reference package: `decimal-web3-sdk`.
 
+Документация построена в привычной логике официального Decimal Python SDK: wallet/request -> расчет комиссии -> подпись -> broadcast -> проверка результата. Отличие текущего SDK в том, что транзакционный слой работает через Decimal EVM/Web3.
+
 ## Назначение
 
 Python SDK является основной реализацией Decimal Web3 SDK для локальных скриптов, серверных задач, CLI, тестового кошелька, мониторинга, обучения транзакций и будущей автоматизации.
@@ -93,7 +95,7 @@ testnet: https://testnet-val.decimalchain.com/web3/
 devnet:  https://devnet-val.decimalchain.com/web3/
 ```
 
-Для testnet SDK также добавляет fallback `https://202020.rpc.thirdweb.com`, потому что публичный `testnet-val` может отдавать `403` для прямых RPC-запросов. Для релиза и приложений лучше указать свои endpoint-ы явно.
+Для testnet SDK также добавляет публичный сторонний fallback `https://202020.rpc.thirdweb.com`, потому что `testnet-val` может отдавать `403` для прямых RPC-запросов из отдельных окружений. Это не официальный Decimal endpoint. Для релиза и приложений лучше указать свои endpoint-ы явно.
 
 ## Базовое использование
 
@@ -144,6 +146,14 @@ async with DecimalClient(config) as client:
 
 ## DEL транзакции
 
+Типовой порядок для любой транзакции:
+
+1. Создать request из seed phrase через `*.from_mnemonic(...)`.
+2. Посчитать комиссию через `estimate_fee_for_*` или `calculate_fee(...)`.
+3. Показать пользователю `fee_del`, `required_del`, `missing_del`.
+4. Только после подтверждения подписать/отправить через `send_*`.
+5. Получить `TransactionResult` с hash/status/block/receipt.
+
 ```python
 from decimal_web3_sdk import NativeTransferRequest
 
@@ -166,11 +176,12 @@ print(result.success, result.gas, result.fee_del, result.raw_tx_hex)
 
 ```python
 result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
+print(result.tx_hash, result.status, result.block_number, result.gas_used, result.effective_fee_del)
 ```
 
 Низкоуровневый вариант `NativeTransferRequest(..., private_key="0x...")` тоже остается: он нужен для серверных сервисов, тестов и случаев, где ключ уже хранится во внешнем signer-е.
 
-Сейчас mnemonic-конструкторы есть у DEL transfer, generic contract call, ERC20 transfer, ERC20 approve и ERC20 transferFrom. Высокоуровневые staking/token/NFT/checks/bridge workflow пока принимают `private_key` напрямую; для приложений получайте его из seed phrase внутри защищенного signer boundary через `mnemonic_to_private_key(...)`, пока эти request-классы не получат такие же `from_mnemonic(...)` конструкторы.
+Все request-классы, которым нужен signer, поддерживают `from_mnemonic(...)`: DEL, ERC20, generic contract calls, staking, token, NFT, checks и bridge workflows. SDK локально получает private key только на момент подписи и не сохраняет seed phrase.
 
 ## Fee preflight
 
@@ -182,6 +193,25 @@ result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
 4. Проверяет `native_balance >= value + fee`.
 5. Для ERC20 дополнительно проверяет token balance.
 6. При нехватке возвращает `TransactionResult(success=False, error=...)` без broadcast.
+
+`FeePreflight` считается до подписи и не создает raw transaction. Его можно показать пользователю как предварительный расчет комиссии. После отправки `TransactionResult` содержит нормализованные поля `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, а также сырой `receipt` для расширенной диагностики.
+
+`TransactionResult.status` принимает практичные значения:
+
+- `dry_run`: транзакция построена и подписана локально, но не отправлена;
+- `pending`: broadcast выполнен, receipt еще не найден;
+- `success`: receipt получен, `status == 1`;
+- `failed`: receipt получен, `status == 0`.
+
+Для contract-call с calldata SDK перед подписью проверяет, что на целевом адресе выбранной сети есть bytecode. Это защищает от ситуации, когда mainnet/system contract адрес случайно используется в testnet/devnet: транзакция к пустому адресу может получить EVM `status=1`, но никакой контракт не выполнится.
+
+```python
+exists = await client.contract_code_exists("0xContract")
+if not exists:
+    print("Wrong network or contract address")
+```
+
+В таком случае SDK вернет `success=False`, `tx_hash=None` и пользовательское сообщение: `Контракт сети недоступен. Проверьте сеть или адрес контракта.`
 
 Для пользовательских интерфейсов дополнительно заполняется `result.user_message`, например:
 
@@ -196,8 +226,11 @@ result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
 from decimal_web3_sdk import NetworkConfig
 from decimal_web3_sdk.limits import SafetyLimits
 
-config = NetworkConfig.mainnet()
-config.safety = SafetyLimits(gas_limit_multiplier=1.0)
+config = NetworkConfig.custom(
+    chain_id=75,
+    web3_urls=["https://node.decimalchain.com/web3/"],
+    safety=SafetyLimits(gas_limit_multiplier=1.0),
+)
 ```
 
 Комиссию можно посчитать отдельно до подписи:
@@ -214,6 +247,38 @@ quote = await client.tx.calculate_fee(draft)
 print(quote.ok, quote.gas, quote.gas_price_wei, quote.fee_del, quote.missing_del)
 ```
 
+Пример полного preflight перед отправкой:
+
+```python
+quote = await client.tx.estimate_fee_for_native_transfer(request)
+if not quote.ok:
+    print("Need more DEL:", quote.missing_del)
+else:
+    print("Fee:", quote.fee_del, "Total:", quote.required_del)
+
+result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
+print(result.tx_hash, result.status, result.block_number)
+```
+
+## Approve и одна транзакция
+
+Некоторые EVM workflow требуют allowance: ERC20 multisend, ERC20 staking/delegate/hold, token convert. SDK сначала проверяет баланс токена и allowance, а затем выбирает путь:
+
+- Если allowance уже хватает, отправляется только основная транзакция.
+- Если токен и контракт поддерживают `permit`/`...ByPermit`, SDK может уложиться в одну транзакцию без отдельного `approve`.
+- Если permit недоступен, нужен отдельный `approve`, а затем основная транзакция. Это ограничение ERC20: allowance появляется в state только после майнинга approve.
+
+```python
+workflow = await client.decimal.delegate_erc20(request, broadcast=False)
+
+print(workflow.steps)
+print(workflow.one_transaction)
+print(workflow.requires_secondary_transaction)
+print(workflow.total_fee_del)
+```
+
+Для `delegate_erc20`, `hold_erc20` и `multisend_erc20` по умолчанию включен `prefer_permit=True`. Для `convert_erc20` в официальных Decimal JS/Go SDK используется `approveToken(...)` перед `convertToken(...)`; отдельного `convertByPermit` в публичном API не найдено, поэтому без заранее выставленного allowance это две транзакции.
+
 Для готовых типов есть shortcuts:
 
 ```python
@@ -221,14 +286,6 @@ quote = await client.tx.estimate_fee_for_native_transfer(request)
 quote = await client.tx.estimate_fee_for_erc20_transfer(erc20_request)
 quote = await client.tx.estimate_fee_for_erc20_approve(approve_request)
 quote = await client.tx.estimate_fee_for_contract_call(contract_request)
-```
-
-CLI:
-
-```powershell
-python -m decimal_web3_sdk.cli fee-del --to 0x... --amount 1 --private-key 0x...
-python -m decimal_web3_sdk.cli fee-erc20 --token 0x... --to 0x... --amount 1 --private-key 0x...
-python -m decimal_web3_sdk.cli fee-contract --contract 0x... --data 0x... --private-key 0x...
 ```
 
 ## Memo / сообщение в транзакции
@@ -291,20 +348,20 @@ await client.tx.transfer_from_erc20(
 from decimal_web3_sdk import DelegateDelRequest, DelegateErc20Request
 
 await client.decimal.delegate_del(
-    DelegateDelRequest(
+    DelegateDelRequest.from_mnemonic(
         validator="0xValidator",
         amount_del="1",
-        private_key="0xPrivateKey",
+        mnemonic=seed_phrase,
     ),
     broadcast=False,
 )
 
 await client.decimal.delegate_erc20(
-    DelegateErc20Request(
+    DelegateErc20Request.from_mnemonic(
         token="0xToken",
         validator="0xValidator",
         amount="10",
-        private_key="0xPrivateKey",
+        mnemonic=seed_phrase,
     ),
     broadcast=False,
 )
@@ -320,12 +377,12 @@ ERC20 staking/multisend поддерживает allowance, permit-first сце�
 from decimal_web3_sdk import ValidatorSelfPauseRequest
 
 await client.decimal.pause_self_validator(
-    ValidatorSelfPauseRequest(private_key=private_key),
+    ValidatorSelfPauseRequest.from_mnemonic(mnemonic=seed_phrase),
     broadcast=False,
 )
 
 await client.decimal.unpause_self_validator(
-    ValidatorSelfPauseRequest(private_key=private_key),
+    ValidatorSelfPauseRequest.from_mnemonic(mnemonic=seed_phrase),
     broadcast=False,
 )
 ```
@@ -336,11 +393,11 @@ await client.decimal.unpause_self_validator(
 from decimal_web3_sdk import ValidatorPauseRequest
 
 await client.decimal.pause_validator(
-    ValidatorPauseRequest(validator="0xValidator", private_key=private_key),
+    ValidatorPauseRequest.from_mnemonic(validator="0xValidator", mnemonic=seed_phrase),
     broadcast=False,
 )
 await client.decimal.unpause_validator(
-    ValidatorPauseRequest(validator="0xValidator", private_key=private_key),
+    ValidatorPauseRequest.from_mnemonic(validator="0xValidator", mnemonic=seed_phrase),
     broadcast=False,
 )
 ```
@@ -355,17 +412,17 @@ from decimal_web3_sdk import (
 )
 
 await client.token.buy(
-    BuyTokenRequest(token="0xToken", amount_del="1", private_key="0xPrivateKey"),
+    BuyTokenRequest.from_mnemonic(token="0xToken", amount_del="1", mnemonic=seed_phrase),
     broadcast=False,
 )
 
 await client.token.convert(
-    ConvertTokenRequest(
+    ConvertTokenRequest.from_mnemonic(
         token_in="0xTokenA",
         token_out="0xTokenB",
         amount_in="1",
         min_amount_out="0.95",
-        private_key="0xPrivateKey",
+        mnemonic=seed_phrase,
     ),
     broadcast=False,
 )
@@ -386,12 +443,12 @@ token_creation_required_reserve_del("MINTCANDY") # 1250 DEL
 from decimal_web3_sdk import CreateNftCollectionRequest, DelegateNftRequest
 
 await client.nft.create_collection(
-    CreateNftCollectionRequest(
+    CreateNftCollectionRequest.from_mnemonic(
         kind="erc721",
         symbol="ART",
         name="Art",
         contract_uri="ipfs://collection",
-        private_key="0xPrivateKey",
+        mnemonic=seed_phrase,
     ),
     broadcast=False,
 )
@@ -403,17 +460,10 @@ await client.nft.create_collection(
 decimal-sdk block-number
 decimal-sdk balance 0x...
 decimal-sdk erc20-info 0xToken
-decimal-sdk send-del --to 0x... --amount 1 --private-key 0x...
-decimal-sdk fee-del --to 0x... --amount 1 --private-key 0x...
-decimal-sdk send-erc20 --token 0x... --to 0x... --amount 1 --private-key 0x...
-decimal-sdk fee-erc20 --token 0x... --to 0x... --amount 1 --private-key 0x...
-decimal-sdk transfer-from-erc20 --token 0x... --owner 0x... --to 0x... --amount 1 --private-key 0x...
-decimal-sdk delegate-del --validator 0x... --amount 1 --private-key 0x...
-decimal-sdk convert-token --token-in 0x... --token-out 0x... --amount-in 1 --min-amount-out 0.9 --private-key 0x...
 python -m decimal_web3_sdk.cli wallet-from-mnemonic "seed words ..."
 ```
 
-Добавьте `--broadcast`, чтобы реально отправить транзакцию.
+Для подписанных транзакций в приложениях используйте Python request-классы `*.from_mnemonic(...)`. CLI signing-команды остаются низкоуровневым интерфейсом для внешнего signer-а/secret-manager и не являются основным пользовательским сценарием.
 
 ## Тестовый прогон
 
@@ -431,7 +481,7 @@ pytest -q tests/integration
 Broadcast training:
 
 ```powershell
-$env:DECIMAL_TEST_PRIVATE_KEY="0x..."
+$env:DECIMAL_TEST_NETWORK="testnet"
 $env:DECIMAL_TEST_MNEMONIC="seed words ..."
 $env:DECIMAL_TEST_TO="0x..."
 $env:DECIMAL_TEST_DEL_AMOUNT="0.001"
@@ -439,7 +489,7 @@ $env:DECIMAL_TEST_BROADCAST="0"
 decimal-sdk train-env
 ```
 
-Можно использовать либо `DECIMAL_TEST_PRIVATE_KEY`, либо `DECIMAL_TEST_MNEMONIC`; если заданы оба, private key имеет приоритет. `DECIMAL_TEST_BROADCAST=1` включайте только на testnet/devnet или на кошельке, который предназначен для реальных тренировочных транзакций.
+Можно использовать либо `DECIMAL_TEST_PRIVATE_KEY`, либо `DECIMAL_TEST_MNEMONIC`; если заданы оба, private key имеет приоритет. По умолчанию training harness использует `DECIMAL_TEST_NETWORK=testnet`. Перед подписью/отправкой он считает комиссию, а для визуального контроля записывает баланс и nonce до/после теста. `DECIMAL_TEST_BROADCAST=1` включайте только на testnet/devnet или на кошельке, который предназначен для реальных тренировочных транзакций.
 
 ## Статус
 

@@ -1,8 +1,13 @@
 # dsc-js-sdk Transaction Parity
 
-Дата: 2026-06-13
+Дата: 2026-06-16
 
 Reference: https://bitbucket.org/decimalteam/dsc-js-sdk/src/master/
+
+Scanned revisions:
+
+- `dsc-js-sdk`: `6790d35`
+- `dsc-go-sdk`: `3ef4a08`
 
 ## Scope
 
@@ -44,7 +49,10 @@ Reference: https://bitbucket.org/decimalteam/dsc-js-sdk/src/master/
 | DEL/Token multisend | `multicall`, multisig builders | Supported for direct multisend | `MultisendDelRequest`, `MultisendErc20Request` |
 | NFT create collection | `createCollection` | Supported | `CreateNftCollectionRequest`, `client.nft.create_collection()` |
 | NFT mint | `mintNFT`, `mintNFTWithDELReserve`, `mintNFTWithTokenReserve`, `mintReserveless` | Partial | `MintNftRequest`, base mint supported; reserve variants need parity expansion |
-| NFT transfer | `transferNFT`, `transferBatchNFT1155` | Partial | single ERC721/ERC1155 transfer supported |
+| NFT disable mint | `disableMintNFT` | Supported | `DisableMintNftRequest`, `client.nft.disable_mint()` |
+| NFT transfer | `transferNFT`, `transferBatchNFT1155` | Supported | `NftTransferRequest`, `NftBatchTransferRequest` |
+| NFT token URI | `setTokenURINFT` | Supported | `SetTokenUriNftRequest`, `client.nft.set_token_uri()` |
+| NFT DEL reserve | `addDELReserveNFT` | Supported | `AddDelReserveNftRequest`, `client.nft.add_del_reserve()` |
 | NFT burn | `burnNFT` | Supported | `BurnNftRequest`, `client.nft.burn()` |
 | NFT approval | `setApprovalForAllNFT`, `approveNFT721` | Supported | `NftApprovalRequest`, `NftApproveRequest` |
 | NFT delegate/hold | `delegateNFT`, `delegateDRC721/1155`, hold variants | Supported | `DelegateNftRequest`, `HoldNftRequest` |
@@ -75,7 +83,7 @@ These JS SDK methods create legacy/protobuf Decimal transactions. They are not c
 ## Immediate Parity Gaps To Close Next
 
 1. Token reserve calculators and exact-in/exact-out naming parity.
-2. NFT reserve add/update helpers and batch transfer parity.
+2. NFT token reserve helpers and base URI helpers.
 3. Stake complete/penalty operator workflows.
 4. Validator operator workflows.
 5. Safe-style multisig helpers.

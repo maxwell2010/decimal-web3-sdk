@@ -54,7 +54,8 @@ class RpcPool:
             except Exception as exc:
                 last_error = exc
                 self.rotate()
-        raise RuntimeError("All Decimal Web3 RPC endpoints failed") from last_error
+        detail = f": {last_error}" if last_error else ""
+        raise RuntimeError(f"All Decimal Web3 RPC endpoints failed{detail}") from last_error
 
     def _create_web3(self, url: str) -> Web3:
         provider = Web3.HTTPProvider(url, request_kwargs={"timeout": self._timeout})

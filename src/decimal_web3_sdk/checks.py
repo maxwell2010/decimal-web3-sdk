@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .erc20 import PermitSignature
+from .mnemonic import FromMnemonicMixin
 from .transactions import ContractCallRequest, TransactionResult
 from .wallet import checksum
 
@@ -71,7 +72,7 @@ CHECKS_ABI = [
 
 
 @dataclass(frozen=True)
-class CreateChecksDelRequest:
+class CreateChecksDelRequest(FromMnemonicMixin):
     contract: str
     signers: list[str]
     amount_wei: int
@@ -81,7 +82,7 @@ class CreateChecksDelRequest:
 
 
 @dataclass(frozen=True)
-class CreateChecksTokenRequest:
+class CreateChecksTokenRequest(FromMnemonicMixin):
     contract: str
     token: str
     signers: list[str]
@@ -93,7 +94,7 @@ class CreateChecksTokenRequest:
 
 
 @dataclass(frozen=True)
-class RedeemChecksRequest:
+class RedeemChecksRequest(FromMnemonicMixin):
     contract: str
     signatures: list[str]
     checks: list[str]

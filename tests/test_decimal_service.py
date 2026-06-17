@@ -210,6 +210,10 @@ async def test_delegate_erc20_plans_approve_when_allowance_is_low() -> None:
     assert result.steps == ("approve_erc20", "delegate_erc20")
     assert result.actual_steps == 2
     assert result.extra_steps_required is True
+    assert result.requires_secondary_transaction is True
+    assert result.one_transaction is False
+    assert result.transaction_count == 2
+    assert result.total_fee_del is not None
 
 
 @pytest.mark.asyncio
@@ -232,6 +236,9 @@ async def test_delegate_erc20_uses_permit_when_available() -> None:
     assert result.steps == ("delegate_erc20_by_permit",)
     assert result.actual_steps == 1
     assert result.extra_steps_required is False
+    assert result.requires_secondary_transaction is False
+    assert result.one_transaction is True
+    assert result.transaction_count == 1
 
 
 @pytest.mark.asyncio

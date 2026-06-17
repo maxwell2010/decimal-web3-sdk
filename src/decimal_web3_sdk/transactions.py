@@ -300,11 +300,20 @@ class TransactionDraft:
 class TransactionResult:
     success: bool
     tx_hash: str | None = None
+    status: str | None = None
+    block_number: int | None = None
+    transaction_index: int | None = None
+    gas_used: int | None = None
+    effective_gas_price_wei: int | None = None
+    effective_fee_wei: int | None = None
+    effective_fee_del: Decimal | None = None
     fee_wei: int | None = None
     fee_del: Decimal | None = None
     gas: int | None = None
     raw_tx_hex: str | None = None
     receipt: dict[str, Any] | None = None
+    events: dict[str, Any] | None = None
+    token_address: str | None = None
     error: str | None = None
     user_message: str | None = None
     native_balance_wei: int | None = None
@@ -316,6 +325,18 @@ class TransactionResult:
     token_allowance_raw: int | None = None
     token_allowance_required_raw: int | None = None
     token_allowance_missing_raw: int | None = None
+
+    @property
+    def is_confirmed(self) -> bool:
+        return self.receipt is not None
+
+    @property
+    def is_successful(self) -> bool:
+        return self.status == "success"
+
+    @property
+    def is_pending(self) -> bool:
+        return self.status == "pending"
 
 
 @dataclass(frozen=True)
@@ -579,6 +600,9 @@ class TransactionService:
     ) -> TransactionResult:
         try:
             draft = await self.build_native_transfer(request)
+            native_balance = int(await self._client.balance_wei(draft.from_address))
+            if int(draft.value_wei) > native_balance:
+                return _native_value_preflight_failure(draft, native_balance)
             preflight = await self.calculate_fee(draft)
             if not preflight.ok:
                 return _preflight_failure(draft, preflight)
@@ -586,15 +610,16 @@ class TransactionService:
             if broadcast:
                 draft = await self.broadcast(draft)
                 if wait_receipt:
-                    draft = await self.wait_receipt(draft)
-            return TransactionResult(
-                success=True,
-                tx_hash=draft.tx_hash,
-                fee_wei=draft.fee_wei,
-                fee_del=draft.fee_del,
-                gas=draft.gas,
-                raw_tx_hex="0x" + draft.raw_tx.hex() if draft.raw_tx else None,
-                receipt=draft.receipt,
+                    timeout_seconds, poll_seconds = _receipt_wait_settings(self._client)
+                    draft = await self.wait_receipt(
+                        draft,
+                        timeout_seconds=timeout_seconds,
+                        poll_seconds=poll_seconds,
+                    )
+            return _result_from_draft(
+                draft,
+                preflight,
+                broadcast=broadcast,
                 native_balance_wei=preflight.native_balance_wei,
                 required_wei=preflight.required_wei,
                 missing_wei=preflight.missing_wei,
@@ -684,6 +709,8 @@ class TransactionService:
         wait_receipt: bool,
     ) -> TransactionResult:
         try:
+            if not await self._contract_code_is_present(draft):
+                return _missing_contract_code_failure(draft)
             preflight = await self.calculate_fee(draft)
             if not preflight.ok:
                 return _preflight_failure(draft, preflight)
@@ -691,15 +718,16 @@ class TransactionService:
             if broadcast:
                 draft = await self.broadcast(draft)
                 if wait_receipt:
-                    draft = await self.wait_receipt(draft)
-            return TransactionResult(
-                success=True,
-                tx_hash=draft.tx_hash,
-                fee_wei=draft.fee_wei,
-                fee_del=draft.fee_del,
-                gas=draft.gas,
-                raw_tx_hex="0x" + draft.raw_tx.hex() if draft.raw_tx else None,
-                receipt=draft.receipt,
+                    timeout_seconds, poll_seconds = _receipt_wait_settings(self._client)
+                    draft = await self.wait_receipt(
+                        draft,
+                        timeout_seconds=timeout_seconds,
+                        poll_seconds=poll_seconds,
+                    )
+            return _result_from_draft(
+                draft,
+                preflight,
+                broadcast=broadcast,
                 native_balance_wei=preflight.native_balance_wei,
                 required_wei=preflight.required_wei,
                 missing_wei=preflight.missing_wei,
@@ -707,13 +735,117 @@ class TransactionService:
         except Exception as exc:
             return _exception_failure(exc)
 
+    async def _contract_code_is_present(self, draft: TransactionDraft) -> bool:
+        data = draft.tx.get("data")
+        to_address = draft.tx.get("to")
+        if not to_address or not data or data == "0x":
+            return True
+        rpc = getattr(self._client, "rpc", None)
+        if rpc is None:
+            return True
+        try:
+            code = await rpc.call(lambda w3: w3.eth.get_code(checksum(to_address)))
+        except Exception:
+            return True
+        return bool(code)
+
 
 def _hex(value: Any) -> str:
     if isinstance(value, HexBytes):
         return value.hex()
     if isinstance(value, bytes):
         return "0x" + value.hex()
-    return str(value)
+    text = str(value)
+    if len(text) == 64 and all(char in "0123456789abcdefABCDEF" for char in text):
+        return "0x" + text
+    return text
+
+
+def _receipt_wait_settings(client) -> tuple[float, float]:
+    safety = getattr(getattr(client, "config", None), "safety", None)
+    timeout = getattr(safety, "receipt_wait_timeout_seconds", 7.0) or 7.0
+    poll = getattr(safety, "receipt_poll_seconds", 3.0) or 3.0
+    return float(timeout), float(poll)
+
+
+def _receipt_get(receipt: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        if key in receipt:
+            return receipt[key]
+    return None
+
+
+def _int_or_none(value: Any) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, HexBytes):
+        return int(value.hex(), 16)
+    if isinstance(value, bytes):
+        return int.from_bytes(value, "big")
+    if isinstance(value, str):
+        return int(value, 16) if value.startswith("0x") else int(value)
+    return int(value)
+
+
+def _receipt_details(receipt: dict[str, Any] | None) -> dict[str, Any]:
+    if not receipt:
+        return {
+            "status": None,
+            "block_number": None,
+            "transaction_index": None,
+            "gas_used": None,
+            "effective_gas_price_wei": None,
+            "effective_fee_wei": None,
+            "effective_fee_del": None,
+        }
+    raw_status = _int_or_none(_receipt_get(receipt, "status"))
+    gas_used = _int_or_none(_receipt_get(receipt, "gasUsed", "gas_used"))
+    effective_gas_price = _int_or_none(_receipt_get(receipt, "effectiveGasPrice", "effective_gas_price"))
+    effective_fee = gas_used * effective_gas_price if gas_used is not None and effective_gas_price is not None else None
+    return {
+        "status": "success" if raw_status == 1 else "failed" if raw_status == 0 else None,
+        "block_number": _int_or_none(_receipt_get(receipt, "blockNumber", "block_number")),
+        "transaction_index": _int_or_none(_receipt_get(receipt, "transactionIndex", "transaction_index")),
+        "gas_used": gas_used,
+        "effective_gas_price_wei": effective_gas_price,
+        "effective_fee_wei": effective_fee,
+        "effective_fee_del": Decimal(effective_fee) / Decimal(10**18) if effective_fee is not None else None,
+    }
+
+
+def _result_from_draft(
+    draft: TransactionDraft,
+    preflight: FeePreflight,
+    *,
+    broadcast: bool,
+    **kwargs,
+) -> TransactionResult:
+    details = _receipt_details(draft.receipt)
+    effective_gas_price_wei = details["effective_gas_price_wei"]
+    if effective_gas_price_wei is None and details["gas_used"] is not None:
+        effective_gas_price_wei = draft.gas_price_wei
+    effective_fee_wei = details["effective_fee_wei"]
+    if effective_fee_wei is None and details["gas_used"] is not None and effective_gas_price_wei is not None:
+        effective_fee_wei = int(details["gas_used"]) * int(effective_gas_price_wei)
+    status = details["status"] or ("pending" if broadcast else "dry_run")
+    success = status != "failed"
+    return TransactionResult(
+        success=success,
+        tx_hash=draft.tx_hash,
+        status=status,
+        block_number=details["block_number"],
+        transaction_index=details["transaction_index"],
+        gas_used=details["gas_used"],
+        effective_gas_price_wei=effective_gas_price_wei,
+        effective_fee_wei=effective_fee_wei,
+        effective_fee_del=Decimal(effective_fee_wei) / Decimal(10**18) if effective_fee_wei is not None else None,
+        fee_wei=draft.fee_wei,
+        fee_del=draft.fee_del,
+        gas=draft.gas,
+        raw_tx_hex="0x" + draft.raw_tx.hex() if draft.raw_tx else None,
+        receipt=draft.receipt,
+        **kwargs,
+    )
 
 
 def _preflight_failure(draft: TransactionDraft, preflight: FeePreflight) -> TransactionResult:
@@ -737,6 +869,31 @@ def _preflight_failure(draft: TransactionDraft, preflight: FeePreflight) -> Tran
         native_balance_wei=preflight.native_balance_wei,
         required_wei=preflight.required_wei,
         missing_wei=preflight.missing_wei,
+    )
+
+
+def _native_value_preflight_failure(draft: TransactionDraft, native_balance_wei: int) -> TransactionResult:
+    missing = max(0, int(draft.value_wei) - int(native_balance_wei))
+    return TransactionResult(
+        success=False,
+        error=(
+            "Insufficient DEL for transaction value: "
+            f"balance={Decimal(native_balance_wei) / Decimal(10**18)} DEL, "
+            f"required={Decimal(draft.value_wei) / Decimal(10**18)} DEL, "
+            f"missing={Decimal(missing) / Decimal(10**18)} DEL"
+        ),
+        user_message="Недостаточно DEL на балансе.",
+        native_balance_wei=int(native_balance_wei),
+        required_wei=int(draft.value_wei),
+        missing_wei=missing,
+    )
+
+
+def _missing_contract_code_failure(draft: TransactionDraft) -> TransactionResult:
+    return TransactionResult(
+        success=False,
+        error=f"Contract address has no bytecode: {draft.to_address}",
+        user_message="Контракт сети недоступен. Проверьте сеть или адрес контракта.",
     )
 
 

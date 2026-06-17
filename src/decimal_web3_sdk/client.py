@@ -82,6 +82,13 @@ class DecimalClient:
     async def estimate_gas(self, tx: dict) -> int:
         return await self.rpc.call(lambda w3: int(w3.eth.estimate_gas(tx)))
 
+    async def contract_code(self, address: str) -> bytes:
+        account = checksum(address)
+        return await self.rpc.call(lambda w3: bytes(w3.eth.get_code(account)))
+
+    async def contract_code_exists(self, address: str) -> bool:
+        return bool(await self.contract_code(address))
+
     async def send_raw_transaction(self, raw_tx: bytes) -> str:
         tx_hash = await self.rpc.call(lambda w3: w3.eth.send_raw_transaction(raw_tx))
         return tx_hash.hex() if hasattr(tx_hash, "hex") else str(tx_hash)

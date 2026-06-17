@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .mnemonic import FromMnemonicMixin
 from .transactions import ContractCallRequest, TransactionResult
 from .wallet import checksum
 
@@ -46,7 +47,7 @@ BRIDGE_V2_ABI = [
 
 
 @dataclass(frozen=True)
-class BridgeTransferNativeRequest:
+class BridgeTransferNativeRequest(FromMnemonicMixin):
     contract: str
     to: str
     amount_wei: int
@@ -57,7 +58,7 @@ class BridgeTransferNativeRequest:
 
 
 @dataclass(frozen=True)
-class BridgeTransferTokenRequest:
+class BridgeTransferTokenRequest(FromMnemonicMixin):
     contract: str
     token: str
     to: str
@@ -69,7 +70,7 @@ class BridgeTransferTokenRequest:
 
 
 @dataclass(frozen=True)
-class BridgeCompleteTransferRequest:
+class BridgeCompleteTransferRequest(FromMnemonicMixin):
     contract: str
     encoded_vm: str
     unwrap_weth: bool

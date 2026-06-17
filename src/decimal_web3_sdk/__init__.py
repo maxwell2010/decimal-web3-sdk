@@ -46,16 +46,21 @@ from .decimal import (
 )
 from .erc20 import Erc20Service, TokenBalance, TokenInfo, format_units, parse_units
 from .monitoring import DecimalMonitor
+from .mnemonic import FromMnemonicMixin
 from .nft import (
+    AddDelReserveNftRequest,
     BurnNftRequest,
     CreateNftCollectionRequest,
     DelegateNftRequest,
+    DisableMintNftRequest,
     HoldNftRequest,
     MintNftRequest,
+    NftBatchTransferRequest,
     NftApproveRequest,
     NftApprovalRequest,
     NftService,
     NftTransferRequest,
+    SetTokenUriNftRequest,
     TransferNftStakeRequest,
     WithdrawNftRequest,
 )
@@ -116,6 +121,7 @@ __all__ = [
     "AgentContext",
     "AgentOrchestrator",
     "AgentResult",
+    "AddDelReserveNftRequest",
     "BridgeCompleteTransferRequest",
     "BridgeService",
     "BridgeTransferNativeRequest",
@@ -181,6 +187,7 @@ __all__ = [
     "Erc20TransferFromRequest",
     "Erc20TransferRequest",
     "FeePreflight",
+    "FromMnemonicMixin",
     "BroadcastTransactionAgent",
     "BurnTokenRequest",
     "BuildNativeTransferAgent",
@@ -191,6 +198,7 @@ __all__ = [
     "CreateTokenRequest",
     "CreateNftCollectionRequest",
     "DelegateNftRequest",
+    "DisableMintNftRequest",
     "EstimateGasAgent",
     "format_units",
     "generate_mnemonic_account",
@@ -201,6 +209,7 @@ __all__ = [
     "MintNftRequest",
     "mnemonic_to_account",
     "mnemonic_to_private_key",
+    "NftBatchTransferRequest",
     "NftApproveRequest",
     "NftApprovalRequest",
     "NftService",
@@ -209,6 +218,7 @@ __all__ = [
     "private_key_to_address",
     "run_env_training",
     "SellTokenRequest",
+    "SetTokenUriNftRequest",
     "TokenService",
     "token_creation_commission_del",
     "token_creation_commission_wei",
