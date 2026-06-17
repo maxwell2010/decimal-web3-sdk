@@ -267,7 +267,8 @@ def test_memo_support_matrix_matches_transaction_types() -> None:
     assert memo_supported_for("native_del_transfer") is True
     assert memo_supported_for("send-del") is True
     assert memo_supported_for("multisend_del") is True
-    assert memo_supported_for("multisend_erc20") is False
+    assert memo_supported_for("multisend_erc20") is True
+    assert memo_supported_for("multisend-erc20") is True
     assert memo_supported_for("erc20_transfer") is False
     assert memo_supported_for("contract_call") is False
 

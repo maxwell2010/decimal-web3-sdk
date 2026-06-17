@@ -196,11 +196,14 @@ def test_cli_multisend_erc20_accepts_recipients() -> None:
             "0x" + "4" * 40 + ":0.1",
             "--private-key",
             "0x" + "1" * 64,
+            "--memo",
+            "daily payout",
         ]
     )
 
     assert args.command == "multisend-erc20"
     assert args.recipient == ["0x" + "4" * 40 + ":0.1"]
+    assert args.memo == "daily payout"
 
 
 def test_cli_convert_token_parses_auto_approve_flag() -> None:

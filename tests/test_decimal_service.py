@@ -28,7 +28,7 @@ from decimal_web3_sdk import (
     WithdrawHoldErc20Request,
 )
 from decimal_web3_sdk.decimal import DecimalService
-from decimal_web3_sdk.transactions import TransactionService
+from decimal_web3_sdk.transactions import TransactionResult, TransactionService
 
 
 PRIVATE_KEY = "0x" + "1" * 64
@@ -324,9 +324,16 @@ async def test_multisend_erc20_single_step_when_allowance_is_enough() -> None:
 
 
 @pytest.mark.asyncio
-async def test_multisend_erc20_rejects_memo_before_allowance_flow() -> None:
+async def test_multisend_erc20_adds_memo_as_final_aggregate_call() -> None:
     client = FakeDecimalClient(allowance_raw=10**21)
     service = DecimalService(client)
+    captured: dict[str, str] = {}
+
+    async def capture_send_contract(private_key, contract, data, value_wei, broadcast, wait_receipt):
+        captured["data"] = data
+        return TransactionResult(success=True, status="dry_run", gas=100_000, fee_wei=100_000_000_000_000)
+
+    service._send_contract = capture_send_contract
 
     result = await service.multisend_erc20(
         MultisendErc20Request(
@@ -338,10 +345,12 @@ async def test_multisend_erc20_rejects_memo_before_allowance_flow() -> None:
         )
     )
 
-    assert result.success is False
-    assert result.steps == ("memo_preflight",)
-    assert result.actual_steps == 0
-    assert result.user_message == "Memo не поддерживается для мультисенда ERC20."
+    assert result.success is True
+    assert result.steps == ("multisend_erc20",)
+    decoded = service._multicall_contract().decode_function_input(captured["data"])[1]["calls"]
+    assert decoded[-1]["target"] == "0x0000000000000000000000000000000000000000"
+    assert decoded[-1]["value"] == 0
+    assert decoded[-1]["callData"] == b"hello"
 
 
 @pytest.mark.asyncio

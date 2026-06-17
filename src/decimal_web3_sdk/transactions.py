@@ -38,10 +38,10 @@ MEMO_CAPABILITY_MATRIX: tuple[MemoCapability, ...] = (
     ),
     MemoCapability(
         transaction_type="multisend_erc20",
-        supported=False,
-        request_field=None,
+        supported=True,
+        request_field="MultisendErc20Request.memo",
         transport="Decimal multicall aggregate",
-        notes="ERC20 multisend uses transferFrom calls inside aggregate; generic memo is not supported.",
+        notes="One UTF-8 memo for the whole ERC20 batch is encoded as the final zero-value call to 0x0.",
     ),
     MemoCapability(
         transaction_type="erc20_transfer",

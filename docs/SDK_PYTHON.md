@@ -297,6 +297,7 @@ from decimal_web3_sdk import memo_supported_for
 
 print(memo_supported_for("send-del"))          # True
 print(memo_supported_for("multisend-del"))    # True
+print(memo_supported_for("multisend-erc20"))  # True
 print(memo_supported_for("erc20-transfer"))   # False
 ```
 
@@ -304,13 +305,13 @@ print(memo_supported_for("erc20-transfer"))   # False
 
 - `NativeTransferRequest.memo` при обычной отправке DEL. SDK кодирует текст как UTF-8 в `data`, считает gas уже с этим payload и подписывает транзакцию с memo.
 - `MultisendDelRequest.memo` при мультисенде DEL. SDK кодирует одно UTF-8 memo на весь batch как последний zero-value call к `0x000...000`, как это читает Decimal explorer.
+- `MultisendErc20Request.memo` при ERC20 multisend. ERC20 transfer calls сохраняют свой ABI calldata, а SDK добавляет одно общее memo финальным zero-value call в multicall aggregate.
 
 Нельзя использовать как универсальный memo:
 
 - ERC20 `transfer`, `approve`, `transferFrom`: поле `data` занято ABI-вызовом токена.
 - `ContractCallRequest`: memo возможен только если конкретный контракт сам имеет аргумент note/message.
 - Staking/token/NFT/checks/bridge workflow: текущие request-классы передают только аргументы системных контрактов.
-- ERC20 multisend через Decimal multicall: token calls используют ERC20 `transferFrom`; универсальный memo для этого пути не включен, пока не проверен на боевых транзакциях именно ERC20 multisend.
 
 ## ERC20
 

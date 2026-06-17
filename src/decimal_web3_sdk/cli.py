@@ -307,6 +307,7 @@ async def _run(args: argparse.Namespace) -> Any:
                     amount=Decimal(args.amount),
                     private_key=args.private_key,
                     decimals=args.decimals,
+                    memo=args.memo,
                     auto_approve=not args.no_auto_approve,
                 ),
                 broadcast=args.broadcast,
@@ -828,6 +829,7 @@ def _build_parser() -> argparse.ArgumentParser:
     multisend_erc20.add_argument("--recipient", action="append", required=True, help="Format: 0xaddress:amount")
     multisend_erc20.add_argument("--private-key", required=True)
     multisend_erc20.add_argument("--decimals", type=int)
+    multisend_erc20.add_argument("--memo")
     multisend_erc20.add_argument("--no-auto-approve", action="store_true")
     _broadcast_flags(multisend_erc20)
 

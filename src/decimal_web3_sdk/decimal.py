@@ -679,17 +679,6 @@ class DecimalService:
                     extra_steps_required=False,
                     error="At least one recipient is required",
                 )
-            if request.memo:
-                return DecimalWorkflowResult(
-                    success=False,
-                    name="multisend_erc20",
-                    steps=("memo_preflight",),
-                    expected_steps=1,
-                    actual_steps=0,
-                    extra_steps_required=False,
-                    error="Memo is not supported for multisend_erc20 on Decimal multicall aggregate",
-                    user_message="Memo не поддерживается для мультисенда ERC20.",
-                )
             decimals = request.decimals
             if decimals is None:
                 decimals = (await self._client.erc20.info(request.token)).decimals
@@ -771,6 +760,14 @@ class DecimalService:
                     request.token, owner, recipient.to, amount_raw
                 )
                 calls.append((checksum(request.token), 0, bytes.fromhex(data[2:])))
+            if request.memo:
+                calls.append(
+                    (
+                        "0x0000000000000000000000000000000000000000",
+                        0,
+                        request.memo.encode("utf-8"),
+                    )
+                )
 
             data = self._multicall_contract().functions.aggregate(calls)._encode_transaction_data()
             result = await self._send_contract(
