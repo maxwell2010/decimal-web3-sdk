@@ -194,7 +194,7 @@ print(result.tx_hash, result.status, result.block_number, result.gas_used, resul
 5. Для ERC20 дополнительно проверяет token balance.
 6. При нехватке возвращает `TransactionResult(success=False, error=...)` без broadcast.
 
-`FeePreflight` считается до подписи и не создает raw transaction. Его можно показать пользователю как предварительный расчет комиссии. После отправки `TransactionResult` содержит нормализованные поля `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, а также сырой `receipt` для расширенной диагностики.
+`FeePreflight` считается до подписи и не создает raw transaction. Перед расчетом SDK обновляет сетевой oracle gas price через `eth_gasPrice` и использует `max(user_gas_price, oracle_gas_price)`, поэтому `fee_wei` / `minimum_fee_wei` является минимальной комиссией, требуемой текущим oracle сети. После отправки `TransactionResult` содержит нормализованные поля `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, а также сырой `receipt` для расширенной диагностики.
 
 `TransactionResult.status` принимает практичные значения:
 
@@ -244,7 +244,7 @@ request = NativeTransferRequest.from_mnemonic(
 draft = await client.tx.build_native_transfer(request)
 quote = await client.tx.calculate_fee(draft)
 
-print(quote.ok, quote.gas, quote.gas_price_wei, quote.fee_del, quote.missing_del)
+print(quote.ok, quote.gas, quote.oracle_gas_price_wei, quote.minimum_fee_del, quote.missing_del)
 ```
 
 Пример полного preflight перед отправкой:
@@ -254,7 +254,7 @@ quote = await client.tx.estimate_fee_for_native_transfer(request)
 if not quote.ok:
     print("Need more DEL:", quote.missing_del)
 else:
-    print("Fee:", quote.fee_del, "Total:", quote.required_del)
+    print("Minimum fee:", quote.minimum_fee_del, "Total:", quote.required_del)
 
 result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
 print(result.tx_hash, result.status, result.block_number)

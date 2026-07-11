@@ -37,11 +37,13 @@ class FakeTxClient:
         token_balance_raw: int = 10**21,
         token_allowance_raw: int = 10**21,
         safety: SafetyLimits | None = None,
+        gas_price_wei: int = 1_000_000_000,
     ) -> None:
         self.config = SimpleNamespace(chain_id=75, safety=safety)
         self.tx = TransactionService(self)
         self.sent_raw: bytes | None = None
         self.balance = balance_wei
+        self.gas_price_wei = gas_price_wei
         self.estimate_calls = 0
         self.erc20 = SimpleNamespace(
             info=self._token_info,
@@ -58,7 +60,7 @@ class FakeTxClient:
         return 7
 
     async def gas_price(self) -> int:
-        return 1_000_000_000
+        return self.gas_price_wei
 
     async def balance_wei(self, address: str) -> int:
         return self.balance
@@ -361,6 +363,41 @@ async def test_calculate_fee_uses_explicit_gas_without_estimating() -> None:
     assert quote.gas == 30_000
     assert quote.fee_wei == 30_000_000_000_000
     assert client.estimate_calls == 0
+
+
+@pytest.mark.asyncio
+async def test_calculate_fee_uses_oracle_gas_price_when_request_is_lower() -> None:
+    client = FakeTxClient(gas_price_wei=2_000_000_000)
+    request = NativeTransferRequest(
+        to=TO_ADDRESS,
+        amount_del=Decimal("1"),
+        private_key=PRIVATE_KEY,
+        gas_price_wei=1,
+    )
+
+    quote = await client.tx.estimate_fee_for_native_transfer(request)
+
+    assert quote.oracle_gas_price_wei == 2_000_000_000
+    assert quote.gas_price_wei == 2_000_000_000
+    assert quote.minimum_fee_wei == 42_000_000_000_000
+    assert quote.minimum_fee_del == Decimal("0.000042")
+
+
+@pytest.mark.asyncio
+async def test_calculate_fee_keeps_user_gas_price_when_above_oracle() -> None:
+    client = FakeTxClient(gas_price_wei=2_000_000_000)
+    request = NativeTransferRequest(
+        to=TO_ADDRESS,
+        amount_del=Decimal("1"),
+        private_key=PRIVATE_KEY,
+        gas_price_wei=3_000_000_000,
+    )
+
+    quote = await client.tx.estimate_fee_for_native_transfer(request)
+
+    assert quote.oracle_gas_price_wei == 2_000_000_000
+    assert quote.gas_price_wei == 3_000_000_000
+    assert quote.minimum_fee_wei == 63_000_000_000_000
 
 
 @pytest.mark.asyncio

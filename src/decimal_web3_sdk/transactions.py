@@ -282,6 +282,7 @@ class TransactionDraft:
     value_wei: int
     gas: int | None = None
     gas_price_wei: int | None = None
+    oracle_gas_price_wei: int | None = None
     fee_wei: int | None = None
     preflight: "FeePreflight | None" = None
     raw_tx: bytes | None = None
@@ -305,6 +306,7 @@ class TransactionResult:
     transaction_index: int | None = None
     gas_used: int | None = None
     effective_gas_price_wei: int | None = None
+    oracle_gas_price_wei: int | None = None
     effective_fee_wei: int | None = None
     effective_fee_del: Decimal | None = None
     fee_wei: int | None = None
@@ -350,10 +352,19 @@ class FeePreflight:
     missing_wei: int = 0
     gas: int | None = None
     gas_price_wei: int | None = None
+    oracle_gas_price_wei: int | None = None
 
     @property
     def fee_del(self) -> Decimal:
         return Decimal(self.fee_wei) / Decimal(10**18)
+
+    @property
+    def minimum_fee_wei(self) -> int:
+        return self.fee_wei
+
+    @property
+    def minimum_fee_del(self) -> Decimal:
+        return self.fee_del
 
     @property
     def native_balance_del(self) -> Decimal:
@@ -484,6 +495,7 @@ class TransactionService:
         )
 
     async def estimate(self, draft: TransactionDraft) -> TransactionDraft:
+        await self._apply_minimum_gas_price(draft)
         estimated_gas = int(await self._client.estimate_gas(draft.tx))
         gas = _apply_gas_limit_multiplier(estimated_gas, _gas_limit_multiplier(self._client))
         draft.gas = int(gas)
@@ -509,12 +521,14 @@ class TransactionService:
             missing_wei=missing,
             gas=draft.gas,
             gas_price_wei=draft.gas_price_wei,
+            oracle_gas_price_wei=draft.oracle_gas_price_wei,
         )
         draft.preflight = preflight
         return preflight
 
     async def calculate_fee(self, draft: TransactionDraft) -> FeePreflight:
         """Estimate gas/fee and check native DEL balance without signing."""
+        await self._apply_minimum_gas_price(draft)
         if draft.gas is None and draft.tx.get("gas") is not None:
             draft.gas = int(draft.tx["gas"])
         if draft.fee_wei is None and draft.gas is None:
@@ -525,6 +539,17 @@ class TransactionService:
             draft.gas_price_wei = gas_price
             draft.fee_wei = int(draft.gas) * gas_price
         return await self.preflight_fee(draft)
+
+    async def _apply_minimum_gas_price(self, draft: TransactionDraft) -> TransactionDraft:
+        oracle_gas_price = int(await self._client.gas_price())
+        current_gas_price = int(draft.tx.get("gasPrice") or draft.gas_price_wei or 0)
+        gas_price = max(current_gas_price, oracle_gas_price)
+        draft.oracle_gas_price_wei = oracle_gas_price
+        draft.gas_price_wei = gas_price
+        draft.tx["gasPrice"] = gas_price
+        if draft.gas is not None:
+            draft.fee_wei = int(draft.gas) * gas_price
+        return draft
 
     async def estimate_fee_for_native_transfer(
         self,
@@ -837,6 +862,7 @@ def _result_from_draft(
         transaction_index=details["transaction_index"],
         gas_used=details["gas_used"],
         effective_gas_price_wei=effective_gas_price_wei,
+        oracle_gas_price_wei=draft.oracle_gas_price_wei,
         effective_fee_wei=effective_fee_wei,
         effective_fee_del=Decimal(effective_fee_wei) / Decimal(10**18) if effective_fee_wei is not None else None,
         fee_wei=draft.fee_wei,
@@ -859,6 +885,7 @@ def _preflight_failure(draft: TransactionDraft, preflight: FeePreflight) -> Tran
         fee_wei=draft.fee_wei,
         fee_del=draft.fee_del,
         gas=draft.gas,
+        oracle_gas_price_wei=draft.oracle_gas_price_wei,
         error=(
             "Insufficient DEL for transaction value and fee: "
             f"balance={preflight.native_balance_del} DEL, "

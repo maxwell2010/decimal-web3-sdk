@@ -199,10 +199,10 @@ You can calculate fee and balance requirements before signing:
 draft = await client.tx.build_native_transfer(request)
 quote = await client.tx.calculate_fee(draft)
 
-print(quote.ok, quote.gas, quote.gas_price_wei, quote.fee_del, quote.missing_del)
+print(quote.ok, quote.gas, quote.oracle_gas_price_wei, quote.minimum_fee_del, quote.missing_del)
 ```
 
-`FeePreflight` is calculated before signing. Use it to show the expected fee and missing DEL in an application UI without creating a raw signed transaction. After broadcast, `TransactionResult` exposes `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, and the raw `receipt`.
+`FeePreflight` is calculated before signing. The SDK refreshes the network gas oracle through `eth_gasPrice` and uses `max(user_gas_price, oracle_gas_price)` before signing, so `fee_wei` / `minimum_fee_wei` is the minimum fee required by the current network oracle. Use it to show the expected fee and missing DEL in an application UI without creating a raw signed transaction. After broadcast, `TransactionResult` exposes `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, and the raw `receipt`.
 
 Transaction statuses are normalized as `dry_run`, `pending`, `success`, or `failed`.
 
