@@ -21,6 +21,7 @@ from decimal_web3_sdk import (
     encode_memo_data,
     memo_supported_for,
 )
+from decimal_web3_sdk.transactions import _retry_gas_price_from_minimum_fee_error
 from decimal_web3_sdk.limits import SafetyLimits
 
 
@@ -45,6 +46,7 @@ class FakeTxClient:
         self.balance = balance_wei
         self.gas_price_wei = gas_price_wei
         self.estimate_calls = 0
+        self.sent_raws: list[bytes] = []
         self.erc20 = SimpleNamespace(
             info=self._token_info,
             balance=self._token_balance,
@@ -72,6 +74,7 @@ class FakeTxClient:
 
     async def send_raw_transaction(self, raw_tx: bytes) -> str:
         self.sent_raw = raw_tx
+        self.sent_raws.append(raw_tx)
         return "0x" + "a" * 64
 
     async def transaction_receipt(self, tx_hash: str) -> dict | None:
@@ -136,6 +139,49 @@ async def test_send_del_broadcast_result_exposes_receipt_summary() -> None:
     assert result.effective_gas_price_wei == 1_000_000_000
     assert result.effective_fee_wei == 21_000_000_000_000
     assert result.effective_fee_del == Decimal("0.000021")
+
+
+@pytest.mark.asyncio
+async def test_send_del_retries_with_minimum_global_fee_from_broadcast_error() -> None:
+    client = FakeTxClient(gas_price_wei=2_380_950_000_000)
+    attempts = 0
+
+    async def send_raw_transaction(raw_tx: bytes) -> str:
+        nonlocal attempts
+        attempts += 1
+        client.sent_raws.append(raw_tx)
+        if attempts == 1:
+            raise ValueError("provided fee 420000000000000 is less than minimum global fee 1000000000000000")
+        return "0x" + "d" * 64
+
+    client.send_raw_transaction = send_raw_transaction  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY)
+
+    result = await client.tx.send_del(request, broadcast=True, wait_receipt=False)
+
+    assert result.success is True
+    assert result.tx_hash == "0x" + "d" * 64
+    assert attempts == 2
+    assert len(client.sent_raws) == 2
+    assert result.gas == 21_000
+    assert result.fee_wei == 1_000_000_000_020_000
+    assert result.fee_del == Decimal("0.00100000000002")
+    assert result.required_wei == 1_001_000_000_000_020_000
+
+
+def test_minimum_global_fee_retry_parser() -> None:
+    assert (
+        _retry_gas_price_from_minimum_fee_error(
+            "provided fee 420000000000000 is less than minimum global fee 1000000000000000",
+            21_000,
+        )
+        == 47_619_047_620
+    )
+    assert (
+        _retry_gas_price_from_minimum_fee_error("minimum global fee: 0.002 DEL", 100_000)
+        == 20_000_000_000
+    )
+    assert _retry_gas_price_from_minimum_fee_error("insufficient funds", 21_000) is None
 
 
 @pytest.mark.asyncio

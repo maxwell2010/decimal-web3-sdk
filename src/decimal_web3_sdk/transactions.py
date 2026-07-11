@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from dataclasses import dataclass, field
 from decimal import Decimal, ROUND_CEILING
 from typing import Any
@@ -603,6 +604,24 @@ class TransactionService:
         draft.tx_hash = _hex(tx_hash)
         return draft
 
+    async def broadcast_with_fee_retry(self, draft: TransactionDraft, private_key: str) -> TransactionDraft:
+        try:
+            return await self.broadcast(draft)
+        except Exception as exc:
+            retry_gas_price = _retry_gas_price_from_minimum_fee_error(str(exc), draft.gas)
+            if retry_gas_price is None:
+                raise
+            if draft.gas_price_wei is not None and retry_gas_price <= int(draft.gas_price_wei):
+                raise
+            draft.tx["gasPrice"] = retry_gas_price
+            draft.gas_price_wei = retry_gas_price
+            if draft.gas is not None:
+                draft.fee_wei = int(draft.gas) * retry_gas_price
+            draft.raw_tx = None
+            draft.tx_hash = None
+            draft = await self.sign(draft, private_key)
+            return await self.broadcast(draft)
+
     async def wait_receipt(
         self,
         draft: TransactionDraft,
@@ -636,7 +655,8 @@ class TransactionService:
                 return _preflight_failure(draft, preflight)
             draft = await self.sign(draft, request.private_key)
             if broadcast:
-                draft = await self.broadcast(draft)
+                draft = await self.broadcast_with_fee_retry(draft, request.private_key)
+                preflight = _preflight_with_fee(preflight, draft)
                 if wait_receipt:
                     timeout_seconds, poll_seconds = _receipt_wait_settings(self._client)
                     draft = await self.wait_receipt(
@@ -744,7 +764,8 @@ class TransactionService:
                 return _preflight_failure(draft, preflight)
             draft = await self.sign(draft, private_key)
             if broadcast:
-                draft = await self.broadcast(draft)
+                draft = await self.broadcast_with_fee_retry(draft, private_key)
+                preflight = _preflight_with_fee(preflight, draft)
                 if wait_receipt:
                     timeout_seconds, poll_seconds = _receipt_wait_settings(self._client)
                     draft = await self.wait_receipt(
@@ -902,6 +923,27 @@ def _preflight_failure(draft: TransactionDraft, preflight: FeePreflight) -> Tran
     )
 
 
+def _preflight_with_fee(preflight: FeePreflight, draft: TransactionDraft) -> FeePreflight:
+    if draft.fee_wei is None or draft.fee_wei == preflight.fee_wei:
+        return preflight
+    required = int(draft.value_wei) + int(draft.fee_wei)
+    missing = max(0, required - int(preflight.native_balance_wei))
+    updated = FeePreflight(
+        ok=missing == 0,
+        from_address=preflight.from_address,
+        native_balance_wei=preflight.native_balance_wei,
+        value_wei=preflight.value_wei,
+        fee_wei=int(draft.fee_wei),
+        required_wei=required,
+        missing_wei=missing,
+        gas=draft.gas,
+        gas_price_wei=draft.gas_price_wei,
+        oracle_gas_price_wei=draft.oracle_gas_price_wei,
+    )
+    draft.preflight = updated
+    return updated
+
+
 def _native_value_preflight_failure(draft: TransactionDraft, native_balance_wei: int) -> TransactionResult:
     missing = max(0, int(draft.value_wei) - int(native_balance_wei))
     return TransactionResult(
@@ -1017,3 +1059,38 @@ def _max_gas_price_wei(client) -> int | None:
 def _apply_gas_limit_multiplier(estimated_gas: int, multiplier: float) -> int:
     value = Decimal(int(estimated_gas)) * Decimal(str(multiplier))
     return int(value.to_integral_value(rounding=ROUND_CEILING))
+
+
+def _retry_gas_price_from_minimum_fee_error(error: str, gas: int | None) -> int | None:
+    if not gas or int(gas) <= 0:
+        return None
+    lowered = error.lower()
+    if not (
+        "minimum global fee" in lowered
+        or "min global fee" in lowered
+        or ("provided fee" in lowered and "minimum" in lowered)
+    ):
+        return None
+    required_fee_wei = _minimum_fee_wei_from_error(error)
+    if required_fee_wei is None or required_fee_wei <= 0:
+        return None
+    return int((Decimal(required_fee_wei) / Decimal(int(gas))).to_integral_value(rounding=ROUND_CEILING))
+
+
+def _minimum_fee_wei_from_error(error: str) -> int | None:
+    patterns = (
+        r"(?:minimum global fee|min(?:imum)? fee|required fee|required|min(?:imum)?)[^0-9]{0,40}([0-9]+(?:\.[0-9]+)?)\s*(wei|gwei|del)?",
+        r"([0-9]+(?:\.[0-9]+)?)\s*(wei|gwei|del)\s*(?:minimum global fee|min(?:imum)? fee|required fee|required|min(?:imum)?)",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, error, re.IGNORECASE)
+        if not match:
+            continue
+        amount = Decimal(match.group(1))
+        unit = (match.group(2) or "wei").lower()
+        if unit == "del":
+            return int(amount * Decimal(10**18))
+        if unit == "gwei":
+            return int(amount * Decimal(10**9))
+        return int(amount)
+    return None
