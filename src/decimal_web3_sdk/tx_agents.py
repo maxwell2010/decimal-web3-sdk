@@ -52,7 +52,12 @@ class BroadcastTransactionAgent:
         draft = context.data.get("draft")
         if client is None or draft is None:
             return AgentResult(self.name, False, error="Client and draft are required")
-        draft = await client.tx.broadcast(draft)
+        request = context.data.get("request")
+        private_key = getattr(request, "private_key", None)
+        if private_key:
+            draft = await client.tx.broadcast_with_fee_retry(draft, private_key)
+        else:
+            draft = await client.tx.broadcast(draft)
         context.data["draft"] = draft
         return AgentResult(self.name, True, {"tx_hash": draft.tx_hash})
 
@@ -75,4 +80,3 @@ class ReceiptPollAgent:
             True,
             {"confirmed": draft.receipt is not None, "tx_hash": draft.tx_hash},
         )
-

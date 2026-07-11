@@ -485,6 +485,42 @@ async def test_transaction_agent_pipeline_broadcasts_and_polls_receipt() -> None
 
 
 @pytest.mark.asyncio
+async def test_transaction_agent_pipeline_retries_minimum_global_fee() -> None:
+    client = FakeTxClient(gas_price_wei=2_380_950_000_000)
+    attempts = 0
+
+    async def send_raw_transaction(raw_tx: bytes) -> str:
+        nonlocal attempts
+        attempts += 1
+        client.sent_raws.append(raw_tx)
+        if attempts == 1:
+            raise ValueError("provided fee 420000000000000 is less than minimum global fee 1000000000000000")
+        return "0x" + "e" * 64
+
+    client.send_raw_transaction = send_raw_transaction  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del="1", private_key=PRIVATE_KEY)
+    context = AgentContext(client=client, data={"request": request})
+    orchestrator = AgentOrchestrator(
+        [
+            BuildNativeTransferAgent(),
+            EstimateGasAgent(),
+            SignTransactionAgent(),
+            BroadcastTransactionAgent(),
+        ],
+        default_timeout_seconds=1,
+    )
+
+    result = await orchestrator.run_sequential(context)
+    draft = context.data["draft"]
+
+    assert result.success is True
+    assert attempts == 2
+    assert draft.tx_hash == "0x" + "e" * 64
+    assert draft.gas_price_wei == 47_619_047_620
+    assert draft.fee_wei == 1_000_000_000_020_000
+
+
+@pytest.mark.asyncio
 async def test_contract_call_dry_run_uses_explicit_calldata() -> None:
     client = FakeTxClient()
     request = ContractCallRequest(
