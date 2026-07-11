@@ -543,7 +543,10 @@ class TransactionService:
     async def _apply_minimum_gas_price(self, draft: TransactionDraft) -> TransactionDraft:
         oracle_gas_price = int(await self._client.gas_price())
         current_gas_price = int(draft.tx.get("gasPrice") or draft.gas_price_wei or 0)
-        gas_price = max(current_gas_price, oracle_gas_price)
+        gas_price = max(current_gas_price or oracle_gas_price, 1)
+        max_gas_price = _max_gas_price_wei(self._client)
+        if max_gas_price is not None:
+            gas_price = min(gas_price, max_gas_price)
         draft.oracle_gas_price_wei = oracle_gas_price
         draft.gas_price_wei = gas_price
         draft.tx["gasPrice"] = gas_price
@@ -995,6 +998,20 @@ def _gas_limit_multiplier(client) -> float:
     if multiplier < 1.0:
         return 1.0
     return multiplier
+
+
+def _max_gas_price_wei(client) -> int | None:
+    safety = getattr(getattr(client, "config", None), "safety", None)
+    if safety is None:
+        return 20_000_000_000
+    value = getattr(safety, "max_gas_price_wei", 20_000_000_000)
+    if value is None:
+        return None
+    try:
+        gas_price = int(value)
+    except (TypeError, ValueError):
+        return None
+    return gas_price if gas_price > 0 else None
 
 
 def _apply_gas_limit_multiplier(estimated_gas: int, multiplier: float) -> int:

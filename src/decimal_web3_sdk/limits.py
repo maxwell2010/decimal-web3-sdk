@@ -11,6 +11,7 @@ class SafetyLimits:
     rest_min_interval_seconds: float = 0.15
     rpc_min_interval_seconds: float = 0.05
     gas_limit_multiplier: float = 1.10
+    max_gas_price_wei: int | None = 20_000_000_000
     receipt_wait_timeout_seconds: float = 7.0
     receipt_poll_seconds: float = 3.0
     ws_max_subscriptions: int = 16

@@ -17,6 +17,52 @@ def _env(name: str, fallback: str = "") -> str:
     return os.getenv(name, fallback).strip()
 
 
+def _env_float(name: str, fallback: float) -> float:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return fallback
+    return float(raw)
+
+
+def _env_int(name: str, fallback: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return fallback
+    return int(raw)
+
+
+def _env_optional_gas_price_wei(prefix: str = "DECIMAL") -> int | None:
+    raw_wei = os.getenv(f"{prefix}_MAX_GAS_PRICE_WEI")
+    if raw_wei is not None and raw_wei.strip() != "":
+        value = raw_wei.strip().lower()
+        if value in {"none", "off", "disabled", "0"}:
+            return None
+        return int(value)
+    raw_gwei = os.getenv(f"{prefix}_MAX_GAS_PRICE_GWEI") or os.getenv(f"{prefix}_GAS_PRICE_GWEI")
+    if raw_gwei is not None and raw_gwei.strip() != "":
+        value = raw_gwei.strip().lower()
+        if value in {"none", "off", "disabled", "0"}:
+            return None
+        return int(float(value) * 10**9)
+    return 20_000_000_000
+
+
+def _safety_from_env(prefix: str = "DECIMAL") -> SafetyLimits:
+    return SafetyLimits(
+        rest_max_limit=_env_int(f"{prefix}_REST_MAX_LIMIT", 100),
+        rest_min_interval_seconds=_env_float(f"{prefix}_REST_MIN_INTERVAL_SECONDS", 0.15),
+        rpc_min_interval_seconds=_env_float(f"{prefix}_RPC_MIN_INTERVAL_SECONDS", 0.05),
+        gas_limit_multiplier=_env_float(f"{prefix}_GAS_LIMIT_MULTIPLIER", 1.10),
+        max_gas_price_wei=_env_optional_gas_price_wei(prefix),
+        receipt_wait_timeout_seconds=_env_float(f"{prefix}_RECEIPT_WAIT_TIMEOUT_SECONDS", 7.0),
+        receipt_poll_seconds=_env_float(f"{prefix}_RECEIPT_POLL_SECONDS", 3.0),
+        ws_max_subscriptions=_env_int(f"{prefix}_WS_MAX_SUBSCRIPTIONS", 16),
+        ws_ping_interval_seconds=_env_float(f"{prefix}_WS_PING_INTERVAL_SECONDS", 30.0),
+        ws_reconnect_min_delay_seconds=_env_float(f"{prefix}_WS_RECONNECT_MIN_DELAY_SECONDS", 2.0),
+        integration_tests_enabled=bool(_env_int(f"{prefix}_INTEGRATION_TESTS_ENABLED", 0)),
+    )
+
+
 @dataclass(frozen=True)
 class SystemContracts:
     contract_center: str = "0xc108715a06f76caa96fa2c943ebf05159c29a87d"
@@ -104,6 +150,7 @@ class NetworkConfig:
             api_fallback_base_urls=_csv_env("DECIMAL_API_FALLBACK_BASES", []),
             api_key=os.getenv("DECIMAL_API_KEY"),
             name=_env("DECIMAL_NETWORK_NAME", "decimal-mainnet"),
+            safety=_safety_from_env("DECIMAL"),
         )
 
     @classmethod
@@ -122,6 +169,7 @@ class NetworkConfig:
             api_key=os.getenv("DECIMAL_TESTNET_API_KEY"),
             name=_env("DECIMAL_TESTNET_NETWORK_NAME", "decimal-testnet"),
             contracts=TESTNET_SYSTEM_CONTRACTS,
+            safety=_safety_from_env("DECIMAL_TESTNET"),
         )
 
     @classmethod
@@ -140,6 +188,7 @@ class NetworkConfig:
             api_key=os.getenv("DECIMAL_DEVNET_API_KEY"),
             name=_env("DECIMAL_DEVNET_NETWORK_NAME", "decimal-devnet"),
             contracts=DEVNET_SYSTEM_CONTRACTS,
+            safety=_safety_from_env("DECIMAL_DEVNET"),
         )
 
     @classmethod

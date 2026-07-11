@@ -202,7 +202,7 @@ quote = await client.tx.calculate_fee(draft)
 print(quote.ok, quote.gas, quote.oracle_gas_price_wei, quote.minimum_fee_del, quote.missing_del)
 ```
 
-`FeePreflight` is calculated before signing. The SDK refreshes the network gas oracle through `eth_gasPrice` and uses `max(user_gas_price, oracle_gas_price)` before signing, so `fee_wei` / `minimum_fee_wei` is the minimum fee required by the current network oracle. Use it to show the expected fee and missing DEL in an application UI without creating a raw signed transaction. After broadcast, `TransactionResult` exposes `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, and the raw `receipt`.
+`FeePreflight` is calculated before signing. The SDK reads network `eth_gasPrice` for diagnostics, but caps the effective gas price at `20 gwei` by default because Decimal RPC can return an inflated oracle value after rebase. Override it with `DECIMAL_GAS_PRICE_GWEI`, `DECIMAL_MAX_GAS_PRICE_GWEI`, or `SafetyLimits(max_gas_price_wei=...)`; set the cap to `none`/`0` only if you intentionally want raw network gas price. `minimum_fee_wei` is calculated from the effective capped gas price. After broadcast, `TransactionResult` exposes `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, and the raw `receipt`.
 
 Transaction statuses are normalized as `dry_run`, `pending`, `success`, or `failed`.
 
@@ -225,14 +225,17 @@ ERC20 workflows check token balance and allowance before signing. If allowance i
 
 `DecimalWorkflowResult` exposes `steps`, `one_transaction`, `requires_secondary_transaction`, `transaction_count`, and `total_fee_del` so apps can show the user whether the workflow is one transaction or approve + action.
 
-By default `NetworkConfig` applies a `1.10` gas limit multiplier after RPC `estimateGas`, matching the safety buffer used in the Decimal Go SDK. Override it when exact raw estimates are required:
+By default `NetworkConfig` applies a `1.10` gas limit multiplier after RPC `estimateGas`, matching the safety buffer used in the Decimal Go SDK, and caps gas price at `20 gwei`. Override these when exact raw estimates or a different cap are required:
 
 ```python
 from decimal_web3_sdk import NetworkConfig
 from decimal_web3_sdk.limits import SafetyLimits
 
-config = NetworkConfig.mainnet()
-config.safety = SafetyLimits(gas_limit_multiplier=1.0)
+config = NetworkConfig.custom(
+    chain_id=75,
+    web3_urls=["https://node.decimalchain.com/web3/"],
+    safety=SafetyLimits(gas_limit_multiplier=1.0, max_gas_price_wei=20_000_000_000),
+)
 ```
 
 Transaction failures include `result.user_message` for UI/CLI use, for example `Недостаточно DEL для комиссии.` or `Недостаточно токенов на балансе.`.

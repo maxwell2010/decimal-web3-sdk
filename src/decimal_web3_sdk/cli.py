@@ -1094,6 +1094,7 @@ def _fee_quote(quote: FeePreflight) -> dict[str, Any]:
         "value_del": str(quote.value_del),
         "gas": quote.gas,
         "gas_price_wei": quote.gas_price_wei,
+        "effective_gas_price_wei": quote.gas_price_wei,
         "oracle_gas_price_wei": quote.oracle_gas_price_wei,
         "fee_wei": quote.fee_wei,
         "fee_del": str(quote.fee_del),

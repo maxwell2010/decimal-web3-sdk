@@ -194,7 +194,7 @@ print(result.tx_hash, result.status, result.block_number, result.gas_used, resul
 5. Для ERC20 дополнительно проверяет token balance.
 6. При нехватке возвращает `TransactionResult(success=False, error=...)` без broadcast.
 
-`FeePreflight` считается до подписи и не создает raw transaction. Перед расчетом SDK обновляет сетевой oracle gas price через `eth_gasPrice` и использует `max(user_gas_price, oracle_gas_price)`, поэтому `fee_wei` / `minimum_fee_wei` является минимальной комиссией, требуемой текущим oracle сети. После отправки `TransactionResult` содержит нормализованные поля `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, а также сырой `receipt` для расширенной диагностики.
+`FeePreflight` считается до подписи и не создает raw transaction. SDK читает сетевой `eth_gasPrice` для диагностики, но по умолчанию ограничивает effective gas price до `20 gwei`, потому что после rebase Decimal RPC может возвращать завышенный oracle gas price. Переопределить лимит можно через `DECIMAL_GAS_PRICE_GWEI`, `DECIMAL_MAX_GAS_PRICE_GWEI` или `SafetyLimits(max_gas_price_wei=...)`; отключайте cap через `none`/`0` только если намеренно хотите сырой network gas price. `minimum_fee_wei` считается уже по effective capped gas price. После отправки `TransactionResult` содержит нормализованные поля `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, а также сырой `receipt` для расширенной диагностики.
 
 `TransactionResult.status` принимает практичные значения:
 
@@ -220,7 +220,7 @@ if not exists:
 - `Недостаточно токенов на балансе.`
 - `Нужно разрешение на списание токена.`
 
-По умолчанию после RPC `estimateGas` применяется запас `gas_limit_multiplier=1.10`, как в Decimal Go SDK. Если нужен строго сырой estimate:
+По умолчанию после RPC `estimateGas` применяется запас `gas_limit_multiplier=1.10`, как в Decimal Go SDK, а gas price ограничивается `20 gwei`. Если нужен строго сырой estimate или другой cap:
 
 ```python
 from decimal_web3_sdk import NetworkConfig
@@ -229,7 +229,7 @@ from decimal_web3_sdk.limits import SafetyLimits
 config = NetworkConfig.custom(
     chain_id=75,
     web3_urls=["https://node.decimalchain.com/web3/"],
-    safety=SafetyLimits(gas_limit_multiplier=1.0),
+    safety=SafetyLimits(gas_limit_multiplier=1.0, max_gas_price_wei=20_000_000_000),
 )
 ```
 

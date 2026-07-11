@@ -366,38 +366,51 @@ async def test_calculate_fee_uses_explicit_gas_without_estimating() -> None:
 
 
 @pytest.mark.asyncio
-async def test_calculate_fee_uses_oracle_gas_price_when_request_is_lower() -> None:
-    client = FakeTxClient(gas_price_wei=2_000_000_000)
+async def test_calculate_fee_caps_network_gas_price_by_default() -> None:
+    client = FakeTxClient(gas_price_wei=2_380_950_000_000)
     request = NativeTransferRequest(
         to=TO_ADDRESS,
         amount_del=Decimal("1"),
         private_key=PRIVATE_KEY,
-        gas_price_wei=1,
     )
 
     quote = await client.tx.estimate_fee_for_native_transfer(request)
 
-    assert quote.oracle_gas_price_wei == 2_000_000_000
-    assert quote.gas_price_wei == 2_000_000_000
-    assert quote.minimum_fee_wei == 42_000_000_000_000
-    assert quote.minimum_fee_del == Decimal("0.000042")
+    assert quote.oracle_gas_price_wei == 2_380_950_000_000
+    assert quote.gas_price_wei == 20_000_000_000
+    assert quote.minimum_fee_wei == 420_000_000_000_000
+    assert quote.minimum_fee_del == Decimal("0.00042")
 
 
 @pytest.mark.asyncio
-async def test_calculate_fee_keeps_user_gas_price_when_above_oracle() -> None:
+async def test_calculate_fee_caps_user_gas_price_when_above_limit() -> None:
     client = FakeTxClient(gas_price_wei=2_000_000_000)
     request = NativeTransferRequest(
         to=TO_ADDRESS,
         amount_del=Decimal("1"),
         private_key=PRIVATE_KEY,
-        gas_price_wei=3_000_000_000,
+        gas_price_wei=50_000_000_000,
     )
 
     quote = await client.tx.estimate_fee_for_native_transfer(request)
 
     assert quote.oracle_gas_price_wei == 2_000_000_000
-    assert quote.gas_price_wei == 3_000_000_000
-    assert quote.minimum_fee_wei == 63_000_000_000_000
+    assert quote.gas_price_wei == 20_000_000_000
+    assert quote.minimum_fee_wei == 420_000_000_000_000
+
+
+@pytest.mark.asyncio
+async def test_calculate_fee_can_disable_gas_price_cap() -> None:
+    client = FakeTxClient(
+        gas_price_wei=2_380_950_000_000,
+        safety=SafetyLimits(max_gas_price_wei=None),
+    )
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY)
+
+    quote = await client.tx.estimate_fee_for_native_transfer(request)
+
+    assert quote.oracle_gas_price_wei == 2_380_950_000_000
+    assert quote.gas_price_wei == 2_380_950_000_000
 
 
 @pytest.mark.asyncio
