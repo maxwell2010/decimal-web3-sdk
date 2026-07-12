@@ -169,6 +169,33 @@ async def test_send_del_retries_with_minimum_global_fee_from_broadcast_error() -
     assert result.required_wei == 1_001_000_000_000_020_000
 
 
+@pytest.mark.asyncio
+async def test_send_del_does_not_block_minimum_global_fee_above_local_cap() -> None:
+    client = FakeTxClient(gas_price_wei=2_380_950_000_000)
+    attempts = 0
+
+    async def send_raw_transaction(raw_tx: bytes) -> str:
+        nonlocal attempts
+        attempts += 1
+        client.sent_raws.append(raw_tx)
+        if attempts == 1:
+            raise ValueError("minimum global fee too high: 0.180144 DEL > limit 0.020000 DEL")
+        return "0x" + "f" * 64
+
+    client.send_raw_transaction = send_raw_transaction  # type: ignore[method-assign]
+    request = NativeTransferRequest(to=TO_ADDRESS, amount_del=Decimal("1"), private_key=PRIVATE_KEY, gas=100_000)
+
+    result = await client.tx.send_del(request, broadcast=True, wait_receipt=False)
+
+    assert result.success is True
+    assert result.tx_hash == "0x" + "f" * 64
+    assert attempts == 2
+    assert result.gas == 100_000
+    assert result.fee_wei == 180_144_000_000_000_000
+    assert result.fee_del == Decimal("0.180144")
+    assert result.required_wei == 1_180_144_000_000_000_000
+
+
 def test_minimum_global_fee_retry_parser() -> None:
     assert (
         _retry_gas_price_from_minimum_fee_error(
@@ -180,6 +207,13 @@ def test_minimum_global_fee_retry_parser() -> None:
     assert (
         _retry_gas_price_from_minimum_fee_error("minimum global fee: 0.002 DEL", 100_000)
         == 20_000_000_000
+    )
+    assert (
+        _retry_gas_price_from_minimum_fee_error(
+            "minimum global fee too high: 0.180144 DEL > limit 0.020000 DEL",
+            100_000,
+        )
+        == 1_801_440_000_000
     )
     assert _retry_gas_price_from_minimum_fee_error("insufficient funds", 21_000) is None
 
