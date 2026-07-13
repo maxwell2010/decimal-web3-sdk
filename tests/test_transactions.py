@@ -23,12 +23,14 @@ from decimal_web3_sdk import (
 )
 from decimal_web3_sdk.transactions import _retry_gas_price_from_minimum_fee_error
 from decimal_web3_sdk.limits import SafetyLimits
+from decimal_web3_sdk.wallet import generate_mnemonic_account
 
 
 PRIVATE_KEY = "0x" + "1" * 64
 TO_ADDRESS = "0x" + "2" * 40
-TEST_MNEMONIC = "test test test test test test test test test test test junk"
-TEST_MNEMONIC_PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+TEST_ACCOUNT = generate_mnemonic_account()
+TEST_MNEMONIC = TEST_ACCOUNT.mnemonic or ""
+TEST_MNEMONIC_PRIVATE_KEY = TEST_ACCOUNT.private_key
 
 
 class FakeTxClient:

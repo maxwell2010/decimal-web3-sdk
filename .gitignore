@@ -21,6 +21,7 @@ android/app/.cxx/
 android/app/build/
 android/build/
 dw/node_modules/
+dw/
 dw/.jdk17/
 dw/android/.gradle/
 dw/android/.idea/
@@ -29,6 +30,7 @@ dw/android/app/build/
 dw/android/build/
 ios/Pods/
 dw/ios/Pods/
+packages/
 *.apk
 *.aab
 *.ipa

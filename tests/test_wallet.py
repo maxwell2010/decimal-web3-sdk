@@ -10,9 +10,10 @@ from decimal_web3_sdk.wallet import (
 )
 
 
-MNEMONIC = "test test test test test test test test test test test junk"
-PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+TEST_ACCOUNT = generate_mnemonic_account()
+MNEMONIC = TEST_ACCOUNT.mnemonic or ""
+PRIVATE_KEY = TEST_ACCOUNT.private_key
+ADDRESS = TEST_ACCOUNT.address
 
 
 def test_mnemonic_to_private_key_uses_evm_default_path() -> None:

@@ -8,18 +8,17 @@ Checked from the current workstation:
 
 - `https://node.decimalchain.com/web3/` responds with `eth_chainId = 0x4b` for mainnet.
 - `https://testnet-val.decimalchain.com/web3/` is the official `dsc-js-sdk` testnet Web3 URL, but returned `403` from this environment.
-- `https://202020.rpc.thirdweb.com` is not part of the official `dsc-js-sdk` endpoint list; it is a public third-party RPC fallback for Decimal testnet chain id `202020`. It responds with `eth_chainId = 0x31524` and returned block `20734833`.
 - `https://devnet-val.decimalchain.com/web3/` is the official `dsc-js-sdk` devnet Web3 URL, but the TLS handshake failed from this environment.
 - `https://testnet-api.decimalchain.com/api/` and `https://testnet-gate.decimalchain.com/api/` returned `403` from this environment.
 - Decimal API Swagger testnet paths follow the production service paths with the `testnet-` prefix, for example `https://testnet-api.decimalchain.com/api/v1/blocks/docs/index.html`. From this environment those docs endpoints also returned `403`, so they are recorded as official references but not relied on for automated live tests yet.
 
 ## SDK Policy
 
-The SDK defaults use the official `dsc-js-sdk` Decimal endpoints first and can be overridden. The thirdweb URL is a non-official fallback only:
+The SDK defaults use official Decimal endpoints and can be overridden:
 
 ```powershell
 $env:DECIMAL_TESTNET_CHAIN_ID="202020"
-$env:DECIMAL_TESTNET_WEB3_URLS="https://testnet-val.decimalchain.com/web3/,https://202020.rpc.thirdweb.com"
+$env:DECIMAL_TESTNET_WEB3_URLS="https://testnet-val.decimalchain.com/web3/"
 $env:DECIMAL_TESTNET_API_ROOT="https://testnet-gate.decimalchain.com/api/"
 $env:DECIMAL_TESTNET_API_BASE="https://testnet-api.decimalchain.com/api/"
 ```
@@ -46,8 +45,6 @@ Private key was generated for this test session only and must not be committed t
 ## Faucet Status
 
 - The official `dsc-js-sdk` repository does not expose a faucet helper or faucet API.
-- The thirdweb faucet flow is web-wallet based: connect wallet, request testnet funds, then wait for processing.
-- The thirdweb Decimal testnet page has a web faucet section, but no simple unauthenticated script endpoint was found during this check.
 - Broadcast tests remain blocked until the generated address is funded manually through a web faucet or by a known funded testnet account.
 
 ## Broadcast Matrix To Complete

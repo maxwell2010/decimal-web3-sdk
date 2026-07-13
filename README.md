@@ -17,7 +17,13 @@ From PyPI after release:
 pip install decimal-web3-sdk
 ```
 
-From this repository:
+From GitHub release branch:
+
+```bash
+pip install "decimal-web3-sdk @ git+https://github.com/maxwell2010/mintcandy-python-sdk.git@release/v0.1"
+```
+
+From a local checkout:
 
 ```bash
 python -m venv .venv
@@ -83,7 +89,7 @@ Testnet/devnet defaults follow the official Decimal `dsc-js-sdk` network map. Yo
 
 ```bash
 DECIMAL_TESTNET_CHAIN_ID=202020
-DECIMAL_TESTNET_WEB3_URLS=https://testnet-val.decimalchain.com/web3/,https://202020.rpc.thirdweb.com
+DECIMAL_TESTNET_WEB3_URLS=https://testnet-val.decimalchain.com/web3/
 DECIMAL_TESTNET_API_ROOT=https://testnet-gate.decimalchain.com/api/
 DECIMAL_TESTNET_API_BASE=https://testnet-api.decimalchain.com/api/
 ```
@@ -100,7 +106,6 @@ mainnet api:  https://mainnet-api.decimalchain.com/api/
 mainnet gate: https://mainnet-gate.decimalchain.com/api/
 
 testnet web3: https://testnet-val.decimalchain.com/web3/
-testnet public third-party web3 fallback: https://202020.rpc.thirdweb.com
 testnet api:  https://testnet-api.decimalchain.com/api/
 testnet gate: https://testnet-gate.decimalchain.com/api/
 
@@ -109,7 +114,7 @@ devnet api:  https://devnet-api.decimalchain.com/api/
 devnet gate: https://devnet-gate.decimalchain.com/api/
 ```
 
-`https://202020.rpc.thirdweb.com` is not an official Decimal endpoint. It is kept only as a public fallback for Decimal testnet chain id `202020` when the official testnet Web3 endpoint is not reachable from the current environment.
+If the public testnet endpoint is not reachable from your environment, provide your own Decimal-compatible RPC through `DECIMAL_TESTNET_WEB3_URLS` or `NetworkConfig.custom(...)`.
 
 ## Quick Start
 
@@ -129,7 +134,8 @@ asyncio.run(main())
 ```python
 from decimal_web3_sdk.wallet import mnemonic_to_account, private_key_to_address
 
-wallet = mnemonic_to_account("test test test test test test test test test test test junk")
+seed_phrase = load_seed_phrase_from_secure_storage()
+wallet = mnemonic_to_account(seed_phrase)
 address = wallet.address
 
 # Low-level signer output, when a backend service needs it explicitly:
@@ -145,7 +151,7 @@ CLI helpers:
 
 ```bash
 python -m decimal_web3_sdk.cli wallet-generate
-python -m decimal_web3_sdk.cli wallet-from-mnemonic "seed words ..."
+python -m decimal_web3_sdk.cli wallet-from-mnemonic "<your seed phrase>"
 ```
 
 ## Read-only API
@@ -167,7 +173,7 @@ Transactions are dry-run by default in examples: SDK builds, estimates gas, chec
 ```python
 from decimal_web3_sdk import NativeTransferRequest
 
-seed_phrase = "seed words from secure app storage"
+seed_phrase = load_seed_phrase_from_secure_storage()
 
 request = NativeTransferRequest.from_mnemonic(
     to="0xRecipient",
@@ -386,7 +392,7 @@ Implemented high-level modules:
 decimal-sdk block-number
 decimal-sdk balance 0x...
 decimal-sdk erc20-info 0xToken
-python -m decimal_web3_sdk.cli wallet-from-mnemonic "seed words ..."
+python -m decimal_web3_sdk.cli wallet-from-mnemonic "<your seed phrase>"
 ```
 
 For signed transactions in apps, prefer the Python `*.from_mnemonic(...)` request constructors shown above. CLI signing commands are a low-level interface for external signer/secret-manager flows and are not the normal user-facing path.
@@ -409,7 +415,7 @@ Broadcast training is opt-in and requires a funded test wallet:
 
 ```bash
 DECIMAL_TEST_NETWORK=testnet
-DECIMAL_TEST_MNEMONIC="seed words ..."
+DECIMAL_TEST_MNEMONIC="<testnet seed phrase from secure storage>"
 DECIMAL_TEST_TO=0x...
 DECIMAL_TEST_DEL_AMOUNT=0.001
 DECIMAL_TEST_BROADCAST=0

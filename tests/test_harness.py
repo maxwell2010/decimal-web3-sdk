@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from decimal_web3_sdk.test_harness import TxTrainingJournal, _record, _test_private_key_from_env, _training_config
 from decimal_web3_sdk.transactions import TransactionResult
+from decimal_web3_sdk.wallet import generate_mnemonic_account
 
 
 def test_training_journal_writes_csv(tmp_path) -> None:
@@ -26,18 +27,17 @@ def test_training_journal_writes_csv(tmp_path) -> None:
 
 
 def test_training_private_key_can_come_from_mnemonic(monkeypatch) -> None:
+    account = generate_mnemonic_account()
     monkeypatch.delenv("DECIMAL_TEST_PRIVATE_KEY", raising=False)
-    monkeypatch.setenv("DECIMAL_TEST_MNEMONIC", "test test test test test test test test test test test junk")
+    monkeypatch.setenv("DECIMAL_TEST_MNEMONIC", account.mnemonic or "")
 
-    assert (
-        _test_private_key_from_env()
-        == "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-    )
+    assert _test_private_key_from_env() == account.private_key
 
 
 def test_training_private_key_takes_precedence_over_mnemonic(monkeypatch) -> None:
+    account = generate_mnemonic_account()
     monkeypatch.setenv("DECIMAL_TEST_PRIVATE_KEY", "0x" + "1" * 64)
-    monkeypatch.setenv("DECIMAL_TEST_MNEMONIC", "test test test test test test test test test test test junk")
+    monkeypatch.setenv("DECIMAL_TEST_MNEMONIC", account.mnemonic or "")
 
     assert _test_private_key_from_env() == "0x" + "1" * 64
 

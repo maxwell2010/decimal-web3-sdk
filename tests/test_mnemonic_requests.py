@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from decimal_web3_sdk.wallet import generate_mnemonic_account
+
 from decimal_web3_sdk import (
     AddDelReserveNftRequest,
     BridgeCompleteTransferRequest,
@@ -53,8 +55,9 @@ from decimal_web3_sdk import (
 )
 
 
-MNEMONIC = "test test test test test test test test test test test junk"
-PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
+TEST_ACCOUNT = generate_mnemonic_account()
+MNEMONIC = TEST_ACCOUNT.mnemonic or ""
+PRIVATE_KEY = TEST_ACCOUNT.private_key
 ADDRESS = "0x" + "1" * 40
 TOKEN = "0x" + "2" * 40
 VALIDATOR = "0x" + "3" * 40

@@ -87,6 +87,5 @@ tx-reader corpus:
 ## Endpoint notes
 
 - `https://testnet-val.decimalchain.com/web3/` returned `403` from this environment.
-- `https://202020.rpc.thirdweb.com` works for JSON-RPC as a public third-party fallback for chain id `202020`; it is not an official Decimal endpoint.
 - `https://testnet-api.decimalchain.com/api/` returned `403`, so validator/token discovery via public API is currently unavailable here.
 - `https://testnet-thegraph.decimalchain.com/subgraphs/name/contract-center` returned `403`, so official JS-style contract discovery is unavailable from this environment.

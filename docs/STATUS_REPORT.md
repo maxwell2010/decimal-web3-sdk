@@ -102,7 +102,7 @@ https://node.decimalchain.com/web3/ -> eth_chainId = 0x4b
 
 Testnet/devnet:
 
-- `NetworkConfig.testnet()` uses official Decimal testnet Web3 first and a non-official public third-party fallback only if needed;
+- `NetworkConfig.testnet()` uses official Decimal testnet Web3 by default and can be overridden with custom Decimal-compatible RPC endpoints;
 - smoke checked through SDK on chain id `202020`;
 - funded test wallet balance read successfully;
 - `wait_receipt=True` uses configurable receipt wait defaults `7s` timeout / `3s` poll;

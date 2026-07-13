@@ -24,6 +24,12 @@ pip install -e ".[dev]"
 pip install decimal-web3-sdk
 ```
 
+Из публичной GitHub-ветки v0.1:
+
+```powershell
+pip install "decimal-web3-sdk @ git+https://github.com/maxwell2010/mintcandy-python-sdk.git@release/v0.1"
+```
+
 ## Конфигурация сети
 
 Mainnet:
@@ -72,7 +78,7 @@ Testnet/devnet:
 
 ```powershell
 $env:DECIMAL_TESTNET_CHAIN_ID="202020"
-$env:DECIMAL_TESTNET_WEB3_URLS="https://testnet-val.decimalchain.com/web3/,https://202020.rpc.thirdweb.com"
+$env:DECIMAL_TESTNET_WEB3_URLS="https://testnet-val.decimalchain.com/web3/"
 $env:DECIMAL_TESTNET_API_ROOT="https://testnet-gate.decimalchain.com/api/"
 $env:DECIMAL_TESTNET_API_BASE="https://testnet-api.decimalchain.com/api/"
 ```
@@ -95,7 +101,7 @@ testnet: https://testnet-val.decimalchain.com/web3/
 devnet:  https://devnet-val.decimalchain.com/web3/
 ```
 
-Для testnet SDK также добавляет публичный сторонний fallback `https://202020.rpc.thirdweb.com`, потому что `testnet-val` может отдавать `403` для прямых RPC-запросов из отдельных окружений. Это не официальный Decimal endpoint. Для релиза и приложений лучше указать свои endpoint-ы явно.
+Если публичный testnet endpoint недоступен из вашего окружения, укажите свой Decimal-compatible RPC через `DECIMAL_TESTNET_WEB3_URLS` или `NetworkConfig.custom(...)`.
 
 ## Базовое использование
 
@@ -115,7 +121,8 @@ asyncio.run(main())
 ```python
 from decimal_web3_sdk.wallet import mnemonic_to_account, private_key_to_address
 
-wallet = mnemonic_to_account("test test test test test test test test test test test junk")
+seed_phrase = load_seed_phrase_from_secure_storage()
+wallet = mnemonic_to_account(seed_phrase)
 address = wallet.address
 
 # Низкоуровневый выход для signer-а, если он действительно нужен сервису:
@@ -131,7 +138,7 @@ CLI:
 
 ```powershell
 python -m decimal_web3_sdk.cli wallet-generate
-python -m decimal_web3_sdk.cli wallet-from-mnemonic "seed words ..."
+python -m decimal_web3_sdk.cli wallet-from-mnemonic "<your seed phrase>"
 ```
 
 ## Read-only REST
@@ -157,7 +164,7 @@ async with DecimalClient(config) as client:
 ```python
 from decimal_web3_sdk import NativeTransferRequest
 
-seed_phrase = "seed words from secure app storage"
+seed_phrase = load_seed_phrase_from_secure_storage()
 
 result = await client.tx.send_del(
     NativeTransferRequest.from_mnemonic(
@@ -461,7 +468,7 @@ await client.nft.create_collection(
 decimal-sdk block-number
 decimal-sdk balance 0x...
 decimal-sdk erc20-info 0xToken
-python -m decimal_web3_sdk.cli wallet-from-mnemonic "seed words ..."
+python -m decimal_web3_sdk.cli wallet-from-mnemonic "<your seed phrase>"
 ```
 
 Для подписанных транзакций в приложениях используйте Python request-классы `*.from_mnemonic(...)`. CLI signing-команды остаются низкоуровневым интерфейсом для внешнего signer-а/secret-manager и не являются основным пользовательским сценарием.
@@ -483,7 +490,7 @@ Broadcast training:
 
 ```powershell
 $env:DECIMAL_TEST_NETWORK="testnet"
-$env:DECIMAL_TEST_MNEMONIC="seed words ..."
+$env:DECIMAL_TEST_MNEMONIC="<testnet seed phrase from secure storage>"
 $env:DECIMAL_TEST_TO="0x..."
 $env:DECIMAL_TEST_DEL_AMOUNT="0.001"
 $env:DECIMAL_TEST_BROADCAST="0"

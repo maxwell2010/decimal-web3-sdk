@@ -104,9 +104,6 @@ DEVNET_SYSTEM_CONTRACTS = SystemContracts(
 DEFAULT_MAINNET_WEB3_URLS = ["https://node.decimalchain.com/web3/"]
 DEFAULT_TESTNET_WEB3_URLS = [
     "https://testnet-val.decimalchain.com/web3/",
-    # Public third-party Decimal testnet RPC for chainId 202020.
-    # It is intentionally a fallback, not an official Decimal endpoint.
-    "https://202020.rpc.thirdweb.com",
 ]
 DEFAULT_DEVNET_WEB3_URLS = ["https://devnet-val.decimalchain.com/web3/"]
 

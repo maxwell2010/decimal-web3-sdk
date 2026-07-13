@@ -21,12 +21,18 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries",
 ]
+
 dependencies = [
     "aiohttp>=3.9",
     "web3>=6.0",
     "eth-account>=0.10",
     "python-dotenv>=1.0",
 ]
+
+[project.urls]
+Homepage = "https://mintcandy.ru/"
+Repository = "https://github.com/maxwell2010/mintcandy-python-sdk"
+Issues = "https://github.com/maxwell2010/mintcandy-python-sdk/issues"
 
 [project.optional-dependencies]
 dev = [

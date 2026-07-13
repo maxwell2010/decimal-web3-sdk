@@ -53,10 +53,7 @@ def test_testnet_defaults_follow_decimal_js_sdk(monkeypatch) -> None:
     config = NetworkConfig.testnet()
 
     assert config.chain_id == 202020
-    assert config.web3_urls == [
-        "https://testnet-val.decimalchain.com/web3/",
-        "https://202020.rpc.thirdweb.com",
-    ]
+    assert config.web3_urls == ["https://testnet-val.decimalchain.com/web3/"]
     assert config.rest_urls == ["http://testnet-val.decimalchain.com/rest/"]
     assert config.api_root_url == "https://testnet-gate.decimalchain.com/api/"
     assert config.api_base_url == "https://testnet-api.decimalchain.com/api/"

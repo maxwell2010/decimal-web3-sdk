@@ -3,6 +3,7 @@ from __future__ import annotations
 from decimal_web3_sdk.cli import _build_parser, _fee_quote, _tx_result
 from decimal_web3_sdk.transactions import FeePreflight
 from decimal_web3_sdk.transactions import TransactionResult
+from decimal_web3_sdk.wallet import generate_mnemonic_account
 
 
 def test_cli_parses_block_number_command() -> None:
@@ -14,7 +15,8 @@ def test_cli_parses_block_number_command() -> None:
 
 def test_cli_wallet_from_mnemonic_parses_default_path() -> None:
     parser = _build_parser()
-    args = parser.parse_args(["wallet-from-mnemonic", "test test test test test test test test test test test junk"])
+    account = generate_mnemonic_account()
+    args = parser.parse_args(["wallet-from-mnemonic", account.mnemonic or ""])
 
     assert args.command == "wallet-from-mnemonic"
     assert args.path == "m/44'/60'/0'/0/0"
