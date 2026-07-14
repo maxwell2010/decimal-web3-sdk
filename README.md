@@ -20,7 +20,7 @@ pip install decimal-web3-sdk
 From GitHub release branch:
 
 ```bash
-pip install "decimal-web3-sdk @ git+https://github.com/maxwell2010/mintcandy-python-sdk.git@release/v0.1"
+pip install "decimal-web3-sdk @ git+https://github.com/maxwell2010/decimal-web3-sdk.git@v0.1"
 ```
 
 From a local checkout:

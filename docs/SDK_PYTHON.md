@@ -27,7 +27,7 @@ pip install decimal-web3-sdk
 Из публичной GitHub-ветки v0.1:
 
 ```powershell
-pip install "decimal-web3-sdk @ git+https://github.com/maxwell2010/mintcandy-python-sdk.git@release/v0.1"
+pip install "decimal-web3-sdk @ git+https://github.com/maxwell2010/decimal-web3-sdk.git@v0.1"
 ```
 
 ## Конфигурация сети
