@@ -1,0 +1,1227 @@
+{
+  "version": 1,
+  "reviewed": "2026-09-08",
+  "network": "decimal-mainnet",
+  "chainId": 75,
+  "tokenCenter": "0x9113ba675aa8f2ef0c068cee2cdabab95b6437fb",
+  "nftCenter": "0x443cc8ac24630be9257483a09c34ffa81608eace",
+  "nftDelegation": "0xe45adfcc739a0d10ce9462b58866c9a1a06035e2",
+  "wdel": "0x1c5d8992da64c8d56ea413dd6f723061c29a7c0b",
+  "abi": {
+    "tokenCenter": [
+      {
+        "type": "function",
+        "name": "createToken",
+        "stateMutability": "payable",
+        "inputs": [
+          {
+            "type": "tuple",
+            "name": "meta",
+            "components": [
+              {
+                "type": "uint256",
+                "name": "initialMint"
+              },
+              {
+                "type": "uint256",
+                "name": "minTotalSupply"
+              },
+              {
+                "type": "uint256",
+                "name": "maxTotalSupply"
+              },
+              {
+                "type": "address",
+                "name": "creator"
+              },
+              {
+                "type": "uint8",
+                "name": "crr"
+              },
+              {
+                "type": "string",
+                "name": "identity"
+              },
+              {
+                "type": "string",
+                "name": "symbol"
+              },
+              {
+                "type": "string",
+                "name": "name"
+              }
+            ]
+          }
+        ],
+        "outputs": []
+      },
+      {
+        "type": "function",
+        "name": "createTokenReserveless",
+        "inputs": [
+          {
+            "type": "string",
+            "name": "name"
+          },
+          {
+            "type": "string",
+            "name": "symbol"
+          },
+          {
+            "type": "bool",
+            "name": "mintable"
+          },
+          {
+            "type": "bool",
+            "name": "burnable"
+          },
+          {
+            "type": "uint256",
+            "name": "initialMint"
+          },
+          {
+            "type": "uint256",
+            "name": "cap"
+          },
+          {
+            "type": "string",
+            "name": "identity"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "getCommissionSymbol",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "string",
+            "name": "symbol"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "tokens",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "string",
+            "name": "symbol"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "implementation",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      }
+    ],
+    "token": [
+      {
+        "type": "function",
+        "name": "creator",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "owner",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "name",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "string",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "symbol",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "string",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "decimals",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "uint8",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "balanceOf",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "totalSupply",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "maxTotalSupply",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "minTotalSupply",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "getMintable",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "getBurnable",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "MIN_RESERVE",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "mint",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "to"
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "burn",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "updateDetails",
+        "inputs": [
+          {
+            "type": "string",
+            "name": "identity"
+          },
+          {
+            "type": "uint256",
+            "name": "maxTotalSupply"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "updateTokenIdentity",
+        "inputs": [
+          {
+            "type": "string",
+            "name": "identity"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "updateMaxTotalSupply",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": "maximum"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "updateMinTotalSupply",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": "minimum"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "nftCenter": [
+      {
+        "type": "function",
+        "name": "implementation",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "uint8",
+            "name": "nftType"
+          },
+          {
+            "type": "bool",
+            "name": "withReserve"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "createDRC721Reserveless",
+        "inputs": [
+          {
+            "type": "tuple",
+            "name": "meta",
+            "components": [
+              {
+                "type": "address",
+                "name": "creator"
+              },
+              {
+                "type": "string",
+                "name": "symbol"
+              },
+              {
+                "type": "string",
+                "name": "name"
+              },
+              {
+                "type": "string",
+                "name": "contractURI"
+              },
+              {
+                "type": "bool",
+                "name": "allowMint"
+              },
+              {
+                "type": "bool",
+                "name": "burnable"
+              }
+            ]
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "createDRC1155Reserveless",
+        "inputs": [
+          {
+            "type": "tuple",
+            "name": "meta",
+            "components": [
+              {
+                "type": "address",
+                "name": "creator"
+              },
+              {
+                "type": "string",
+                "name": "symbol"
+              },
+              {
+                "type": "string",
+                "name": "name"
+              },
+              {
+                "type": "string",
+                "name": "contractURI"
+              },
+              {
+                "type": "bool",
+                "name": "allowMint"
+              },
+              {
+                "type": "bool",
+                "name": "burnable"
+              }
+            ]
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      }
+    ],
+    "nft": [
+      {
+        "type": "function",
+        "name": "supportsInterface",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "bytes4",
+            "name": ""
+          }
+        ],
+        "outputs": [
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "creator",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "name",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "string",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "symbol",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "string",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "getAllowMint",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "getBurnable",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "getRefundable",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "MIN_RESERVE",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "ownerOf",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "balanceOf",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "getApproved",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [
+          {
+            "type": "address",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "isApprovedForAll",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "address",
+            "name": ""
+          }
+        ],
+        "outputs": [
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "approve",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "setApprovalForAll",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "bool",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "safeTransferFrom",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "bytes",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "mint",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "string",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "address",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "mint",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "string",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "address",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "mintByDEL",
+        "stateMutability": "payable",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "string",
+            "name": ""
+          }
+        ],
+        "outputs": []
+      },
+      {
+        "type": "function",
+        "name": "mintByDEL",
+        "stateMutability": "payable",
+        "inputs": [
+          {
+            "type": "address",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "string",
+            "name": ""
+          }
+        ],
+        "outputs": []
+      },
+      {
+        "type": "function",
+        "name": "burn",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "burn",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "disableMint",
+        "inputs": [],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "setTokenURI",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          },
+          {
+            "type": "string",
+            "name": ""
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "addReserveByDEL",
+        "stateMutability": "payable",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": []
+      }
+    ],
+    "nftDelegation": [
+      {
+        "type": "function",
+        "name": "getStake",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "delegator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "tuple",
+            "name": "",
+            "components": [
+              {
+                "type": "address",
+                "name": "validator"
+              },
+              {
+                "type": "address",
+                "name": "delegator"
+              },
+              {
+                "type": "address",
+                "name": "token"
+              },
+              {
+                "type": "uint256",
+                "name": "amount"
+              },
+              {
+                "type": "uint256",
+                "name": "tokenId"
+              },
+              {
+                "type": "uint8",
+                "name": "tokenType"
+              },
+              {
+                "type": "uint256",
+                "name": "holdTimestamp"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "getHoldStake",
+        "stateMutability": "view",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "delegator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "timestamp"
+          }
+        ],
+        "outputs": [
+          {
+            "type": "tuple",
+            "name": "",
+            "components": [
+              {
+                "type": "address",
+                "name": "validator"
+              },
+              {
+                "type": "address",
+                "name": "delegator"
+              },
+              {
+                "type": "address",
+                "name": "token"
+              },
+              {
+                "type": "uint256",
+                "name": "amount"
+              },
+              {
+                "type": "uint256",
+                "name": "tokenId"
+              },
+              {
+                "type": "uint8",
+                "name": "tokenType"
+              },
+              {
+                "type": "uint256",
+                "name": "holdTimestamp"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "delegateDRC721",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "delegateDRC1155",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "delegateHoldDRC721",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "holdTimestamp"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "delegateHoldDRC1155",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          },
+          {
+            "type": "uint256",
+            "name": "holdTimestamp"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "withdraw",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "withdrawHold",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          },
+          {
+            "type": "uint256",
+            "name": "holdTimestamp"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "transfer",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          },
+          {
+            "type": "address",
+            "name": "target"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      },
+      {
+        "type": "function",
+        "name": "transferHold",
+        "inputs": [
+          {
+            "type": "address",
+            "name": "validator"
+          },
+          {
+            "type": "address",
+            "name": "nft"
+          },
+          {
+            "type": "uint256",
+            "name": "tokenId"
+          },
+          {
+            "type": "uint256",
+            "name": "amount"
+          },
+          {
+            "type": "uint256",
+            "name": "holdTimestamp"
+          },
+          {
+            "type": "address",
+            "name": "target"
+          }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
+      }
+    ]
+  }
+}
