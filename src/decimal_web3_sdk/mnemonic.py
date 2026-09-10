@@ -16,6 +16,7 @@ class FromMnemonicMixin:
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
+        account_index: int | None = None,
         **kwargs,
     ) -> T:
         if "private_key" in kwargs:
@@ -25,6 +26,7 @@ class FromMnemonicMixin:
                 mnemonic,
                 passphrase=passphrase,
                 account_path=account_path,
+                account_index=account_index,
             ),
             **kwargs,
         )

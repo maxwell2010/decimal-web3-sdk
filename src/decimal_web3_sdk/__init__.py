@@ -21,6 +21,7 @@ from .checks import (
 from .client import DecimalClient
 from .config import NetworkConfig, SystemContracts
 from .decimal import (
+    DelegationStake,
     DecimalWorkflowResult,
     DecimalService,
     DelegateDelRequest,
@@ -35,11 +36,14 @@ from .decimal import (
     ResetStakeHoldRequest,
     StakeTokenToHoldRequest,
     TransferStakeErc20Request,
+    TransferStakeDelRequest,
     TransferStakeWithResetRequest,
+    TransferDelStakeWithResetRequest,
     UnbondDelRequest,
     UnbondErc20Request,
     ValidatorPauseRequest,
     ValidatorSelfPauseRequest,
+    WithdrawDelStakeWithResetRequest,
     WithdrawStakeWithResetRequest,
     WithdrawHoldErc20Request,
     WithdrawHoldDelRequest,
@@ -66,7 +70,17 @@ from .nft import (
 )
 from .orchestrator import AgentOrchestrator, OrchestratorResult
 from .policy import TransactionPolicy
-from .rest import Page, RestClient
+from .rest import (
+    Page,
+    RestClient,
+    WalletStakeHold,
+    WalletStakePosition,
+    WalletStakeWithdrawal,
+    WalletStakingSummary,
+    WalletUnstakePosition,
+    normalize_wallet_stake_withdrawals,
+    normalize_wallet_staking_summary,
+)
 from .test_harness import TxTrainingJournal, TxTrainingRecord, run_env_training
 from .token import (
     BurnTokenRequest,
@@ -109,9 +123,12 @@ from .tx_agents import (
 )
 from .wallet import (
     DEFAULT_DERIVATION_PATH,
+    DEFAULT_DERIVATION_PATH_TEMPLATE,
     WalletAccount,
+    derivation_path_for_index,
     generate_mnemonic_account,
     mnemonic_to_account,
+    mnemonic_to_accounts,
     mnemonic_to_private_key,
     private_key_to_address,
 )
@@ -133,11 +150,13 @@ __all__ = [
     "DecimalWorkflowResult",
     "DecimalWsClient",
     "DEFAULT_DERIVATION_PATH",
+    "DEFAULT_DERIVATION_PATH_TEMPLATE",
     "ContractCallRequest",
     "CreateChecksDelRequest",
     "CreateChecksTokenRequest",
     "DelegateDelRequest",
     "DelegateErc20Request",
+    "DelegationStake",
     "HoldStakeWithResetRequest",
     "HealthCheckAgent",
     "HoldDelRequest",
@@ -152,7 +171,9 @@ __all__ = [
     "ResetStakeHoldRequest",
     "StakeTokenToHoldRequest",
     "TransferStakeErc20Request",
+    "TransferStakeDelRequest",
     "TransferStakeWithResetRequest",
+    "TransferDelStakeWithResetRequest",
     "NetworkConfig",
     "NativeTransferRequest",
     "OrchestratorResult",
@@ -176,6 +197,7 @@ __all__ = [
     "UnbondErc20Request",
     "ValidatorPauseRequest",
     "ValidatorSelfPauseRequest",
+    "WithdrawDelStakeWithResetRequest",
     "WithdrawStakeWithResetRequest",
     "WithdrawHoldErc20Request",
     "WithdrawHoldDelRequest",
@@ -201,13 +223,16 @@ __all__ = [
     "DisableMintNftRequest",
     "EstimateGasAgent",
     "format_units",
+    "derivation_path_for_index",
     "generate_mnemonic_account",
     "memo_capabilities",
     "memo_supported_for",
+    "normalize_wallet_staking_summary",
     "HoldNftRequest",
     "MintTokenRequest",
     "MintNftRequest",
     "mnemonic_to_account",
+    "mnemonic_to_accounts",
     "mnemonic_to_private_key",
     "NftBatchTransferRequest",
     "NftApproveRequest",
@@ -228,4 +253,10 @@ __all__ = [
     "UpdateTokenDetailsRequest",
     "WithdrawNftRequest",
     "WalletAccount",
+    "WalletStakeHold",
+    "WalletStakePosition",
+    "WalletStakeWithdrawal",
+    "WalletStakingSummary",
+    "WalletUnstakePosition",
+    "normalize_wallet_stake_withdrawals",
 ]

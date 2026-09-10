@@ -18,6 +18,28 @@ def load_candy_profile() -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def build_unsigned_candy_burn(
+    *, owner: str, amount_base: int, token_address: str | None = None,
+    chain_id: int = 75,
+) -> dict[str, Any]:
+    """Explicit irreversible burn: native DEL to zero, ERC20 burn(uint256).
+
+    No approval, swap, arbitrary recipient, signing or broadcast. token_address
+    omitted means native DEL, NOT WDEL. Validate live balance, token support and
+    gas before asking the user to confirm. Amount is an integer in base units.
+    """
+    if isinstance(amount_base, bool) or not isinstance(amount_base, int) or not 0 < amount_base < 2**256:
+        raise ValueError("amount_base must be a positive uint256")
+    if token_address is not None:
+        return build_unsigned_candy_call(owner=owner, contract_type="token", address=token_address,
+                                         signature="burn(uint256)", args=[amount_base], chain_id=chain_id)
+    profile = load_candy_profile()
+    if chain_id != profile["chainId"] or not Web3.is_address(owner) or int(owner, 16) == 0:
+        raise ValueError("Decimal Mainnet and a nonzero sender are required")
+    return {"chainId": chain_id, "from": Web3.to_checksum_address(owner),
+            "to": profile["nativeBurnAddress"], "data": "0x", "value": str(amount_base)}
+
+
 def build_unsigned_candy_call(
     *, owner: str, contract_type: str, signature: str,
     args: list[Any], address: str | None = None, value_wei: int = 0,

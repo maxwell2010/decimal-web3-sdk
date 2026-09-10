@@ -152,7 +152,7 @@ Approve/permit behavior:
 
 - ERC20 delegate/hold and ERC20 multisend try one-transaction permit flows first.
 - If permit is unavailable and allowance is low, SDK reports `requires_secondary_transaction=True` and runs approve + action.
-- Token convert follows official JS/Go SDK behavior: approve token center first, then convert. No public `convertByPermit` method was found in the scanned official SDKs.
+- Token convert uses the official JS SDK permit overload when the input token supports permit. Otherwise it reuses an existing allowance or falls back to approve + convert.
 
 ## Что не хватает
 
@@ -167,7 +167,8 @@ Approve/permit behavior:
   - checks DEL/token/redeem;
   - bridge native/token/complete.
 - Typed REST DTO вместо сырых `dict[str, Any]` для части read-only ответов.
-- Стабильный read-only staking summary зависит от API-gateway. В SDK есть транзакционный staking workflow, но чтение агрегированных делегаций должно приходить от выбранного API.
+- Известные staking-позиции проверяются напрямую через `get_stake` и `get_hold_stake`.
+  API/indexer нужен для обнаружения неизвестных заранее валидаторов, токенов и timestamp холдов.
 - Safe-style multisig helpers.
 - Legacy Cosmos/protobuf compatibility layer.
 - Нужна отдельная публикация wheel/sdist в PyPI или приватный package registry.

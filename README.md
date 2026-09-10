@@ -132,7 +132,7 @@ asyncio.run(main())
 ## Wallet Helpers
 
 ```python
-from decimal_web3_sdk.wallet import mnemonic_to_account, private_key_to_address
+from decimal_web3_sdk.wallet import mnemonic_to_account, mnemonic_to_accounts, private_key_to_address
 
 seed_phrase = load_seed_phrase_from_secure_storage()
 wallet = mnemonic_to_account(seed_phrase)
@@ -141,6 +141,10 @@ address = wallet.address
 # Low-level signer output, when a backend service needs it explicitly:
 private_key = wallet.private_key
 address = private_key_to_address("0x...")
+
+# EVM accounts 0..9 from the same mnemonic:
+wallets = mnemonic_to_accounts(seed_phrase, count=10)
+print([(wallet.index, wallet.address) for wallet in wallets])
 ```
 
 Default mnemonic derivation path is the EVM path `m/44'/60'/0'/0/0`, which is suitable for Decimal EVM addresses. The SDK never stores seed phrases or private keys. Keep them outside source code and pass them through secure storage or environment variables.
@@ -152,6 +156,7 @@ CLI helpers:
 ```bash
 python -m decimal_web3_sdk.cli wallet-generate
 python -m decimal_web3_sdk.cli wallet-from-mnemonic "<your seed phrase>"
+python -m decimal_web3_sdk.cli wallet-sequence "<your seed phrase>" --count 10
 ```
 
 ## Read-only API
@@ -202,13 +207,12 @@ All transaction request classes that need a signer support `from_mnemonic(...)`:
 You can calculate fee and balance requirements before signing:
 
 ```python
-draft = await client.tx.build_native_transfer(request)
-quote = await client.tx.calculate_fee(draft)
+quote = await client.tx.estimate_fee_for_native_transfer(request, exact=True)
 
-print(quote.ok, quote.gas, quote.oracle_gas_price_wei, quote.minimum_fee_del, quote.missing_del)
+print(quote.ok, quote.estimated_gas, quote.minimum_fee_del, quote.missing_del)
 ```
 
-`FeePreflight` is calculated before signing. The SDK reads network `eth_gasPrice` for diagnostics, but starts with an effective gas price capped at `20 gwei` by default because Decimal RPC can return an inflated oracle value after rebase. Override it with `DECIMAL_GAS_PRICE_GWEI`, `DECIMAL_MAX_GAS_PRICE_GWEI`, or `SafetyLimits(max_gas_price_wei=...)`; set the cap to `none`/`0` only if you intentionally want raw network gas price. If broadcast returns a minimum-global-fee error, including `provided fee < minimum global fee` or `minimum global fee too high`, SDK retries once with `gasPrice = ceil(required_fee / gas)` and re-signs the same transaction. After broadcast, `TransactionResult` exposes `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, and the raw `receipt`.
+`FeePreflight` is calculated before signing. By default the SDK uses the current network `eth_gasPrice`; there is no hard `20 gwei` cap because Decimal's minimum global fee can be higher. `exact=True` reports `estimateGas * gasPrice`. The default buffered quote uses a `1.10` gas limit, while the receipt exposes the fee actually paid as `gas_used * effective_gas_price`. An operator can still set `DECIMAL_GAS_PRICE_GWEI`, `DECIMAL_MAX_GAS_PRICE_GWEI`, or `SafetyLimits(max_gas_price_wei=...)`, but an undersized cap may be rejected by the network. If broadcast returns a minimum-global-fee error, the SDK retries once with `gasPrice = ceil(required_fee / gas)` and re-signs the same transaction. After broadcast, `TransactionResult` exposes `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, and the raw `receipt`.
 
 Transaction statuses are normalized as `dry_run`, `pending`, `success`, or `failed`.
 
@@ -227,11 +231,11 @@ Contract calls with calldata also verify that the target address has bytecode on
 
 ## Approve and One-Transaction Workflows
 
-ERC20 workflows check token balance and allowance before signing. If allowance is already enough, only the main transaction is sent. For ERC20 multisend, memo is included in that same multicall transaction. If the token supports `permit`, SDK can put `permit + transferFrom calls + memo` into one multicall transaction. Otherwise ERC20 allowance must be created by a mined `approve` transaction first.
+ERC20 workflows check token balance and allowance before signing. If allowance is already enough, only the main transaction is sent. Delegation, hold, conversion, and ERC20 multisend prefer the Decimal/EIP-2612 permit overload, so a compatible token needs one on-chain transaction. For ERC20 multisend, the same aggregate can contain `permit + transferFrom calls + memo`. A token without permit still requires a mined `approve` transaction before the action. DEL transfer/multisend, token buy, unbond, hold withdrawal, and stake transfer do not require ERC20 approval.
 
 `DecimalWorkflowResult` exposes `steps`, `one_transaction`, `requires_secondary_transaction`, `transaction_count`, and `total_fee_del` so apps can show the user whether the workflow is one transaction or approve + action.
 
-By default `NetworkConfig` applies a `1.10` gas limit multiplier after RPC `estimateGas`, matching the safety buffer used in the Decimal Go SDK, and caps gas price at `20 gwei`. Override these when exact raw estimates or a different cap are required:
+By default `NetworkConfig` applies a `1.10` gas limit multiplier after RPC `estimateGas`, matching the safety buffer used in the Decimal Go SDK, and uses the gas price returned by the selected Decimal RPC. Override these only when an operator intentionally needs exact gas limit or a custom gas-price policy:
 
 ```python
 from decimal_web3_sdk import NetworkConfig
@@ -240,7 +244,7 @@ from decimal_web3_sdk.limits import SafetyLimits
 config = NetworkConfig.custom(
     chain_id=75,
     web3_urls=["https://node.decimalchain.com/web3/"],
-    safety=SafetyLimits(gas_limit_multiplier=1.0, max_gas_price_wei=20_000_000_000),
+    safety=SafetyLimits(gas_limit_multiplier=1.0),
 )
 ```
 
@@ -262,7 +266,7 @@ print(memo_supported_for("erc20-transfer"))   # False
 Supported:
 
 - `NativeTransferRequest.memo` for native DEL transfers. The SDK encodes UTF-8 text into EVM transaction `data`, estimates gas with that payload, and includes it in the signed transaction.
-- `MultisendDelRequest.memo` for native DEL multisend. The SDK encodes one UTF-8 memo for the whole batch as the final zero-value call to `0x000...000`, matching Decimal explorer multisend parsing.
+- `MultisendDelRequest.memo` for native DEL multisend. One recipient is automatically sent as a normal DEL transfer with memo; two or more recipients use aggregate and encode one memo for the whole batch as the final zero-value call to `0x000...000`.
 - `MultisendErc20Request.memo` for ERC20 multisend. ERC20 transfer calls keep their ABI calldata, and the SDK adds one final zero-value memo call to the multicall aggregate.
 
 Not supported as a generic memo:
@@ -338,6 +342,59 @@ await client.token.convert(
     broadcast=False,
 )
 ```
+
+`hold_*` results contain the requested `hold_timestamp` and UTC `hold_time`, so an application can persist the unlock date immediately. Current staking state and withdrawal history can be refreshed later through `client.rest.wallet_staking_summary(address)` and `client.rest.wallet_stake_withdrawals(address)`.
+
+Known token positions can also be verified directly against the Delegation contract without
+depending on an indexer:
+
+```python
+regular = await client.decimal.get_stake(validator, wallet_address, token_address)
+held = await client.decimal.get_hold_stake(
+    validator,
+    wallet_address,
+    token_address,
+    hold_timestamp,
+)
+
+print(regular.amount(decimals), regular.exists)
+print(held.amount(decimals), held.hold_time)
+```
+
+Indexer/API discovery is still needed to enumerate all validators, tokens, and hold timestamps
+for an unknown wallet. Once those identifiers are known, the direct reads above are the source
+of truth for the current contract state.
+
+Existing DEL stake can be moved or withdrawn without token approval:
+
+```python
+from decimal_web3_sdk import TransferStakeDelRequest, WithdrawDelStakeWithResetRequest
+
+move = await client.decimal.transfer_stake_del(
+    TransferStakeDelRequest.from_mnemonic(
+        validator="0xOldValidator",
+        new_validator="0xNewValidator",
+        amount_del="1",
+        mnemonic=seed_phrase,
+    ),
+    broadcast=False,
+)
+
+withdraw = await client.decimal.withdraw_del_stake_with_reset(
+    WithdrawDelStakeWithResetRequest.from_mnemonic(
+        validator="0xValidator",
+        amount_del="1",
+        hold_timestamps_to_reset=[hold_timestamp],
+        mnemonic=seed_phrase,
+    ),
+    broadcast=False,
+)
+```
+
+The same operations are available for an already delegated ERC20 token through
+`UnbondErc20Request`, `WithdrawHoldErc20Request`, and `TransferStakeErc20Request`. They do not
+need ERC20 approval because Delegation already owns the staked position. Call the matching
+`estimate_fee_for_*` method with `exact=True` before signing.
 
 Token creation reserve can be calculated before sending. If `CreateTokenRequest.reserve_value_wei` is omitted, SDK uses the Decimal Go SDK rule: `1000 DEL` minimum reserve plus symbol-length commission.
 
@@ -415,14 +472,15 @@ Broadcast training is opt-in and requires a funded test wallet:
 
 ```bash
 DECIMAL_TEST_NETWORK=testnet
-DECIMAL_TEST_MNEMONIC="<testnet seed phrase from secure storage>"
+DECIMAL_TESTNET_TEST_MNEMONIC="<testnet seed phrase from secure storage>"
+DECIMAL_TESTNET_TEST_EXPECTED_ADDRESS=0x...
 DECIMAL_TEST_TO=0x...
 DECIMAL_TEST_DEL_AMOUNT=0.001
 DECIMAL_TEST_BROADCAST=0
 decimal-sdk train-env
 ```
 
-`train-env` calculates the fee before signing/sending, then records the transaction result. For visual test reporting it also stores the account balance and nonce before/after the case. Set `DECIMAL_TEST_BROADCAST=1` only on testnet/devnet or with a wallet intended for real training transactions.
+`train-env` calculates the fee before signing/sending, then records the transaction result. For visual test reporting it also stores the account balance and nonce before/after the case. Credentials are network-scoped (`DECIMAL_TESTNET_TEST_*`, `DECIMAL_DEVNET_TEST_*`, `DECIMAL_MAINNET_TEST_*`). The derived address must match `*_TEST_EXPECTED_ADDRESS`; mainnet broadcast is rejected when the expected address is absent. Set `DECIMAL_TEST_BROADCAST=1` only on testnet/devnet or with a wallet intended for real training transactions.
 
 ## Relation To The Legacy Decimal Python SDK
 

@@ -111,11 +111,13 @@ class DecimalClient:
         *,
         passphrase: str = "",
         account_path: str = "m/44'/60'/0'/0/0",
+        account_index: int | None = None,
     ) -> str:
         return mnemonic_to_private_key(
             mnemonic,
             passphrase=passphrase,
             account_path=account_path,
+            account_index=account_index,
         )
 
     async def address_from_mnemonic(
@@ -124,11 +126,13 @@ class DecimalClient:
         *,
         passphrase: str = "",
         account_path: str = "m/44'/60'/0'/0/0",
+        account_index: int | None = None,
     ) -> str:
         return mnemonic_to_account(
             mnemonic,
             passphrase=passphrase,
             account_path=account_path,
+            account_index=account_index,
         ).address
 
     async def rest_get(self, path: str, **params) -> dict:

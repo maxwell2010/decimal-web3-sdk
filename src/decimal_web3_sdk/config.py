@@ -14,7 +14,10 @@ def _csv_env(name: str, fallback: list[str]) -> list[str]:
 
 
 def _env(name: str, fallback: str = "") -> str:
-    return os.getenv(name, fallback).strip()
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return fallback
+    return value.strip()
 
 
 def _env_float(name: str, fallback: float) -> float:
@@ -44,7 +47,7 @@ def _env_optional_gas_price_wei(prefix: str = "DECIMAL") -> int | None:
         if value in {"none", "off", "disabled", "0"}:
             return None
         return int(float(value) * 10**9)
-    return 20_000_000_000
+    return None
 
 
 def _safety_from_env(prefix: str = "DECIMAL") -> SafetyLimits:
@@ -111,9 +114,9 @@ OFFICIAL_MAINNET_REST_URLS = ["http://node.decimalchain.com/rest/"]
 OFFICIAL_TESTNET_REST_URLS = ["http://testnet-val.decimalchain.com/rest/"]
 OFFICIAL_DEVNET_REST_URLS = ["http://devnet-val.decimalchain.com/rest/"]
 
-OFFICIAL_MAINNET_API_ROOT = "https://mainnet-api.decimalchain.com/api/"
-OFFICIAL_TESTNET_API_ROOT = "https://testnet-api.decimalchain.com/api/"
-OFFICIAL_DEVNET_API_ROOT = "https://devnet-api.decimalchain.com/api/"
+OFFICIAL_MAINNET_API_ROOT = "https://api.decimalchain.com/api/v1/"
+OFFICIAL_TESTNET_API_ROOT = "https://testnet-api.decimalchain.com/api/v1/"
+OFFICIAL_DEVNET_API_ROOT = "https://devnet-api.decimalchain.com/api/v1/"
 OFFICIAL_MAINNET_GATE_API_ROOT = "https://mainnet-gate.decimalchain.com/api/"
 OFFICIAL_TESTNET_GATE_API_ROOT = "https://testnet-gate.decimalchain.com/api/"
 OFFICIAL_DEVNET_GATE_API_ROOT = "https://devnet-gate.decimalchain.com/api/"

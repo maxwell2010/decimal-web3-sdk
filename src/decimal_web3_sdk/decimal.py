@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -10,6 +11,7 @@ from .transactions import (
     ContractCallRequest,
     Erc20ApproveRequest,
     FeePreflight,
+    NativeTransferRequest,
     TransactionDraft,
     TransactionResult,
     _token_preflight_failure,
@@ -213,6 +215,59 @@ DELEGATION_ABI: list[dict[str, Any]] = [
         "stateMutability": "nonpayable",
         "type": "function",
     },
+    {
+        "inputs": [
+            {"internalType": "address", "name": "validator", "type": "address"},
+            {"internalType": "address", "name": "delegator", "type": "address"},
+            {"internalType": "address", "name": "token", "type": "address"},
+        ],
+        "name": "getStake",
+        "outputs": [
+            {
+                "components": [
+                    {"internalType": "address", "name": "validator", "type": "address"},
+                    {"internalType": "address", "name": "delegator", "type": "address"},
+                    {"internalType": "address", "name": "token", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
+                    {"internalType": "uint8", "name": "tokenType", "type": "uint8"},
+                    {"internalType": "uint256", "name": "holdTimestamp", "type": "uint256"},
+                ],
+                "internalType": "struct IDecimalDelegationCommon.Stake",
+                "name": "",
+                "type": "tuple",
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+    },
+    {
+        "inputs": [
+            {"internalType": "address", "name": "validator", "type": "address"},
+            {"internalType": "address", "name": "delegator", "type": "address"},
+            {"internalType": "address", "name": "token", "type": "address"},
+            {"internalType": "uint256", "name": "holdTimestamp", "type": "uint256"},
+        ],
+        "name": "getHoldStake",
+        "outputs": [
+            {
+                "components": [
+                    {"internalType": "address", "name": "validator", "type": "address"},
+                    {"internalType": "address", "name": "delegator", "type": "address"},
+                    {"internalType": "address", "name": "token", "type": "address"},
+                    {"internalType": "uint256", "name": "amount", "type": "uint256"},
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
+                    {"internalType": "uint8", "name": "tokenType", "type": "uint8"},
+                    {"internalType": "uint256", "name": "holdTimestamp", "type": "uint256"},
+                ],
+                "internalType": "struct IDecimalDelegationCommon.Stake",
+                "name": "",
+                "type": "tuple",
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+    },
 ]
 
 
@@ -399,6 +454,15 @@ class TransferStakeErc20Request(FromMnemonicMixin):
 
 
 @dataclass(frozen=True)
+class TransferStakeDelRequest(FromMnemonicMixin):
+    validator: str
+    new_validator: str
+    amount_del: Decimal | str | int | float
+    private_key: str
+    hold_timestamp: int | None = None
+
+
+@dataclass(frozen=True)
 class StakeTokenToHoldRequest(FromMnemonicMixin):
     token: str
     validator: str
@@ -429,6 +493,14 @@ class WithdrawStakeWithResetRequest(FromMnemonicMixin):
 
 
 @dataclass(frozen=True)
+class WithdrawDelStakeWithResetRequest(FromMnemonicMixin):
+    validator: str
+    amount_del: Decimal | str | int | float
+    hold_timestamps_to_reset: list[int]
+    private_key: str
+
+
+@dataclass(frozen=True)
 class TransferStakeWithResetRequest(FromMnemonicMixin):
     token: str
     old_validator: str
@@ -437,6 +509,15 @@ class TransferStakeWithResetRequest(FromMnemonicMixin):
     hold_timestamps_to_reset: list[int]
     private_key: str
     decimals: int | None = None
+
+
+@dataclass(frozen=True)
+class TransferDelStakeWithResetRequest(FromMnemonicMixin):
+    old_validator: str
+    new_validator: str
+    amount_del: Decimal | str | int | float
+    hold_timestamps_to_reset: list[int]
+    private_key: str
 
 
 @dataclass(frozen=True)
@@ -459,6 +540,30 @@ class ValidatorSelfPauseRequest(FromMnemonicMixin):
 class ValidatorPauseRequest(FromMnemonicMixin):
     validator: str
     private_key: str
+
+
+@dataclass(frozen=True)
+class DelegationStake:
+    validator: str
+    delegator: str
+    token: str
+    amount_raw: int
+    token_id: int
+    token_type: int
+    hold_timestamp: int
+
+    @property
+    def exists(self) -> bool:
+        return self.amount_raw > 0
+
+    @property
+    def hold_time(self) -> str | None:
+        if self.hold_timestamp <= 0:
+            return None
+        return _hold_time(self.hold_timestamp)
+
+    def amount(self, decimals: int = 18) -> Decimal:
+        return Decimal(self.amount_raw) / (Decimal(10) ** int(decimals))
 
 
 @dataclass(frozen=True)
@@ -512,6 +617,14 @@ class DecimalWorkflowResult:
     def tx_hash(self) -> str | None:
         return self.primary.tx_hash if self.primary else None
 
+    @property
+    def hold_timestamp(self) -> int | None:
+        return self.primary.hold_timestamp if self.primary else None
+
+    @property
+    def hold_time(self) -> str | None:
+        return self.primary.hold_time if self.primary else None
+
     def __post_init__(self) -> None:
         if self.user_message is None:
             message = None
@@ -544,6 +657,31 @@ class DecimalService:
     def __init__(self, client) -> None:
         self._client = client
 
+    async def get_stake(self, validator: str, delegator: str, token: str) -> DelegationStake:
+        call = self._delegation_contract().functions.getStake(
+            checksum(validator),
+            checksum(delegator),
+            checksum(token),
+        )
+        value = await self._client.rpc.call(lambda _: call.call())
+        return _delegation_stake(value)
+
+    async def get_hold_stake(
+        self,
+        validator: str,
+        delegator: str,
+        token: str,
+        hold_timestamp: int,
+    ) -> DelegationStake:
+        call = self._delegation_contract().functions.getHoldStake(
+            checksum(validator),
+            checksum(delegator),
+            checksum(token),
+            int(hold_timestamp),
+        )
+        value = await self._client.rpc.call(lambda _: call.call())
+        return _delegation_stake(value)
+
     async def delegate_del(
         self,
         request: DelegateDelRequest,
@@ -562,6 +700,22 @@ class DecimalService:
             wait_receipt,
         )
 
+    async def estimate_fee_for_delegate_del(
+        self,
+        request: DelegateDelRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        data = self._delegation_contract().functions.delegateDEL(
+            checksum(request.validator)
+        )._encode_transaction_data()
+        return await self._estimate_delegation_call(
+            request.private_key,
+            data,
+            value_wei=_del_to_wei(request.amount_del),
+            exact=exact,
+        )
+
     async def hold_del(
         self,
         request: HoldDelRequest,
@@ -572,13 +726,31 @@ class DecimalService:
             checksum(request.validator),
             int(request.hold_timestamp),
         )._encode_transaction_data()
-        return await self._send_contract(
+        result = await self._send_contract(
             request.private_key,
             self._client.config.contracts.delegation,
             data,
             _del_to_wei(request.amount_del),
             broadcast,
             wait_receipt,
+        )
+        return _with_hold_schedule(result, request.hold_timestamp)
+
+    async def estimate_fee_for_hold_del(
+        self,
+        request: HoldDelRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        data = self._delegation_contract().functions.delegateHoldDEL(
+            checksum(request.validator),
+            int(request.hold_timestamp),
+        )._encode_transaction_data()
+        return await self._estimate_delegation_call(
+            request.private_key,
+            data,
+            value_wei=_del_to_wei(request.amount_del),
+            exact=exact,
         )
 
     async def unbond_del(
@@ -589,7 +761,7 @@ class DecimalService:
     ) -> TransactionResult:
         data = self._delegation_contract().functions.withdraw(
             checksum(request.validator),
-            checksum(self._client.config.contracts.del_token),
+            checksum(self._client.config.contracts.wdel),
             _del_to_wei(request.amount_del),
         )._encode_transaction_data()
         return await self._send_contract(
@@ -609,7 +781,7 @@ class DecimalService:
     ) -> TransactionResult:
         data = self._delegation_contract().functions.withdrawHold(
             checksum(request.validator),
-            checksum(self._client.config.contracts.del_token),
+            checksum(self._client.config.contracts.wdel),
             _del_to_wei(request.amount_del),
             int(request.hold_timestamp),
         )._encode_transaction_data()
@@ -622,6 +794,35 @@ class DecimalService:
             wait_receipt,
         )
 
+    async def estimate_fee_for_withdraw_hold_del(
+        self,
+        request: WithdrawHoldDelRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        data = self._delegation_contract().functions.withdrawHold(
+            checksum(request.validator),
+            checksum(self._client.config.contracts.wdel),
+            _del_to_wei(request.amount_del),
+            int(request.hold_timestamp),
+        )._encode_transaction_data()
+        return await self._estimate_delegation_call(request.private_key, data, exact=exact)
+
+    async def estimate_fee_for_unbond_del(self, request: UnbondDelRequest, *, exact: bool = False) -> FeePreflight:
+        data = self._delegation_contract().functions.withdraw(
+            checksum(request.validator),
+            checksum(self._client.config.contracts.wdel),
+            _del_to_wei(request.amount_del),
+        )._encode_transaction_data()
+        draft = await self._client.tx.build_contract_call(
+            ContractCallRequest(
+                contract=self._client.config.contracts.delegation,
+                private_key=request.private_key,
+                data=data,
+            )
+        )
+        return await self._client.tx.calculate_fee(draft, exact=exact)
+
     async def multisend_del(
         self,
         request: MultisendDelRequest,
@@ -631,12 +832,36 @@ class DecimalService:
         if not request.recipients:
             return TransactionResult(success=False, error="At least one recipient is required")
 
+        if len(request.recipients) == 1:
+            recipient = request.recipients[0]
+            return await self._client.tx.send_del(
+                NativeTransferRequest(
+                    to=recipient.to,
+                    amount_del=recipient.amount_del,
+                    private_key=request.private_key,
+                    memo=request.memo,
+                ),
+                broadcast=broadcast,
+                wait_receipt=wait_receipt,
+            )
+
         draft = await self.build_multisend_del(request)
         return await self._client.tx.send_draft(draft, request.private_key, broadcast, wait_receipt)
 
     async def build_multisend_del(self, request: MultisendDelRequest) -> TransactionDraft:
         if not request.recipients:
             raise ValueError("At least one recipient is required")
+
+        if len(request.recipients) == 1:
+            recipient = request.recipients[0]
+            return await self._client.tx.build_native_transfer(
+                NativeTransferRequest(
+                    to=recipient.to,
+                    amount_del=recipient.amount_del,
+                    private_key=request.private_key,
+                    memo=request.memo,
+                )
+            )
 
         calls: list[tuple[str, int, bytes]] = []
         total_value = 0
@@ -663,9 +888,9 @@ class DecimalService:
             )
         )
 
-    async def estimate_fee_for_multisend_del(self, request: MultisendDelRequest) -> FeePreflight:
+    async def estimate_fee_for_multisend_del(self, request: MultisendDelRequest, *, exact: bool = False) -> FeePreflight:
         draft = await self.build_multisend_del(request)
-        return await self._client.tx.calculate_fee(draft)
+        return await self._client.tx.calculate_fee(draft, exact=exact)
 
     async def multisend_erc20(
         self,
@@ -877,6 +1102,25 @@ class DecimalService:
         except Exception as exc:
             return _workflow_exception("unbond_erc20", exc)
 
+    async def estimate_fee_for_unbond_erc20(self, request: UnbondErc20Request, *, exact: bool = False) -> FeePreflight:
+        decimals = request.decimals
+        if decimals is None:
+            decimals = (await self._client.erc20.info(request.token)).decimals
+        amount_raw = _parse_units(request.amount, decimals)
+        data = self._delegation_contract().functions.withdraw(
+            checksum(request.validator),
+            checksum(request.token),
+            amount_raw,
+        )._encode_transaction_data()
+        draft = await self._client.tx.build_contract_call(
+            ContractCallRequest(
+                contract=self._client.config.contracts.delegation,
+                private_key=request.private_key,
+                data=data,
+            )
+        )
+        return await self._client.tx.calculate_fee(draft, exact=exact)
+
     async def withdraw_hold_erc20(
         self,
         request: WithdrawHoldErc20Request,
@@ -915,6 +1159,21 @@ class DecimalService:
         except Exception as exc:
             return _workflow_exception("withdraw_hold_erc20", exc)
 
+    async def estimate_fee_for_withdraw_hold_erc20(
+        self,
+        request: WithdrawHoldErc20Request,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        amount_raw = await self._erc20_amount_raw(request.token, request.amount, request.decimals)
+        data = self._delegation_contract().functions.withdrawHold(
+            checksum(request.validator),
+            checksum(request.token),
+            amount_raw,
+            int(request.hold_timestamp),
+        )._encode_transaction_data()
+        return await self._estimate_delegation_call(request.private_key, data, exact=exact)
+
     async def transfer_stake_erc20(
         self,
         request: TransferStakeErc20Request,
@@ -922,28 +1181,48 @@ class DecimalService:
         wait_receipt: bool = False,
     ) -> DecimalWorkflowResult:
         try:
-            amount_raw = await self._erc20_amount_raw(request.token, request.amount, request.decimals)
-            contract = self._delegation_contract()
-            if request.hold_timestamp is None:
-                data = contract.functions.transfer(
-                    checksum(request.validator),
-                    checksum(request.token),
-                    amount_raw,
-                    checksum(request.new_validator),
-                )._encode_transaction_data()
-                step = "transfer_stake_erc20"
-            else:
-                data = contract.functions.transferHold(
-                    checksum(request.validator),
-                    checksum(request.token),
-                    amount_raw,
-                    int(request.hold_timestamp),
-                    checksum(request.new_validator),
-                )._encode_transaction_data()
-                step = "transfer_hold_stake_erc20"
+            data = await self._transfer_stake_erc20_data(request)
+            step = "transfer_hold_stake_erc20" if request.hold_timestamp is not None else "transfer_stake_erc20"
             return await self._single_step_workflow(step, request.private_key, data, broadcast, wait_receipt)
         except Exception as exc:
             return _workflow_exception("transfer_stake_erc20", exc)
+
+    async def estimate_fee_for_transfer_stake_erc20(
+        self,
+        request: TransferStakeErc20Request,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        return await self._estimate_delegation_call(
+            request.private_key,
+            await self._transfer_stake_erc20_data(request),
+            exact=exact,
+        )
+
+    async def transfer_stake_del(
+        self,
+        request: TransferStakeDelRequest,
+        broadcast: bool = False,
+        wait_receipt: bool = False,
+    ) -> DecimalWorkflowResult:
+        try:
+            data = self._transfer_stake_del_data(request)
+            step = "transfer_hold_stake_del" if request.hold_timestamp is not None else "transfer_stake_del"
+            return await self._single_step_workflow(step, request.private_key, data, broadcast, wait_receipt)
+        except Exception as exc:
+            return _workflow_exception("transfer_stake_del", exc)
+
+    async def estimate_fee_for_transfer_stake_del(
+        self,
+        request: TransferStakeDelRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        return await self._estimate_delegation_call(
+            request.private_key,
+            self._transfer_stake_del_data(request),
+            exact=exact,
+        )
 
     async def stake_token_to_hold(
         self,
@@ -960,7 +1239,14 @@ class DecimalService:
                 int(request.old_hold_timestamp),
                 int(request.new_hold_timestamp),
             )._encode_transaction_data()
-            return await self._single_step_workflow("stake_token_to_hold", request.private_key, data, broadcast, wait_receipt)
+            result = await self._single_step_workflow(
+                "stake_token_to_hold",
+                request.private_key,
+                data,
+                broadcast,
+                wait_receipt,
+            )
+            return _workflow_with_hold_schedule(result, request.new_hold_timestamp)
         except Exception as exc:
             return _workflow_exception("stake_token_to_hold", exc)
 
@@ -1009,6 +1295,65 @@ class DecimalService:
         except Exception as exc:
             return _workflow_exception("withdraw_stake_with_reset", exc)
 
+    async def estimate_fee_for_withdraw_stake_with_reset(
+        self,
+        request: WithdrawStakeWithResetRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        amount_raw = await self._erc20_amount_raw(request.token, request.amount, request.decimals)
+        data = self._delegation_contract().functions.withdrawWithReset(
+            checksum(request.validator),
+            checksum(request.token),
+            amount_raw,
+            [int(item) for item in request.hold_timestamps_to_reset],
+        )._encode_transaction_data()
+        return await self._estimate_delegation_call(request.private_key, data, exact=exact)
+
+    async def withdraw_del_stake_with_reset(
+        self,
+        request: WithdrawDelStakeWithResetRequest,
+        broadcast: bool = False,
+        wait_receipt: bool = False,
+    ) -> DecimalWorkflowResult:
+        try:
+            data = self._delegation_contract().functions.withdrawWithReset(
+                checksum(request.validator),
+                checksum(self._client.config.contracts.wdel),
+                _del_to_wei(request.amount_del),
+                [int(item) for item in request.hold_timestamps_to_reset],
+            )._encode_transaction_data()
+            return await self._single_step_workflow(
+                "withdraw_del_stake_with_reset",
+                request.private_key,
+                data,
+                broadcast,
+                wait_receipt,
+            )
+        except Exception as exc:
+            return _workflow_exception("withdraw_del_stake_with_reset", exc)
+
+    async def estimate_fee_for_withdraw_del_stake_with_reset(
+        self,
+        request: WithdrawDelStakeWithResetRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        data = self._delegation_contract().functions.withdrawWithReset(
+            checksum(request.validator),
+            checksum(self._client.config.contracts.wdel),
+            _del_to_wei(request.amount_del),
+            [int(item) for item in request.hold_timestamps_to_reset],
+        )._encode_transaction_data()
+        draft = await self._client.tx.build_contract_call(
+            ContractCallRequest(
+                contract=self._client.config.contracts.delegation,
+                private_key=request.private_key,
+                data=data,
+            )
+        )
+        return await self._client.tx.calculate_fee(draft, exact=exact)
+
     async def transfer_stake_with_reset(
         self,
         request: TransferStakeWithResetRequest,
@@ -1028,6 +1373,52 @@ class DecimalService:
         except Exception as exc:
             return _workflow_exception("transfer_stake_with_reset", exc)
 
+    async def estimate_fee_for_transfer_stake_with_reset(
+        self,
+        request: TransferStakeWithResetRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        amount_raw = await self._erc20_amount_raw(request.token, request.amount, request.decimals)
+        data = self._delegation_contract().functions.transferWithReset(
+            checksum(request.old_validator),
+            checksum(request.token),
+            amount_raw,
+            checksum(request.new_validator),
+            [int(item) for item in request.hold_timestamps_to_reset],
+        )._encode_transaction_data()
+        return await self._estimate_delegation_call(request.private_key, data, exact=exact)
+
+    async def transfer_del_stake_with_reset(
+        self,
+        request: TransferDelStakeWithResetRequest,
+        broadcast: bool = False,
+        wait_receipt: bool = False,
+    ) -> DecimalWorkflowResult:
+        try:
+            data = self._transfer_del_stake_with_reset_data(request)
+            return await self._single_step_workflow(
+                "transfer_del_stake_with_reset",
+                request.private_key,
+                data,
+                broadcast,
+                wait_receipt,
+            )
+        except Exception as exc:
+            return _workflow_exception("transfer_del_stake_with_reset", exc)
+
+    async def estimate_fee_for_transfer_del_stake_with_reset(
+        self,
+        request: TransferDelStakeWithResetRequest,
+        *,
+        exact: bool = False,
+    ) -> FeePreflight:
+        return await self._estimate_delegation_call(
+            request.private_key,
+            self._transfer_del_stake_with_reset_data(request),
+            exact=exact,
+        )
+
     async def hold_stake_with_reset(
         self,
         request: HoldStakeWithResetRequest,
@@ -1043,7 +1434,14 @@ class DecimalService:
                 int(request.new_hold_timestamp),
                 [int(item) for item in request.hold_timestamps_to_reset],
             )._encode_transaction_data()
-            return await self._single_step_workflow("hold_stake_with_reset", request.private_key, data, broadcast, wait_receipt)
+            result = await self._single_step_workflow(
+                "hold_stake_with_reset",
+                request.private_key,
+                data,
+                broadcast,
+                wait_receipt,
+            )
+            return _workflow_with_hold_schedule(result, request.new_hold_timestamp)
         except Exception as exc:
             return _workflow_exception("hold_stake_with_reset", exc)
 
@@ -1225,6 +1623,8 @@ class DecimalService:
                             broadcast,
                             wait_receipt,
                         )
+                        if hold_timestamp is not None:
+                            result = _with_hold_schedule(result, hold_timestamp)
                         return DecimalWorkflowResult(
                             success=result.success,
                             name=name,
@@ -1292,6 +1692,8 @@ class DecimalService:
                 broadcast,
                 wait_receipt,
             )
+            if hold_timestamp is not None:
+                result = _with_hold_schedule(result, hold_timestamp)
             steps.append(step)
             return DecimalWorkflowResult(
                 success=result.success,
@@ -1316,6 +1718,68 @@ class DecimalService:
         if decimals is None:
             decimals = (await self._client.erc20.info(token)).decimals
         return _parse_units(amount, decimals)
+
+    async def _transfer_stake_erc20_data(self, request: TransferStakeErc20Request) -> str:
+        amount_raw = await self._erc20_amount_raw(request.token, request.amount, request.decimals)
+        contract = self._delegation_contract()
+        if request.hold_timestamp is None:
+            return contract.functions.transfer(
+                checksum(request.validator),
+                checksum(request.token),
+                amount_raw,
+                checksum(request.new_validator),
+            )._encode_transaction_data()
+        return contract.functions.transferHold(
+            checksum(request.validator),
+            checksum(request.token),
+            amount_raw,
+            int(request.hold_timestamp),
+            checksum(request.new_validator),
+        )._encode_transaction_data()
+
+    def _transfer_stake_del_data(self, request: TransferStakeDelRequest) -> str:
+        contract = self._delegation_contract()
+        if request.hold_timestamp is None:
+            return contract.functions.transfer(
+                checksum(request.validator),
+                checksum(self._client.config.contracts.wdel),
+                _del_to_wei(request.amount_del),
+                checksum(request.new_validator),
+            )._encode_transaction_data()
+        return contract.functions.transferHold(
+            checksum(request.validator),
+            checksum(self._client.config.contracts.wdel),
+            _del_to_wei(request.amount_del),
+            int(request.hold_timestamp),
+            checksum(request.new_validator),
+        )._encode_transaction_data()
+
+    def _transfer_del_stake_with_reset_data(self, request: TransferDelStakeWithResetRequest) -> str:
+        return self._delegation_contract().functions.transferWithReset(
+            checksum(request.old_validator),
+            checksum(self._client.config.contracts.wdel),
+            _del_to_wei(request.amount_del),
+            checksum(request.new_validator),
+            [int(item) for item in request.hold_timestamps_to_reset],
+        )._encode_transaction_data()
+
+    async def _estimate_delegation_call(
+        self,
+        private_key: str,
+        data: str,
+        *,
+        value_wei: int = 0,
+        exact: bool,
+    ) -> FeePreflight:
+        draft = await self._client.tx.build_contract_call(
+            ContractCallRequest(
+                contract=self._client.config.contracts.delegation,
+                private_key=private_key,
+                data=data,
+                value_wei=value_wei,
+            )
+        )
+        return await self._client.tx.calculate_fee(draft, exact=exact)
 
     async def _single_step_workflow(
         self,
@@ -1416,6 +1880,41 @@ def _del_to_wei(value: Decimal | str | int | float) -> int:
 
 def _parse_units(value: Decimal | str | int | float, decimals: int) -> int:
     return int(Decimal(str(value)) * (Decimal(10) ** int(decimals)))
+
+
+def _hold_time(hold_timestamp: int) -> str:
+    return datetime.fromtimestamp(int(hold_timestamp), tz=timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _delegation_stake(value: Any) -> DelegationStake:
+    if not isinstance(value, (list, tuple)) or len(value) < 7:
+        raise ValueError("Unexpected Decimal delegation stake response")
+    return DelegationStake(
+        validator=checksum(value[0]),
+        delegator=checksum(value[1]),
+        token=checksum(value[2]),
+        amount_raw=int(value[3]),
+        token_id=int(value[4]),
+        token_type=int(value[5]),
+        hold_timestamp=int(value[6]),
+    )
+
+
+def _with_hold_schedule(result: TransactionResult, hold_timestamp: int) -> TransactionResult:
+    return replace(
+        result,
+        hold_timestamp=int(hold_timestamp),
+        hold_time=_hold_time(hold_timestamp),
+    )
+
+
+def _workflow_with_hold_schedule(
+    result: DecimalWorkflowResult,
+    hold_timestamp: int,
+) -> DecimalWorkflowResult:
+    if result.primary is None:
+        return result
+    return replace(result, primary=_with_hold_schedule(result.primary, hold_timestamp))
 
 
 def _workflow_exception(name: str, exc: Exception) -> DecimalWorkflowResult:

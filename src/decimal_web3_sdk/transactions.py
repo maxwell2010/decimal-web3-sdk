@@ -121,6 +121,7 @@ class NativeTransferRequest:
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
+        account_index: int | None = None,
         memo: str | None = None,
         gas: int | None = None,
         gas_price_wei: int | None = None,
@@ -128,7 +129,12 @@ class NativeTransferRequest:
         return cls(
             to=to,
             amount_del=amount_del,
-            private_key=mnemonic_to_private_key(mnemonic, passphrase=passphrase, account_path=account_path),
+            private_key=mnemonic_to_private_key(
+                mnemonic,
+                passphrase=passphrase,
+                account_path=account_path,
+                account_index=account_index,
+            ),
             memo=memo,
             gas=gas,
             gas_price_wei=gas_price_wei,
@@ -153,13 +159,19 @@ class ContractCallRequest:
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
+        account_index: int | None = None,
         value_wei: int = 0,
         gas: int | None = None,
         gas_price_wei: int | None = None,
     ) -> "ContractCallRequest":
         return cls(
             contract=contract,
-            private_key=mnemonic_to_private_key(mnemonic, passphrase=passphrase, account_path=account_path),
+            private_key=mnemonic_to_private_key(
+                mnemonic,
+                passphrase=passphrase,
+                account_path=account_path,
+                account_index=account_index,
+            ),
             data=data,
             value_wei=value_wei,
             gas=gas,
@@ -187,6 +199,7 @@ class Erc20TransferRequest:
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
+        account_index: int | None = None,
         decimals: int | None = None,
         gas: int | None = None,
         gas_price_wei: int | None = None,
@@ -195,7 +208,12 @@ class Erc20TransferRequest:
             token=token,
             to=to,
             amount=amount,
-            private_key=mnemonic_to_private_key(mnemonic, passphrase=passphrase, account_path=account_path),
+            private_key=mnemonic_to_private_key(
+                mnemonic,
+                passphrase=passphrase,
+                account_path=account_path,
+                account_index=account_index,
+            ),
             decimals=decimals,
             gas=gas,
             gas_price_wei=gas_price_wei,
@@ -222,6 +240,7 @@ class Erc20ApproveRequest:
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
+        account_index: int | None = None,
         decimals: int | None = None,
         gas: int | None = None,
         gas_price_wei: int | None = None,
@@ -230,7 +249,12 @@ class Erc20ApproveRequest:
             token=token,
             spender=spender,
             amount=amount,
-            private_key=mnemonic_to_private_key(mnemonic, passphrase=passphrase, account_path=account_path),
+            private_key=mnemonic_to_private_key(
+                mnemonic,
+                passphrase=passphrase,
+                account_path=account_path,
+                account_index=account_index,
+            ),
             decimals=decimals,
             gas=gas,
             gas_price_wei=gas_price_wei,
@@ -259,6 +283,7 @@ class Erc20TransferFromRequest:
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
+        account_index: int | None = None,
         decimals: int | None = None,
         gas: int | None = None,
         gas_price_wei: int | None = None,
@@ -268,7 +293,12 @@ class Erc20TransferFromRequest:
             owner=owner,
             to=to,
             amount=amount,
-            private_key=mnemonic_to_private_key(mnemonic, passphrase=passphrase, account_path=account_path),
+            private_key=mnemonic_to_private_key(
+                mnemonic,
+                passphrase=passphrase,
+                account_path=account_path,
+                account_index=account_index,
+            ),
             decimals=decimals,
             gas=gas,
             gas_price_wei=gas_price_wei,
@@ -282,9 +312,12 @@ class TransactionDraft:
     to_address: str
     value_wei: int
     gas: int | None = None
+    estimated_gas: int | None = None
+    gas_limit: int | None = None
     gas_price_wei: int | None = None
     oracle_gas_price_wei: int | None = None
     fee_wei: int | None = None
+    estimated_fee_wei: int | None = None
     preflight: "FeePreflight | None" = None
     raw_tx: bytes | None = None
     tx_hash: str | None = None
@@ -317,6 +350,8 @@ class TransactionResult:
     receipt: dict[str, Any] | None = None
     events: dict[str, Any] | None = None
     token_address: str | None = None
+    hold_timestamp: int | None = None
+    hold_time: str | None = None
     error: str | None = None
     user_message: str | None = None
     native_balance_wei: int | None = None
@@ -352,8 +387,13 @@ class FeePreflight:
     required_wei: int
     missing_wei: int = 0
     gas: int | None = None
+    estimated_gas: int | None = None
     gas_price_wei: int | None = None
     oracle_gas_price_wei: int | None = None
+    estimated_fee_wei: int | None = None
+    gas_limit: int | None = None
+    gas_limit_fee_wei: int | None = None
+    exact: bool = False
 
     @property
     def fee_del(self) -> Decimal:
@@ -366,6 +406,18 @@ class FeePreflight:
     @property
     def minimum_fee_del(self) -> Decimal:
         return self.fee_del
+
+    @property
+    def estimated_fee_del(self) -> Decimal | None:
+        if self.estimated_fee_wei is None:
+            return None
+        return Decimal(self.estimated_fee_wei) / Decimal(10**18)
+
+    @property
+    def gas_limit_fee_del(self) -> Decimal | None:
+        if self.gas_limit_fee_wei is None:
+            return None
+        return Decimal(self.gas_limit_fee_wei) / Decimal(10**18)
 
     @property
     def native_balance_del(self) -> Decimal:
@@ -495,13 +547,17 @@ class TransactionService:
             )
         )
 
-    async def estimate(self, draft: TransactionDraft) -> TransactionDraft:
+    async def estimate(self, draft: TransactionDraft, *, exact: bool = False) -> TransactionDraft:
         await self._apply_minimum_gas_price(draft)
         estimated_gas = int(await self._client.estimate_gas(draft.tx))
-        gas = _apply_gas_limit_multiplier(estimated_gas, _gas_limit_multiplier(self._client))
+        gas_limit = _apply_gas_limit_multiplier(estimated_gas, _gas_limit_multiplier(self._client))
+        gas = estimated_gas if exact else gas_limit
+        gas_price = int(draft.tx["gasPrice"])
+        draft.estimated_gas = int(estimated_gas)
+        draft.gas_limit = int(gas_limit)
+        draft.estimated_fee_wei = int(estimated_gas) * gas_price
         draft.gas = int(gas)
         draft.tx["gas"] = int(gas)
-        gas_price = int(draft.tx["gasPrice"])
         draft.gas_price_wei = gas_price
         draft.fee_wei = int(gas) * gas_price
         return draft
@@ -521,23 +577,34 @@ class TransactionService:
             required_wei=required,
             missing_wei=missing,
             gas=draft.gas,
+            estimated_gas=draft.estimated_gas,
             gas_price_wei=draft.gas_price_wei,
             oracle_gas_price_wei=draft.oracle_gas_price_wei,
+            estimated_fee_wei=draft.estimated_fee_wei,
+            gas_limit=draft.gas_limit or draft.gas,
+            gas_limit_fee_wei=(int(draft.gas_limit) * int(draft.gas_price_wei)) if draft.gas_limit and draft.gas_price_wei else draft.fee_wei,
+            exact=draft.estimated_fee_wei is not None and draft.fee_wei == draft.estimated_fee_wei,
         )
         draft.preflight = preflight
         return preflight
 
-    async def calculate_fee(self, draft: TransactionDraft) -> FeePreflight:
+    async def calculate_fee(self, draft: TransactionDraft, *, exact: bool = False) -> FeePreflight:
         """Estimate gas/fee and check native DEL balance without signing."""
         await self._apply_minimum_gas_price(draft)
         if draft.gas is None and draft.tx.get("gas") is not None:
             draft.gas = int(draft.tx["gas"])
         if draft.fee_wei is None and draft.gas is None:
-            draft = await self.estimate(draft)
+            draft = await self.estimate(draft, exact=exact)
         elif draft.fee_wei is None:
             gas_price = int(draft.tx["gasPrice"])
             draft.tx["gas"] = int(draft.gas)
             draft.gas_price_wei = gas_price
+            if draft.estimated_gas is None:
+                draft.estimated_gas = int(draft.gas)
+            if draft.gas_limit is None:
+                draft.gas_limit = int(draft.gas)
+            if draft.estimated_fee_wei is None:
+                draft.estimated_fee_wei = int(draft.estimated_gas) * gas_price
             draft.fee_wei = int(draft.gas) * gas_price
         return await self.preflight_fee(draft)
 
@@ -558,37 +625,47 @@ class TransactionService:
     async def estimate_fee_for_native_transfer(
         self,
         request: NativeTransferRequest,
+        *,
+        exact: bool = False,
     ) -> FeePreflight:
         draft = await self.build_native_transfer(request)
-        return await self.calculate_fee(draft)
+        return await self.calculate_fee(draft, exact=exact)
 
     async def estimate_fee_for_contract_call(
         self,
         request: ContractCallRequest,
+        *,
+        exact: bool = False,
     ) -> FeePreflight:
         draft = await self.build_contract_call(request)
-        return await self.calculate_fee(draft)
+        return await self.calculate_fee(draft, exact=exact)
 
     async def estimate_fee_for_erc20_transfer(
         self,
         request: Erc20TransferRequest,
+        *,
+        exact: bool = False,
     ) -> FeePreflight:
         draft = await self.build_erc20_transfer(request)
-        return await self.calculate_fee(draft)
+        return await self.calculate_fee(draft, exact=exact)
 
     async def estimate_fee_for_erc20_approve(
         self,
         request: Erc20ApproveRequest,
+        *,
+        exact: bool = False,
     ) -> FeePreflight:
         draft = await self.build_erc20_approve(request)
-        return await self.calculate_fee(draft)
+        return await self.calculate_fee(draft, exact=exact)
 
     async def estimate_fee_for_erc20_transfer_from(
         self,
         request: Erc20TransferFromRequest,
+        *,
+        exact: bool = False,
     ) -> FeePreflight:
         draft = await self.build_erc20_transfer_from(request)
-        return await self.calculate_fee(draft)
+        return await self.calculate_fee(draft, exact=exact)
 
     async def sign(self, draft: TransactionDraft, private_key: str) -> TransactionDraft:
         signable_tx = {key: value for key, value in draft.tx.items() if key != "from"}
@@ -625,8 +702,8 @@ class TransactionService:
     async def wait_receipt(
         self,
         draft: TransactionDraft,
-        timeout_seconds: float = 1.0,
-        poll_seconds: float = 0.2,
+        timeout_seconds: float = 7.0,
+        poll_seconds: float = 3.0,
     ) -> TransactionDraft:
         if draft.tx_hash is None:
             raise ValueError("Transaction hash is required")
@@ -937,8 +1014,17 @@ def _preflight_with_fee(preflight: FeePreflight, draft: TransactionDraft) -> Fee
         required_wei=required,
         missing_wei=missing,
         gas=draft.gas,
+        estimated_gas=draft.estimated_gas or preflight.estimated_gas,
         gas_price_wei=draft.gas_price_wei,
         oracle_gas_price_wei=draft.oracle_gas_price_wei,
+        estimated_fee_wei=draft.estimated_fee_wei or preflight.estimated_fee_wei,
+        gas_limit=draft.gas_limit or draft.gas or preflight.gas_limit,
+        gas_limit_fee_wei=(
+            int((draft.gas_limit or draft.gas)) * int(draft.gas_price_wei)
+            if (draft.gas_limit or draft.gas) and draft.gas_price_wei
+            else preflight.gas_limit_fee_wei
+        ),
+        exact=False,
     )
     draft.preflight = updated
     return updated
@@ -1045,8 +1131,8 @@ def _gas_limit_multiplier(client) -> float:
 def _max_gas_price_wei(client) -> int | None:
     safety = getattr(getattr(client, "config", None), "safety", None)
     if safety is None:
-        return 20_000_000_000
-    value = getattr(safety, "max_gas_price_wei", 20_000_000_000)
+        return None
+    value = getattr(safety, "max_gas_price_wei", None)
     if value is None:
         return None
     try:
@@ -1078,6 +1164,14 @@ def _retry_gas_price_from_minimum_fee_error(error: str, gas: int | None) -> int 
 
 
 def _minimum_fee_wei_from_error(error: str) -> int | None:
+    comparison_patterns = (
+        r"provided fee\s*<\s*minimum global fee\s*\(\s*[0-9]+(?:\.[0-9]+)?\s*<\s*([0-9]+(?:\.[0-9]+)?)\s*\)",
+        r"minimum global fee\s*\(\s*[0-9]+(?:\.[0-9]+)?\s*<\s*([0-9]+(?:\.[0-9]+)?)\s*\)",
+    )
+    for pattern in comparison_patterns:
+        match = re.search(pattern, error, re.IGNORECASE)
+        if match:
+            return int(Decimal(match.group(1)).to_integral_value(rounding=ROUND_CEILING))
     patterns = (
         r"(?:minimum global fee|min(?:imum)? fee|required fee|required|min(?:imum)?)[^0-9]{0,40}([0-9]+(?:\.[0-9]+)?)\s*(wei|gwei|del)?",
         r"([0-9]+(?:\.[0-9]+)?)\s*(wei|gwei|del)\s*(?:minimum global fee|min(?:imum)? fee|required fee|required|min(?:imum)?)",

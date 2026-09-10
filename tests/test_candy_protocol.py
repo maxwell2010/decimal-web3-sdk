@@ -1,9 +1,30 @@
 import pytest
-from decimal_web3_sdk.candy_protocol import build_unsigned_candy_call, load_candy_profile
+from decimal_web3_sdk.candy_protocol import build_unsigned_candy_call, build_unsigned_candy_burn, load_candy_profile
 
 OWNER = "0x1111111111111111111111111111111111111111"
 RECIPIENT = "0x2222222222222222222222222222222222222222"
 NFT = "0x3333333333333333333333333333333333333333"
+
+
+def test_explicit_native_and_token_burn_without_keys_or_broadcast():
+    native = build_unsigned_candy_burn(owner=OWNER, amount_base=123)
+    assert native == {"chainId": 75, "from": OWNER, "to": "0x" + "0" * 40, "data": "0x", "value": "123"}
+    token = build_unsigned_candy_burn(owner=OWNER, amount_base=123, token_address=NFT)
+    assert token["to"] == NFT and token["value"] == "0"
+    assert token["data"] == "0x42966c68" + hex(123)[2:].zfill(64)
+
+
+@pytest.mark.parametrize("value", [0, -1, 2**256, True, 1.1, "1"])
+def test_burn_requires_positive_integer_amount(value):
+    with pytest.raises(ValueError):
+        build_unsigned_candy_burn(owner=OWNER, amount_base=value)
+
+
+def test_burn_cannot_change_chain_or_use_zero_as_token_contract():
+    with pytest.raises(ValueError):
+        build_unsigned_candy_burn(owner=OWNER, amount_base=1, chain_id=1)
+    with pytest.raises(ValueError):
+        build_unsigned_candy_burn(owner=OWNER, amount_base=1, token_address="0x" + "0" * 40)
 
 def test_shared_erc721_calldata_without_keys_or_network():
     draft = build_unsigned_candy_call(owner=OWNER, address=NFT, contract_type="nft", signature="safeTransferFrom(address,address,uint256)", args=[OWNER, RECIPIENT, 2])

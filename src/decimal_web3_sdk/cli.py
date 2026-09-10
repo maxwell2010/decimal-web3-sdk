@@ -52,7 +52,12 @@ from .transactions import (
     FeePreflight,
     NativeTransferRequest,
 )
-from .wallet import DEFAULT_DERIVATION_PATH, generate_mnemonic_account, mnemonic_to_account
+from .wallet import (
+    DEFAULT_DERIVATION_PATH,
+    generate_mnemonic_account,
+    mnemonic_to_account,
+    mnemonic_to_accounts,
+)
 
 
 def main() -> None:
@@ -79,9 +84,26 @@ async def _run(args: argparse.Namespace) -> Any:
             args.mnemonic,
             passphrase=args.passphrase or "",
             account_path=args.path,
+            account_index=args.index,
             include_mnemonic=args.include_mnemonic,
         )
         return wallet.__dict__
+    if args.command == "wallet-sequence":
+        wallets = mnemonic_to_accounts(
+            args.mnemonic,
+            passphrase=args.passphrase or "",
+            start_index=args.start_index,
+            count=args.count,
+        )
+        return [
+            {
+                "index": args.start_index + offset,
+                "address": wallet.address,
+                "derivation_path": wallet.derivation_path,
+                **({"private_key": wallet.private_key} if args.include_private_keys else {}),
+            }
+            for offset, wallet in enumerate(wallets)
+        ]
 
     async with DecimalClient() as client:
         if args.command == "health":
@@ -111,6 +133,16 @@ async def _run(args: argparse.Namespace) -> Any:
             return await client.rest.validators()
         if args.command == "validator":
             return await client.rest.validator(args.validator)
+        if args.command == "wallet-staking":
+            summary = await client.rest.wallet_staking_summary(args.address, include_unstakes=not args.no_unstakes)
+            return {
+                "address": summary.address,
+                "total_del": str(summary.total_del),
+                "coin_total_del": str(summary.coin_total_del),
+                "nft_hold_total_del": str(summary.nft_hold_total_del),
+                "positions": [position.__dict__ for position in summary.positions],
+                "unstakes": [unstake.__dict__ for unstake in summary.unstakes],
+            }
         if args.command == "coins":
             return await client.rest.coins(with_price=args.price, limit=args.limit)
         if args.command == "coin":
@@ -148,7 +180,8 @@ async def _run(args: argparse.Namespace) -> Any:
                     amount_del=Decimal(args.amount),
                     private_key=args.private_key,
                     memo=args.memo,
-                )
+                ),
+                exact=args.exact,
             )
             return _fee_quote(quote)
         if args.command == "send-erc20":
@@ -175,7 +208,8 @@ async def _run(args: argparse.Namespace) -> Any:
                     amount=Decimal(args.amount),
                     private_key=args.private_key,
                     decimals=args.decimals,
-                )
+                ),
+                exact=args.exact,
             )
             return _fee_quote(quote)
         if args.command == "approve-erc20":
@@ -202,7 +236,8 @@ async def _run(args: argparse.Namespace) -> Any:
                     amount=Decimal(args.amount),
                     private_key=args.private_key,
                     decimals=args.decimals,
-                )
+                ),
+                exact=args.exact,
             )
             return _fee_quote(quote)
         if args.command == "transfer-from-erc20":
@@ -229,7 +264,8 @@ async def _run(args: argparse.Namespace) -> Any:
                     private_key=args.private_key,
                     data=args.data,
                     value_wei=args.value_wei,
-                )
+                ),
+                exact=args.exact,
             )
             return _fee_quote(quote)
         if args.command == "delegate-del":
@@ -687,7 +723,15 @@ def _build_parser() -> argparse.ArgumentParser:
     wallet_from_mnemonic.add_argument("mnemonic")
     wallet_from_mnemonic.add_argument("--passphrase")
     wallet_from_mnemonic.add_argument("--path", default=DEFAULT_DERIVATION_PATH)
+    wallet_from_mnemonic.add_argument("--index", type=int)
     wallet_from_mnemonic.add_argument("--include-mnemonic", action="store_true")
+
+    wallet_sequence = sub.add_parser("wallet-sequence")
+    wallet_sequence.add_argument("mnemonic")
+    wallet_sequence.add_argument("--passphrase")
+    wallet_sequence.add_argument("--start-index", type=int, default=0)
+    wallet_sequence.add_argument("--count", type=int, default=10)
+    wallet_sequence.add_argument("--include-private-keys", action="store_true")
 
     block = sub.add_parser("block")
     block.add_argument("height", help="Block height or 'latest'")
@@ -710,6 +754,10 @@ def _build_parser() -> argparse.ArgumentParser:
     sub.add_parser("validators")
     validator = sub.add_parser("validator")
     validator.add_argument("validator")
+
+    wallet_staking = sub.add_parser("wallet-staking")
+    wallet_staking.add_argument("address")
+    wallet_staking.add_argument("--no-unstakes", action="store_true")
 
     coins = sub.add_parser("coins")
     coins.add_argument("--price", action="store_true")
@@ -737,6 +785,7 @@ def _build_parser() -> argparse.ArgumentParser:
     fee_del.add_argument("--amount", required=True)
     fee_del.add_argument("--private-key", required=True)
     fee_del.add_argument("--memo")
+    fee_del.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
     send_erc20 = sub.add_parser("send-erc20")
     send_erc20.add_argument("--token", required=True)
@@ -752,6 +801,7 @@ def _build_parser() -> argparse.ArgumentParser:
     fee_erc20.add_argument("--amount", required=True)
     fee_erc20.add_argument("--private-key", required=True)
     fee_erc20.add_argument("--decimals", type=int)
+    fee_erc20.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
     approve_erc20 = sub.add_parser("approve-erc20")
     approve_erc20.add_argument("--token", required=True)
@@ -767,6 +817,7 @@ def _build_parser() -> argparse.ArgumentParser:
     fee_erc20_approve.add_argument("--amount", required=True)
     fee_erc20_approve.add_argument("--private-key", required=True)
     fee_erc20_approve.add_argument("--decimals", type=int)
+    fee_erc20_approve.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
     transfer_from_erc20 = sub.add_parser("transfer-from-erc20")
     transfer_from_erc20.add_argument("--token", required=True)
@@ -782,6 +833,7 @@ def _build_parser() -> argparse.ArgumentParser:
     fee_contract.add_argument("--data", required=True)
     fee_contract.add_argument("--private-key", required=True)
     fee_contract.add_argument("--value-wei", type=int, default=0)
+    fee_contract.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
     delegate_del = sub.add_parser("delegate-del")
     delegate_del.add_argument("--validator", required=True)
@@ -1093,11 +1145,18 @@ def _fee_quote(quote: FeePreflight) -> dict[str, Any]:
         "value_wei": quote.value_wei,
         "value_del": str(quote.value_del),
         "gas": quote.gas,
+        "estimated_gas": quote.estimated_gas,
+        "gas_limit": quote.gas_limit,
         "gas_price_wei": quote.gas_price_wei,
         "effective_gas_price_wei": quote.gas_price_wei,
         "oracle_gas_price_wei": quote.oracle_gas_price_wei,
         "fee_wei": quote.fee_wei,
         "fee_del": str(quote.fee_del),
+        "estimated_fee_wei": quote.estimated_fee_wei,
+        "estimated_fee_del": str(quote.estimated_fee_del) if quote.estimated_fee_del is not None else None,
+        "gas_limit_fee_wei": quote.gas_limit_fee_wei,
+        "gas_limit_fee_del": str(quote.gas_limit_fee_del) if quote.gas_limit_fee_del is not None else None,
+        "exact": quote.exact,
         "minimum_fee_wei": quote.minimum_fee_wei,
         "minimum_fee_del": str(quote.minimum_fee_del),
         "required_wei": quote.required_wei,

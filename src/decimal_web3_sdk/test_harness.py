@@ -10,6 +10,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
+
 from .client import DecimalClient
 from .config import NetworkConfig
 from .decimal import (
@@ -29,7 +31,7 @@ from .token import (
     SellTokenRequest,
 )
 from .transactions import Erc20ApproveRequest, Erc20TransferRequest, FeePreflight, NativeTransferRequest
-from .wallet import DEFAULT_DERIVATION_PATH, mnemonic_to_private_key
+from .wallet import DEFAULT_DERIVATION_PATH, mnemonic_to_private_key, private_key_to_address
 
 
 @dataclass(frozen=True)
@@ -86,20 +88,33 @@ class TxTrainingJournal:
 
 
 async def run_env_training(journal: TxTrainingJournal | None = None) -> list[TxTrainingRecord]:
-    private_key = _test_private_key_from_env()
+    load_dotenv(override=False)
+    network = _test_network()
+    private_key = _test_private_key_from_env(network)
     if not private_key:
         raise RuntimeError(
-            "DECIMAL_TEST_PRIVATE_KEY or DECIMAL_TEST_MNEMONIC is required for transaction training"
+            f"{_network_env_prefix(network)}_TEST_PRIVATE_KEY or "
+            f"{_network_env_prefix(network)}_TEST_MNEMONIC is required for transaction training"
+        )
+
+    account = private_key_to_address(private_key)
+    expected_address = _test_expected_address(network)
+    if expected_address and account.lower() != expected_address.lower():
+        raise RuntimeError(
+            f"Training credential address mismatch: expected {expected_address}, derived {account}"
         )
 
     broadcast = os.getenv("DECIMAL_TEST_BROADCAST") == "1"
+    if broadcast and network == "mainnet" and not expected_address:
+        raise RuntimeError(
+            "Mainnet broadcast requires DECIMAL_MAINNET_TEST_EXPECTED_ADDRESS"
+        )
     wait_receipt = os.getenv("DECIMAL_TEST_WAIT_RECEIPT") == "1"
     journal = journal or TxTrainingJournal(os.getenv("DECIMAL_TEST_REPORT", "reports/tx_training.csv"))
     records: list[TxTrainingRecord] = []
 
-    async with DecimalClient(_training_config()) as client:
+    async with DecimalClient(_training_config(network)) as client:
         to = os.getenv("DECIMAL_TEST_TO") or await client.address_from_private_key(private_key)
-        account = await client.address_from_private_key(private_key)
         del_amount = Decimal(os.getenv("DECIMAL_TEST_DEL_AMOUNT", "0"))
         if del_amount > 0:
             request = NativeTransferRequest(to=to, amount_del=del_amount, private_key=private_key)
@@ -550,8 +565,15 @@ def _int_or_none(value) -> int | None:
     return int(value)
 
 
-def _training_config() -> NetworkConfig:
+def _test_network() -> str:
     network = os.getenv("DECIMAL_TEST_NETWORK", "testnet").strip().lower()
+    if network not in {"testnet", "devnet", "mainnet"}:
+        raise RuntimeError("DECIMAL_TEST_NETWORK must be one of: testnet, devnet, mainnet")
+    return network
+
+
+def _training_config(network: str | None = None) -> NetworkConfig:
+    network = network or _test_network()
     if network == "mainnet":
         return NetworkConfig.mainnet()
     if network == "devnet":
@@ -561,15 +583,25 @@ def _training_config() -> NetworkConfig:
     raise RuntimeError("DECIMAL_TEST_NETWORK must be one of: testnet, devnet, mainnet")
 
 
-def _test_private_key_from_env() -> str | None:
-    private_key = os.getenv("DECIMAL_TEST_PRIVATE_KEY")
+def _network_env_prefix(network: str) -> str:
+    return f"DECIMAL_{network.upper()}"
+
+
+def _test_expected_address(network: str) -> str | None:
+    return os.getenv(f"{_network_env_prefix(network)}_TEST_EXPECTED_ADDRESS")
+
+
+def _test_private_key_from_env(network: str | None = None) -> str | None:
+    network = network or _test_network()
+    prefix = _network_env_prefix(network)
+    private_key = os.getenv(f"{prefix}_TEST_PRIVATE_KEY")
     if private_key:
         return private_key
-    mnemonic = os.getenv("DECIMAL_TEST_MNEMONIC")
+    mnemonic = os.getenv(f"{prefix}_TEST_MNEMONIC")
     if not mnemonic:
         return None
     return mnemonic_to_private_key(
         mnemonic,
-        passphrase=os.getenv("DECIMAL_TEST_MNEMONIC_PASSPHRASE", ""),
-        account_path=os.getenv("DECIMAL_TEST_DERIVATION_PATH", DEFAULT_DERIVATION_PATH),
+        passphrase=os.getenv(f"{prefix}_TEST_MNEMONIC_PASSPHRASE", ""),
+        account_path=os.getenv(f"{prefix}_TEST_DERIVATION_PATH", DEFAULT_DERIVATION_PATH),
     )

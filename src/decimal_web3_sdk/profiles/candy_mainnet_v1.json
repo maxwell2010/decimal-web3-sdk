@@ -3,6 +3,7 @@
   "reviewed": "2026-09-08",
   "network": "decimal-mainnet",
   "chainId": 75,
+  "nativeBurnAddress": "0x0000000000000000000000000000000000000000",
   "tokenCenter": "0x9113ba675aa8f2ef0c068cee2cdabab95b6437fb",
   "nftCenter": "0x443cc8ac24630be9257483a09c34ffa81608eace",
   "nftDelegation": "0xe45adfcc739a0d10ce9462b58866c9a1a06035e2",

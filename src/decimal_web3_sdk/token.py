@@ -154,6 +154,23 @@ TOKEN_CENTER_ABI: list[dict[str, Any]] = [
     },
     {
         "inputs": [
+            {"internalType": "address payable", "name": "tokenIn", "type": "address"},
+            {"internalType": "address payable", "name": "tokenOut", "type": "address"},
+            {"internalType": "uint256", "name": "amountIn", "type": "uint256"},
+            {"internalType": "uint256", "name": "amountOutMin", "type": "uint256"},
+            {"internalType": "address", "name": "recipient", "type": "address"},
+            {"internalType": "uint256", "name": "deadline", "type": "uint256"},
+            {"internalType": "uint8", "name": "v", "type": "uint8"},
+            {"internalType": "bytes32", "name": "r", "type": "bytes32"},
+            {"internalType": "bytes32", "name": "s", "type": "bytes32"},
+        ],
+        "name": "convert",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    },
+    {
+        "inputs": [
             {"internalType": "string", "name": "name", "type": "string"},
             {"internalType": "string", "name": "symbol", "type": "string"},
             {"internalType": "bool", "name": "mintable", "type": "bool"},
@@ -197,6 +214,8 @@ class ConvertTokenRequest(FromMnemonicMixin):
     token_in_decimals: int | None = None
     token_out_decimals: int | None = None
     auto_approve: bool = True
+    prefer_permit: bool = True
+    permit_deadline: int = 2**256 - 1
 
 
 @dataclass(frozen=True)
@@ -322,6 +341,48 @@ class TokenService:
             steps: list[str] = []
             approve_result: TransactionResult | None = None
             if allowance < amount_raw:
+                if request.prefer_permit:
+                    permit = await self._client.erc20.permit_signature(
+                        request.token_in,
+                        owner,
+                        spender,
+                        amount_raw,
+                        request.permit_deadline,
+                        request.private_key,
+                    )
+                    if permit is not None:
+                        signature = "convert(address,address,uint256,uint256,address,uint256,uint8,bytes32,bytes32)"
+                        function = self._token_center_contract().get_function_by_signature(signature)
+                        data = function(
+                            checksum(request.token_in),
+                            checksum(request.token_out),
+                            amount_raw,
+                            min_out_raw,
+                            owner,
+                            permit.deadline,
+                            permit.v,
+                            permit.r,
+                            permit.s,
+                        )._encode_transaction_data()
+                        result = await self._send_contract(
+                            request.private_key,
+                            spender,
+                            data,
+                            0,
+                            broadcast,
+                            wait_receipt,
+                        )
+                        return DecimalWorkflowResult(
+                            result.success,
+                            "convert_erc20",
+                            ("convert_erc20_by_permit",),
+                            1,
+                            1,
+                            False,
+                            result,
+                            None,
+                            result.error,
+                        )
                 if not request.auto_approve:
                     return _workflow_error("convert_erc20", f"ERC20 allowance is insufficient: allowance_raw={allowance}, required_raw={amount_raw}", True)
                 approve_result = await self._client.tx.approve_erc20(
@@ -339,7 +400,9 @@ class TokenService:
                 if not approve_result.success:
                     return DecimalWorkflowResult(False, "convert_erc20", tuple(steps), 1, len(steps), True, None, approve_result, approve_result.error)
 
-            data = self._token_center_contract().functions.convert(
+            signature = "convert(address,address,uint256,uint256,address)"
+            function = self._token_center_contract().get_function_by_signature(signature)
+            data = function(
                 checksum(request.token_in),
                 checksum(request.token_out),
                 amount_raw,
@@ -553,6 +616,7 @@ def _replace_transaction_result(result: TransactionResult, **updates: Any) -> Tr
         "transaction_index": result.transaction_index,
         "gas_used": result.gas_used,
         "effective_gas_price_wei": result.effective_gas_price_wei,
+        "oracle_gas_price_wei": result.oracle_gas_price_wei,
         "effective_fee_wei": result.effective_fee_wei,
         "effective_fee_del": result.effective_fee_del,
         "fee_wei": result.fee_wei,
@@ -562,6 +626,8 @@ def _replace_transaction_result(result: TransactionResult, **updates: Any) -> Tr
         "receipt": result.receipt,
         "events": result.events,
         "token_address": result.token_address,
+        "hold_timestamp": result.hold_timestamp,
+        "hold_time": result.hold_time,
         "error": result.error,
         "user_message": result.user_message,
         "native_balance_wei": result.native_balance_wei,

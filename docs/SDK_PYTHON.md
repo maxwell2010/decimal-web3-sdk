@@ -151,6 +151,72 @@ async with DecimalClient(config) as client:
     validators = await client.rest.validators()
 ```
 
+### Делегированные токены кошелька
+
+Если выбранный API-gateway поддерживает Decimal validator facade, SDK может получить активные делегации, текущий анбонд и подготовить UI для последующего `unbond`:
+
+```python
+summary = await client.rest.wallet_staking_summary("0xWallet")
+
+print(summary.total_del)
+for position in summary.positions:
+    print(
+        position.validator_name,
+        position.validator,
+        position.symbol,
+        position.amount,
+        position.base_amount_del,
+        position.is_hold,
+    )
+
+for unstake in summary.unstakes:
+    print(unstake.validator_name, unstake.symbol, unstake.amount, unstake.completion_time)
+```
+
+Для блока “История выводов” используйте отдельный нормализованный метод. По умолчанию он возвращает актуальные выводы, которые еще ожидают дату возврата на кошелек:
+
+```python
+withdrawals = await client.rest.wallet_stake_withdrawals("0xWallet")
+
+for item in withdrawals:
+    print(
+        item.validator_name,
+        item.symbol,          # WDEL нормализуется в DEL
+        item.amount,
+        item.available_time,
+        item.tx_hash,
+    )
+```
+
+Если индекс списка транзакций еще не догнал детальную запись, можно передать известные hash:
+
+```python
+withdrawals = await client.rest.wallet_stake_withdrawals(
+    "0xWallet",
+    tx_hashes=["0x..."],
+)
+```
+
+Для аудита старых выводов:
+
+```python
+withdrawals = await client.rest.wallet_stake_withdrawals(
+    "0xWallet",
+    include_completed=True,
+    recent_days=90,
+)
+```
+
+Низкоуровневые методы возвращают raw JSON выбранного API:
+
+```python
+stakes = await client.rest.wallet_stakes("0xWallet")
+unstakes = await client.rest.wallet_unstakes("0xWallet")
+transfers = await client.rest.wallet_stake_transfers("0xWallet")
+```
+
+Совместимый endpoint: `/validators/wallet/{address}/stakes/coins`. В публичных Decimal API он может быть закрыт или отсутствовать, поэтому для приложений указывайте свой read-only API через `NetworkConfig.custom(api_base_url="https://your-api.example/v1", ...)`. В SDK адреса наших нод и API не зашиты.
+
 ## DEL транзакции
 
 Типовой порядок для любой транзакции:
@@ -201,7 +267,7 @@ print(result.tx_hash, result.status, result.block_number, result.gas_used, resul
 5. Для ERC20 дополнительно проверяет token balance.
 6. При нехватке возвращает `TransactionResult(success=False, error=...)` без broadcast.
 
-`FeePreflight` считается до подписи и не создает raw transaction. SDK читает сетевой `eth_gasPrice` для диагностики, но стартует с effective gas price, ограниченным до `20 gwei`, потому что после rebase Decimal RPC может возвращать завышенный oracle gas price. Переопределить лимит можно через `DECIMAL_GAS_PRICE_GWEI`, `DECIMAL_MAX_GAS_PRICE_GWEI` или `SafetyLimits(max_gas_price_wei=...)`; отключайте cap через `none`/`0` только если намеренно хотите сырой network gas price. Если broadcast возвращает ошибку minimum global fee, включая `provided fee < minimum global fee` или `minimum global fee too high`, SDK один раз пересчитывает `gasPrice = ceil(required_fee / gas)`, заново подписывает ту же транзакцию и повторяет отправку. После отправки `TransactionResult` содержит нормализованные поля `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, а также сырой `receipt` для расширенной диагностики.
+`FeePreflight` считается до подписи и не создает raw transaction. По умолчанию SDK использует сетевой `eth_gasPrice` без жесткого cap: после внедрения Decimal fee oracle именно сеть определяет minimum global fee. `exact=True` считает `estimateGas * gasPrice`, обычный режим добавляет запас к gas limit. Переопределить политику можно через `DECIMAL_GAS_PRICE_GWEI`, `DECIMAL_MAX_GAS_PRICE_GWEI` или `SafetyLimits(max_gas_price_wei=...)`, но слишком низкий cap может быть отклонен сетью. Если broadcast возвращает minimum-global-fee error, SDK один раз пересчитывает `gasPrice = ceil(required_fee / gas)`, заново подписывает ту же транзакцию и повторяет отправку. После отправки `TransactionResult` содержит нормализованные поля `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, а также сырой `receipt` для расширенной диагностики.
 
 `TransactionResult.status` принимает практичные значения:
 
@@ -227,7 +293,7 @@ if not exists:
 - `Недостаточно токенов на балансе.`
 - `Нужно разрешение на списание токена.`
 
-По умолчанию после RPC `estimateGas` применяется запас `gas_limit_multiplier=1.10`, как в Decimal Go SDK, а gas price ограничивается `20 gwei`. Если нужен строго сырой estimate или другой cap:
+По умолчанию после RPC `estimateGas` применяется запас `gas_limit_multiplier=1.10`, как в Decimal Go SDK, а gas price берется из выбранной сети. Если нужен строго сырой estimate:
 
 ```python
 from decimal_web3_sdk import NetworkConfig
@@ -236,7 +302,7 @@ from decimal_web3_sdk.limits import SafetyLimits
 config = NetworkConfig.custom(
     chain_id=75,
     web3_urls=["https://node.decimalchain.com/web3/"],
-    safety=SafetyLimits(gas_limit_multiplier=1.0, max_gas_price_wei=20_000_000_000),
+    safety=SafetyLimits(gas_limit_multiplier=1.0),
 )
 ```
 
@@ -249,7 +315,7 @@ request = NativeTransferRequest.from_mnemonic(
     mnemonic=seed_phrase,
 )
 draft = await client.tx.build_native_transfer(request)
-quote = await client.tx.calculate_fee(draft)
+quote = await client.tx.calculate_fee(draft, exact=True)
 
 print(quote.ok, quote.gas, quote.oracle_gas_price_wei, quote.minimum_fee_del, quote.missing_del)
 ```
@@ -272,8 +338,9 @@ print(result.tx_hash, result.status, result.block_number)
 Некоторые EVM workflow требуют allowance: ERC20 multisend, ERC20 staking/delegate/hold, token convert. SDK сначала проверяет баланс токена и allowance, а затем выбирает путь:
 
 - Если allowance уже хватает, отправляется только основная транзакция. Для ERC20 multisend memo добавляется в этот же multicall.
-- Если токен поддерживает `permit`, SDK может уложить `permit + transferFrom calls + memo` в одну multicall-транзакцию без отдельного `approve`.
+- Если токен поддерживает `permit`, SDK использует permit-overload для delegate/hold/convert или укладывает `permit + transferFrom calls + memo` в одну multicall-транзакцию.
 - Если permit недоступен, нужен отдельный `approve`, а затем основная транзакция. Это ограничение ERC20: allowance появляется в state только после майнинга approve.
+- Для `multisend_del` approval не используется никогда: DEL является нативной монетой сети, поэтому SDK строит только `value`-calls получателей и, при наличии, один финальный memo-call.
 
 ```python
 workflow = await client.decimal.delegate_erc20(request, broadcast=False)
@@ -284,7 +351,7 @@ print(workflow.requires_secondary_transaction)
 print(workflow.total_fee_del)
 ```
 
-Для `delegate_erc20`, `hold_erc20` и `multisend_erc20` по умолчанию включен `prefer_permit=True`. Для `convert_erc20` в официальных Decimal JS/Go SDK используется `approveToken(...)` перед `convertToken(...)`; отдельного `convertByPermit` в публичном API не найдено, поэтому без заранее выставленного allowance это две транзакции.
+Для `delegate_erc20`, `hold_erc20`, `multisend_erc20` и `ConvertTokenRequest` по умолчанию включен `prefer_permit=True`. Официальный Decimal JS SDK вызывает перегрузку `convert(address,address,uint256,uint256,address,uint256,uint8,bytes32,bytes32)`, поэтому permit-совместимый входной токен конвертируется одной on-chain транзакцией. Без permit и без достаточного allowance остаются две транзакции: approve и действие.
 
 Для готовых типов есть shortcuts:
 
@@ -311,7 +378,7 @@ print(memo_supported_for("erc20-transfer"))   # False
 Можно использовать:
 
 - `NativeTransferRequest.memo` при обычной отправке DEL. SDK кодирует текст как UTF-8 в `data`, считает gas уже с этим payload и подписывает транзакцию с memo.
-- `MultisendDelRequest.memo` при мультисенде DEL. SDK кодирует одно UTF-8 memo на весь batch как последний zero-value call к `0x000...000`, как это читает Decimal explorer.
+- `MultisendDelRequest.memo` при мультисенде DEL. Для одного получателя SDK строит обычный DEL transfer; только два и более получателя используют aggregate с одним финальным memo-call.
 - `MultisendErc20Request.memo` при ERC20 multisend. ERC20 transfer calls сохраняют свой ABI calldata, а SDK добавляет одно общее memo финальным zero-value call в multicall aggregate.
 
 Нельзя использовать как универсальный memo:
@@ -376,6 +443,29 @@ await client.decimal.delegate_erc20(
 ```
 
 ERC20 staking/multisend поддерживает allowance, permit-first сценарий и approve fallback.
+
+Известную позицию можно сверить напрямую с контрактом Delegation, без индексатора:
+
+```python
+regular = await client.decimal.get_stake(validator, wallet_address, token_address)
+held = await client.decimal.get_hold_stake(
+    validator,
+    wallet_address,
+    token_address,
+    hold_timestamp,
+)
+
+print(regular.amount(decimals), regular.exists)
+print(held.amount(decimals), held.hold_time)
+```
+
+Для перечисления всех неизвестных заранее токенов, валидаторов и timestamp холдов по-прежнему
+нужен индексатор/API. После получения идентификаторов контрактное чтение показывает актуальное
+состояние позиции.
+
+Отзыв, вывод созревшего холда и перенос уже делегированного ERC20 выполняются через
+`UnbondErc20Request`, `WithdrawHoldErc20Request` и `TransferStakeErc20Request`. Approve для них
+не требуется. Перед подписью использовать соответствующий `estimate_fee_for_*` с `exact=True`.
 
 ## Validator online/offline
 
@@ -490,14 +580,15 @@ Broadcast training:
 
 ```powershell
 $env:DECIMAL_TEST_NETWORK="testnet"
-$env:DECIMAL_TEST_MNEMONIC="<testnet seed phrase from secure storage>"
+$env:DECIMAL_TESTNET_TEST_MNEMONIC="<testnet seed phrase from secure storage>"
+$env:DECIMAL_TESTNET_TEST_EXPECTED_ADDRESS="0x..."
 $env:DECIMAL_TEST_TO="0x..."
 $env:DECIMAL_TEST_DEL_AMOUNT="0.001"
 $env:DECIMAL_TEST_BROADCAST="0"
 decimal-sdk train-env
 ```
 
-Можно использовать либо `DECIMAL_TEST_PRIVATE_KEY`, либо `DECIMAL_TEST_MNEMONIC`; если заданы оба, private key имеет приоритет. По умолчанию training harness использует `DECIMAL_TEST_NETWORK=testnet`. Перед подписью/отправкой он считает комиссию, а для визуального контроля записывает баланс и nonce до/после теста. `DECIMAL_TEST_BROADCAST=1` включайте только на testnet/devnet или на кошельке, который предназначен для реальных тренировочных транзакций.
+Используйте сетевые пары `DECIMAL_TESTNET_TEST_*`, `DECIMAL_DEVNET_TEST_*` или `DECIMAL_MAINNET_TEST_*`; private key, если задан, имеет приоритет над mnemonic той же сети. По умолчанию training harness использует `DECIMAL_TEST_NETWORK=testnet`. Производный адрес сверяется с `*_TEST_EXPECTED_ADDRESS`, а mainnet broadcast без ожидаемого адреса блокируется. Перед подписью/отправкой harness считает комиссию, а для визуального контроля записывает баланс и nonce до/после теста. `DECIMAL_TEST_BROADCAST=1` включайте только на testnet/devnet или на кошельке, который предназначен для реальных тренировочных транзакций.
 
 ## Статус
 
