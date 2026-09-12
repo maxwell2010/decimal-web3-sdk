@@ -3,11 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from decimal import Decimal
+from enum import IntEnum
 from typing import Any
 
 from web3 import Web3
 
-from .erc20 import parse_units
+from .erc20 import format_units, format_units_string, parse_units
 from .transactions import (
     ContractCallRequest,
     Erc20ApproveRequest,
@@ -543,6 +544,14 @@ class ValidatorPauseRequest(FromMnemonicMixin):
     private_key: str
 
 
+class DelegationTokenType(IntEnum):
+    UNKNOWN = 0
+    DRC20 = 1
+    DRC721 = 2
+    DRC1155 = 3
+    DEL = 4
+
+
 @dataclass(frozen=True)
 class DelegationStake:
     validator: str
@@ -552,6 +561,7 @@ class DelegationStake:
     token_id: int
     token_type: int
     hold_timestamp: int
+    block_number: int | None = None
 
     @property
     def exists(self) -> bool:
@@ -563,8 +573,96 @@ class DelegationStake:
             return None
         return _hold_time(self.hold_timestamp)
 
+    @property
+    def is_hold(self) -> bool:
+        return self.hold_timestamp > 0
+
+    @property
+    def token_type_enum(self) -> DelegationTokenType:
+        return DelegationTokenType(self.token_type)
+
+    @property
+    def is_native_del(self) -> bool:
+        return self.token_type_enum is DelegationTokenType.DEL
+
+    def is_matured(self, now_timestamp: int | None = None) -> bool:
+        if not self.is_hold:
+            return False
+        now = (
+            int(datetime.now(tz=timezone.utc).timestamp())
+            if now_timestamp is None
+            else int(now_timestamp)
+        )
+        return self.hold_timestamp <= now
+
+    def amount_string(self, decimals: int = 18) -> str:
+        return format_units_string(self.amount_raw, decimals)
+
     def amount(self, decimals: int = 18) -> Decimal:
-        return Decimal(self.amount_raw) / (Decimal(10) ** int(decimals))
+        return format_units(self.amount_raw, decimals)
+
+    def as_dict(self, decimals: int = 18) -> dict[str, object]:
+        """Return a JSON-safe stake without exposing uint256 values as JSON numbers."""
+        return {
+            "validator": self.validator,
+            "delegator": self.delegator,
+            "token": self.token,
+            "amount_raw": str(self.amount_raw),
+            "amount": self.amount_string(decimals),
+            "token_id": str(self.token_id),
+            "token_type": int(self.token_type),
+            "token_type_name": self.token_type_enum.name,
+            "hold_timestamp": str(self.hold_timestamp),
+            "hold_time": self.hold_time,
+            "block_number": self.block_number,
+            "exists": self.exists,
+        }
+
+
+@dataclass(frozen=True)
+class DelegationStakeSnapshot:
+    block_number: int
+    regular: DelegationStake
+    holds: tuple[DelegationStake, ...] = ()
+    missing_hold_timestamps: tuple[int, ...] = ()
+
+    @property
+    def regular_amount_raw(self) -> int:
+        return self.regular.amount_raw if self.regular.exists else 0
+
+    @property
+    def held_amount_raw(self) -> int:
+        return sum(stake.amount_raw for stake in self.holds)
+
+    @property
+    def total_amount_raw(self) -> int:
+        return self.regular_amount_raw + self.held_amount_raw
+
+    def regular_amount(self, decimals: int = 18) -> Decimal:
+        return format_units(self.regular_amount_raw, decimals)
+
+    def held_amount(self, decimals: int = 18) -> Decimal:
+        return format_units(self.held_amount_raw, decimals)
+
+    def total_amount(self, decimals: int = 18) -> Decimal:
+        return format_units(self.total_amount_raw, decimals)
+
+    def matured_holds(self, now_timestamp: int | None = None) -> tuple[DelegationStake, ...]:
+        return tuple(stake for stake in self.holds if stake.is_matured(now_timestamp))
+
+    def as_dict(self, decimals: int = 18) -> dict[str, object]:
+        return {
+            "block_number": self.block_number,
+            "regular_amount_raw": str(self.regular_amount_raw),
+            "regular_amount": format_units_string(self.regular_amount_raw, decimals),
+            "held_amount_raw": str(self.held_amount_raw),
+            "held_amount": format_units_string(self.held_amount_raw, decimals),
+            "total_amount_raw": str(self.total_amount_raw),
+            "total_amount": format_units_string(self.total_amount_raw, decimals),
+            "regular": self.regular.as_dict(decimals),
+            "holds": [stake.as_dict(decimals) for stake in self.holds],
+            "missing_hold_timestamps": [str(value) for value in self.missing_hold_timestamps],
+        }
 
 
 @dataclass(frozen=True)
@@ -658,14 +756,36 @@ class DecimalService:
     def __init__(self, client) -> None:
         self._client = client
 
-    async def get_stake(self, validator: str, delegator: str, token: str) -> DelegationStake:
+    async def get_stake(
+        self,
+        validator: str,
+        delegator: str,
+        token: str,
+        *,
+        block_identifier: int | str | None = None,
+    ) -> DelegationStake:
+        validator_address = checksum(validator)
+        delegator_address = checksum(delegator)
+        token_address = checksum(token)
         call = self._delegation_contract().functions.getStake(
-            checksum(validator),
-            checksum(delegator),
-            checksum(token),
+            validator_address,
+            delegator_address,
+            token_address,
         )
-        value = await self._client.rpc.call(lambda _: call.call())
-        return _delegation_stake(value)
+        value = await self._client.rpc.call(
+            lambda _: call.call()
+            if block_identifier is None
+            else call.call(block_identifier=block_identifier)
+        )
+        return _delegation_stake(
+            value,
+            expected_validator=validator_address,
+            expected_delegator=delegator_address,
+            expected_token=token_address,
+            expected_hold_timestamp=0,
+            wdel=checksum(self._client.config.contracts.wdel),
+            block_number=block_identifier if isinstance(block_identifier, int) else None,
+        )
 
     async def get_hold_stake(
         self,
@@ -673,15 +793,85 @@ class DecimalService:
         delegator: str,
         token: str,
         hold_timestamp: int,
+        *,
+        block_identifier: int | str | None = None,
     ) -> DelegationStake:
+        hold_key = int(hold_timestamp)
+        if hold_key <= 0:
+            raise ValueError("hold_timestamp must be greater than zero")
+        validator_address = checksum(validator)
+        delegator_address = checksum(delegator)
+        token_address = checksum(token)
         call = self._delegation_contract().functions.getHoldStake(
-            checksum(validator),
-            checksum(delegator),
-            checksum(token),
-            int(hold_timestamp),
+            validator_address,
+            delegator_address,
+            token_address,
+            hold_key,
         )
-        value = await self._client.rpc.call(lambda _: call.call())
-        return _delegation_stake(value)
+        value = await self._client.rpc.call(
+            lambda _: call.call()
+            if block_identifier is None
+            else call.call(block_identifier=block_identifier)
+        )
+        return _delegation_stake(
+            value,
+            expected_validator=validator_address,
+            expected_delegator=delegator_address,
+            expected_token=token_address,
+            expected_hold_timestamp=hold_key,
+            wdel=checksum(self._client.config.contracts.wdel),
+            block_number=block_identifier if isinstance(block_identifier, int) else None,
+        )
+
+    async def get_stake_snapshot(
+        self,
+        validator: str,
+        delegator: str,
+        token: str,
+        hold_timestamps: list[int] | tuple[int, ...] = (),
+        *,
+        block_number: int | None = None,
+        max_hold_entries: int = 100,
+    ) -> DelegationStakeSnapshot:
+        """Read one regular stake and a bounded set of known hold keys at one block."""
+        limit = min(max(1, int(max_hold_entries)), 100)
+        hold_keys = tuple(dict.fromkeys(int(value) for value in hold_timestamps))
+        if len(hold_keys) > limit:
+            raise ValueError(f"At most {limit} hold timestamps can be read in one snapshot")
+        if any(value <= 0 for value in hold_keys):
+            raise ValueError("hold timestamps must be greater than zero")
+
+        snapshot_block = (
+            int(await self._client.block_number())
+            if block_number is None
+            else int(block_number)
+        )
+        regular = await self.get_stake(
+            validator,
+            delegator,
+            token,
+            block_identifier=snapshot_block,
+        )
+        holds: list[DelegationStake] = []
+        missing: list[int] = []
+        for hold_key in hold_keys:
+            stake = await self.get_hold_stake(
+                validator,
+                delegator,
+                token,
+                hold_key,
+                block_identifier=snapshot_block,
+            )
+            if stake.exists:
+                holds.append(stake)
+            else:
+                missing.append(hold_key)
+        return DelegationStakeSnapshot(
+            block_number=snapshot_block,
+            regular=regular,
+            holds=tuple(holds),
+            missing_hold_timestamps=tuple(missing),
+        )
 
     async def delegate_del(
         self,
@@ -1887,10 +2077,19 @@ def _hold_time(hold_timestamp: int) -> str:
     return datetime.fromtimestamp(int(hold_timestamp), tz=timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def _delegation_stake(value: Any) -> DelegationStake:
+def _delegation_stake(
+    value: Any,
+    *,
+    expected_validator: str,
+    expected_delegator: str,
+    expected_token: str,
+    expected_hold_timestamp: int,
+    wdel: str,
+    block_number: int | None = None,
+) -> DelegationStake:
     if not isinstance(value, (list, tuple)) or len(value) < 7:
         raise ValueError("Unexpected Decimal delegation stake response")
-    return DelegationStake(
+    stake = DelegationStake(
         validator=checksum(value[0]),
         delegator=checksum(value[1]),
         token=checksum(value[2]),
@@ -1898,7 +2097,45 @@ def _delegation_stake(value: Any) -> DelegationStake:
         token_id=int(value[4]),
         token_type=int(value[5]),
         hold_timestamp=int(value[6]),
+        block_number=block_number,
     )
+    zero_address = checksum("0x0000000000000000000000000000000000000000")
+    is_empty = (
+        stake.validator == zero_address
+        and stake.delegator == zero_address
+        and stake.token == zero_address
+        and stake.amount_raw == 0
+        and stake.token_id == 0
+        and stake.token_type == DelegationTokenType.UNKNOWN
+        and stake.hold_timestamp == 0
+    )
+    if is_empty:
+        return stake
+    if stake.amount_raw < 0:
+        raise ValueError("Delegation stake amount cannot be negative")
+    expected_identity = (
+        checksum(expected_validator),
+        checksum(expected_delegator),
+        checksum(expected_token),
+    )
+    actual_identity = (stake.validator, stake.delegator, stake.token)
+    if actual_identity != expected_identity:
+        raise ValueError("Delegation stake identity does not match the requested position")
+    if stake.token_id != 0:
+        raise ValueError("Fungible delegation stake must have token_id=0")
+    try:
+        token_type = DelegationTokenType(stake.token_type)
+    except ValueError as exc:
+        raise ValueError(f"Unsupported delegation token type: {stake.token_type}") from exc
+    if token_type not in (DelegationTokenType.DRC20, DelegationTokenType.DEL):
+        raise ValueError(f"Unsupported fungible delegation token type: {token_type.name}")
+    if token_type is DelegationTokenType.DEL and stake.token != checksum(wdel):
+        raise ValueError("DEL delegation stake must use the configured WDEL contract")
+    if token_type is DelegationTokenType.DRC20 and stake.token == checksum(wdel):
+        raise ValueError("Configured WDEL contract must use delegation token type DEL")
+    if stake.hold_timestamp != int(expected_hold_timestamp):
+        raise ValueError("Delegation stake hold key does not match the requested position")
+    return stake
 
 
 def _with_hold_schedule(result: TransactionResult, hold_timestamp: int) -> TransactionResult:

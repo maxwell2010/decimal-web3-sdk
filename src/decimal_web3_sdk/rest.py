@@ -7,6 +7,8 @@ from decimal import Decimal, InvalidOperation
 import time
 from typing import Any
 
+from .erc20 import format_units
+
 
 @dataclass(frozen=True)
 class Page:
@@ -65,8 +67,6 @@ class WalletStakePosition:
 
     @property
     def available_to_unbond(self) -> Decimal:
-        if self.is_native and self.is_hold:
-            return Decimal(0)
         if self.held_amount > 0 or self.is_hold:
             return self.unlocked_amount
         return self.amount
@@ -178,9 +178,13 @@ def _decimal_18(value: Any) -> Decimal:
     if value in (None, ""):
         return Decimal(0)
     try:
-        return Decimal(str(value)) / (Decimal(10) ** 18)
-    except (InvalidOperation, ValueError, TypeError):
-        return Decimal(0)
+        raw = Decimal(str(value))
+        numerator, denominator = raw.as_integer_ratio()
+        if denominator != 1:
+            raise ValueError("Base-unit amount must be an integer")
+        return format_units(numerator, 18)
+    except (InvalidOperation, ValueError, TypeError) as exc:
+        raise ValueError(f"Invalid 18-decimal base-unit amount: {value!r}") from exc
 
 
 def _int_or_none(value: Any) -> int | None:
@@ -712,11 +716,16 @@ class RestClient:
         unbonding_days: int = 15,
     ) -> tuple[WalletStakeWithdrawal, ...]:
         """Stake withdrawal history for an EVM wallet, normalized for wallet UIs."""
+        known_hashes = tuple(dict.fromkeys(tx_hashes or []))
+        if len(known_hashes) > self._max_limit:
+            raise ValueError(
+                f"At most {self._max_limit} transaction hashes can be read in one request"
+            )
         tasks: list[Any] = [
             self.wallet_unstakes(address),
             self.txs(page or Page(limit=100), address=address),
         ]
-        for tx_hash in tx_hashes or []:
+        for tx_hash in known_hashes:
             tasks.append(self.tx(tx_hash))
         results = await asyncio.gather(*tasks, return_exceptions=True)
         if all(isinstance(item, Exception) for item in results):

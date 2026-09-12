@@ -100,12 +100,12 @@ def test_normalize_wallet_staking_summary_groups_validator_coin_positions() -> N
     assert summary.positions[1].token_address is None
     assert summary.positions[1].amount == Decimal("2727.242864461120814609")
     assert summary.positions[1].api_unlocked_delta == Decimal("7.242864461120814609")
-    assert summary.positions[1].available_to_unbond == Decimal("0")
-    assert summary.positions[1].can_unbond is False
+    assert summary.positions[1].available_to_unbond == Decimal("7.242864461120814609")
+    assert summary.positions[1].can_unbond is True
     assert summary.delegated_by_symbol["BYACADEMY"] == Decimal("72.8")
     assert summary.held_by_symbol["BYACADEMY"] == Decimal("20")
     assert summary.available_to_unbond_by_symbol["BYACADEMY"] == Decimal("52.8")
-    assert "DEL" not in summary.available_to_unbond_by_symbol
+    assert summary.available_to_unbond_by_symbol["DEL"] == Decimal("7.242864461120814609")
     assert len(summary.unstakes) == 1
     assert summary.unstakes[0].validator_name == "Spacebot"
     assert summary.unstakes[0].amount == Decimal("1")
@@ -131,6 +131,29 @@ def test_normalize_wallet_staking_summary_sums_positions_when_total_missing() ->
     assert summary.positions[0].held_amount == Decimal("0")
     assert summary.positions[0].available_to_unbond == Decimal("1")
     assert summary.positions[0].can_unbond is True
+
+
+def test_staking_summary_formats_large_raw_values_without_decimal_context_rounding() -> None:
+    raw = "123456789012345678901234567890"
+    payload = {
+        "items": [
+            {
+                "validator": "0x3333333333333333333333333333333333333333",
+                "items": [
+                    {
+                        "delegatedCoins": raw,
+                        "delegatedBaseCoins": raw,
+                        "coin_symbol": "DEL",
+                    }
+                ],
+            }
+        ]
+    }
+
+    summary = normalize_wallet_staking_summary("0xWallet", payload)
+
+    assert summary.positions[0].amount_raw == raw
+    assert summary.positions[0].amount == Decimal("123456789012.34567890123456789")
 
 
 def test_staking_summary_uses_hold_timestamp_not_permit_deadline() -> None:

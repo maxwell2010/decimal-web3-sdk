@@ -483,6 +483,29 @@ print(regular.amount(decimals), regular.exists)
 print(held.amount(decimals), held.hold_time)
 ```
 
+Для DEL передается `client.config.contracts.wdel`, а контракт должен вернуть `tokenType=4`.
+Для fungible токена допустим `tokenType=1`. SDK строго сверяет адреса, `tokenId=0`, тип и
+hold timestamp; NFT-типы через эти методы не принимаются.
+
+Обычный stake и известные hold-ключи можно получить согласованным snapshot на одном блоке:
+
+```python
+snapshot = await client.decimal.get_stake_snapshot(
+    validator,
+    wallet_address,
+    client.config.contracts.wdel,
+    hold_timestamps=[hold_timestamp_1, hold_timestamp_2],
+)
+
+print(snapshot.regular_amount())
+print(snapshot.held_amount())
+print(snapshot.matured_holds())
+payload = snapshot.as_dict()  # uint256 и суммы сериализуются строками
+```
+
+`get_stake_snapshot` принимает не более 100 известных hold timestamp и не сканирует контракт.
+Raw `100000000000000000` форматируется как строка `0.1`; `float` не используется.
+
 Для перечисления всех неизвестных заранее токенов, валидаторов и timestamp холдов по-прежнему
 нужен индексатор/API. После получения идентификаторов контрактное чтение показывает актуальное
 состояние позиции.

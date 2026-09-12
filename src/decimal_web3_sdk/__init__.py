@@ -22,6 +22,8 @@ from .client import DecimalClient
 from .config import NetworkConfig, SystemContracts
 from .decimal import (
     DelegationStake,
+    DelegationStakeSnapshot,
+    DelegationTokenType,
     DecimalWorkflowResult,
     DecimalService,
     DelegateDelRequest,
@@ -164,6 +166,8 @@ __all__ = [
     "DelegateDelRequest",
     "DelegateErc20Request",
     "DelegationStake",
+    "DelegationStakeSnapshot",
+    "DelegationTokenType",
     "HoldStakeWithResetRequest",
     "HealthCheckAgent",
     "HoldDelRequest",

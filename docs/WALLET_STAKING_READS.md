@@ -155,9 +155,7 @@ SDK разделяет несколько величин:
 Правило:
 
 ```python
-if position.is_native and position.is_hold:
-    available = 0
-elif position.is_hold or position.hold_amount > 0:
+if position.is_hold or position.hold_amount > 0:
     available = position.unlocked_amount
 else:
     available = position.amount
@@ -181,7 +179,58 @@ Hold-часть нельзя отозвать обычным `unbond`, пока 
 
 Для контрактных методов `getHoldStake` / `withdrawHold` timestamp берется из `hold.hold_end_time` (`hold.contract_hold_timestamp`), а не из `hold_start_time`.
 
-Для native `DEL` с активными hold-записями SDK считает `can_unbond=False` консервативно, даже если API показывает `unlocked_amount`: такой остаток нужно обязательно проверять через contract preflight, потому что на практике `withdraw` может вернуть revert.
+`unlocked_amount` не смешивается с hold-частью даже для `DEL`. Перед отправкой обычного `withdraw` остаток следует подтвердить через `get_stake_snapshot(...)` и contract preflight: индексатор может отставать от состояния контракта.
+
+## Строгое чтение контракта
+
+Контракт Decimal кодирует fungible stake типами `DRC20=1` и `DEL=4`. Для `DEL`
+поле `token` содержит адрес WDEL из выбранной конфигурации, но это по-прежнему
+native DEL-позиция. SDK не принимает NFT-типы как монеты и строго проверяет
+`validator`, `delegator`, `token`, `tokenId=0`, тип и hold key.
+
+```python
+snapshot = await client.decimal.get_stake_snapshot(
+    validator="0xValidator",
+    delegator="0xWallet",
+    token=client.config.contracts.wdel,
+    hold_timestamps=[1820176010, 1820210108],
+)
+
+print(snapshot.regular_amount())
+print(snapshot.held_amount())
+print(snapshot.matured_holds())
+print(snapshot.missing_hold_timestamps)
+```
+
+Snapshot читает обычный `getStake` и только переданные `getHoldStake` на одном
+блоке. Список ограничен 100 ключами, глобального сканирования контракта нет.
+Timestamp для hold должен быть известен из индексатора или события контракта.
+Пустой контрактный ответ сохраняется как `exists=False`, а не превращается в
+реальную позицию с нулевым балансом.
+
+Для передачи ответа в JSON используйте `as_dict()`. Все потенциально большие
+`uint256` (`amount_raw`, `token_id`, `hold_timestamp`) возвращаются строками:
+
+```python
+stake = await client.decimal.get_stake(
+    "0xValidator",
+    "0xWallet",
+    client.config.contracts.wdel,
+)
+payload = stake.as_dict()
+
+assert payload["amount_raw"] == "100000000000000000"
+assert payload["amount"] == "0.1"
+```
+
+Не переводите raw amount во `float` или JavaScript `Number`. Для отображения
+используйте готовую строку `amount`, а для точных вычислений в Python -
+`stake.amount()` (`Decimal`).
+
+В старом JS SDK описан `getStakesPageByMember`, однако в актуальной mainnet
+реализации Delegation этого selector нет. Python SDK поэтому не публикует метод,
+который гарантированно завершался бы revert. Для discovery нужен ограниченный
+индексатор, после чего каждая выбранная позиция проверяется методами выше.
 
 Когда hold уже созрел, для DEL может потребоваться не обычный `withdraw`, а reset-сценарий:
 
@@ -292,7 +341,7 @@ for position in summary.available_positions:
 - Если `/coins/{symbol}` недоступен или монета не найдена, позиция останется с суммой и символом, но без `token_address`.
 - Для native `DEL` `token_address` всегда должен быть `None`.
 - Для ERC20/DRC20 `unbond` приложению нужно использовать `position.token_address`.
-- `available_to_unbond` считается из API/state payload. Перед реальным `unbond` обязательно вызывайте fee/preflight estimate: контракт может вернуть revert, особенно для native `DEL` позиций, где есть активные hold-записи.
+- `available_to_unbond` считается из API/state payload. Перед реальным `unbond` подтвердите обычную позицию через `get_stake_snapshot(...)` и обязательно вызывайте fee/preflight estimate.
 
 ## Проверка unbond preflight
 
@@ -322,7 +371,7 @@ fee: 0.00752616 DEL
 
 Сеть потребовала более высокий minimum global fee, после чего retry прошел с минимально допустимым gas price. Фактическая транзакция `0xc1dac6b3c70b0c689c6d0f1cb19c5bba57e93bc7f254788128d860dc238b492a` вошла в блок `33232007`; Explorer показал комиссию `0.438 DEL`. Теперь SDK по умолчанию берет oracle gas price сети без жесткого cap и показывает exact и buffered значения отдельно.
 
-Поэтому для native `DEL` hold-позиций SDK оставляет `can_unbond=False` для обычного `unbond_del`, а приложение должно предлагать отдельный сценарий `withdraw_del_stake_with_reset` после созревания hold.
+Поэтому приложение должно разделять подтвержденный обычный DEL stake и конкретные hold-записи. Для созревшего hold предлагается отдельный сценарий `withdraw_del_stake_with_reset`; будущий hold отзывать нельзя.
 
 Для контрольной ERC20/DRC20 позиции `Spacebot / MONOLIT` preflight прошел:
 

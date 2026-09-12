@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal, localcontext
 from types import SimpleNamespace
 
 import pytest
@@ -8,6 +9,7 @@ from web3 import Web3
 
 from decimal_web3_sdk.config import OFFICIAL_MAINNET_API_ROOT, NetworkConfig, SystemContracts
 from decimal_web3_sdk.decimal import (
+    DelegationTokenType,
     DecimalService,
     HoldDelRequest,
     MultisendDelRequest,
@@ -114,7 +116,7 @@ class _FakeDelegationCall:
     def __init__(self, value) -> None:
         self._value = value
 
-    def call(self):
+    def call(self, **kwargs):
         return self._value
 
 
@@ -131,7 +133,12 @@ class _FakeDelegationFunctions:
 
     def getHoldStake(self, *args):
         self.get_hold_stake_args = args
-        return _FakeDelegationCall(self._held)
+        value = (
+            self._held.get(args[-1], _empty_stake())
+            if isinstance(self._held, dict)
+            else self._held
+        )
+        return _FakeDelegationCall(value)
 
 
 class _FakeDelegationContract:
@@ -142,6 +149,11 @@ class _FakeDelegationContract:
 class _FakeRpc:
     async def call(self, callback):
         return callback(None)
+
+
+def _empty_stake():
+    zero = "0x0000000000000000000000000000000000000000"
+    return (zero, zero, zero, 0, 0, 0, 0)
 
 
 @pytest.mark.asyncio
@@ -263,6 +275,113 @@ async def test_direct_contract_reads_return_regular_and_held_token_stakes(monkey
     assert contract.functions.get_hold_stake_args[-1] == hold_timestamp
 
 
+@pytest.mark.asyncio
+async def test_direct_del_reads_preserve_type_identity_and_exact_uint256_format(monkeypatch) -> None:
+    client = _FakeClient()
+    client.rpc = _FakeRpc()
+    service = DecimalService(client)
+    delegator = "0x9000000000000000000000000000000000000009"
+    wdel = client.config.contracts.wdel
+    amount_raw = 123_456_789_012_345_678_901_234_567_890
+    regular = (VALIDATOR_A, delegator, wdel, amount_raw, 0, 4, 0)
+    contract = _FakeDelegationContract(regular, _empty_stake())
+    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+
+    with localcontext() as context:
+        context.prec = 8
+        stake = await service.get_stake(VALIDATOR_A, delegator, wdel)
+        assert stake.amount() == Decimal("123456789012.34567890123456789")
+
+    payload = stake.as_dict()
+    assert stake.token_type_enum is DelegationTokenType.DEL
+    assert stake.is_native_del is True
+    assert payload["amount_raw"] == "123456789012345678901234567890"
+    assert payload["amount"] == "123456789012.34567890123456789"
+    assert payload["token_id"] == "0"
+    assert payload["token_type"] == 4
+    assert payload["hold_timestamp"] == "0"
+
+
+@pytest.mark.asyncio
+async def test_direct_stake_read_rejects_identity_type_token_id_and_hold_key_mismatch(monkeypatch) -> None:
+    client = _FakeClient()
+    client.rpc = _FakeRpc()
+    service = DecimalService(client)
+    delegator = "0x9000000000000000000000000000000000000009"
+    hold_timestamp = 1_820_176_010
+
+    invalid_rows = [
+        (VALIDATOR_B, delegator, TOKEN_IN, 1, 0, 1, 0),
+        (VALIDATOR_A, VALIDATOR_B, TOKEN_IN, 1, 0, 1, 0),
+        (VALIDATOR_A, delegator, TOKEN_OUT, 1, 0, 1, 0),
+        (VALIDATOR_A, delegator, TOKEN_IN, 1, 1, 1, 0),
+        (VALIDATOR_A, delegator, TOKEN_IN, 1, 0, 2, 0),
+        (VALIDATOR_A, delegator, TOKEN_IN, 1, 0, 4, 0),
+        (VALIDATOR_A, delegator, TOKEN_IN, 1, 0, 1, hold_timestamp + 1),
+    ]
+    for row in invalid_rows[:-1]:
+        contract = _FakeDelegationContract(row, _empty_stake())
+        monkeypatch.setattr(service, "_delegation_contract", lambda contract=contract: contract)
+        with pytest.raises(ValueError):
+            await service.get_stake(VALIDATOR_A, delegator, TOKEN_IN)
+
+    contract = _FakeDelegationContract(_empty_stake(), invalid_rows[-1])
+    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+    with pytest.raises(ValueError, match="hold key"):
+        await service.get_hold_stake(VALIDATOR_A, delegator, TOKEN_IN, hold_timestamp)
+
+
+@pytest.mark.asyncio
+async def test_stake_snapshot_separates_regular_del_holds_and_missing_keys(monkeypatch) -> None:
+    client = _FakeClient()
+    client.rpc = _FakeRpc()
+    service = DecimalService(client)
+    delegator = "0x9000000000000000000000000000000000000009"
+    wdel = client.config.contracts.wdel
+    regular_raw = 101_348_503_591_558_205_948
+    first_key = 1_820_176_010
+    second_key = 1_820_210_108
+    missing_key = 1_900_000_000
+    regular = (VALIDATOR_A, delegator, wdel, regular_raw, 0, 4, 0)
+    holds = {
+        first_key: (VALIDATOR_A, delegator, wdel, 400_000_000_000_000_000, 0, 4, first_key),
+        second_key: (VALIDATOR_A, delegator, wdel, 96_157_970_214_999_998_595, 0, 4, second_key),
+    }
+    contract = _FakeDelegationContract(regular, holds)
+    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+
+    snapshot = await service.get_stake_snapshot(
+        VALIDATOR_A,
+        delegator,
+        wdel,
+        [first_key, second_key, missing_key, first_key],
+        block_number=33_608_167,
+    )
+
+    assert snapshot.block_number == 33_608_167
+    assert snapshot.regular_amount() == Decimal("101.348503591558205948")
+    assert snapshot.held_amount() == Decimal("96.557970214999998595")
+    assert snapshot.total_amount() == Decimal("197.906473806558204543")
+    assert snapshot.missing_hold_timestamps == (missing_key,)
+    assert snapshot.matured_holds(now_timestamp=1_800_000_000) == ()
+    assert snapshot.as_dict()["total_amount_raw"] == "197906473806558204543"
+
+
+@pytest.mark.asyncio
+async def test_empty_contract_stake_is_absent_not_a_zero_position(monkeypatch) -> None:
+    client = _FakeClient()
+    client.rpc = _FakeRpc()
+    service = DecimalService(client)
+    delegator = "0x9000000000000000000000000000000000000009"
+    contract = _FakeDelegationContract(_empty_stake(), _empty_stake())
+    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+
+    stake = await service.get_stake(VALIDATOR_A, delegator, TOKEN_IN)
+
+    assert stake.exists is False
+    assert stake.as_dict()["exists"] is False
+
+
 def test_mnemonic_sequence_derives_indices_zero_through_nine() -> None:
     wallets = mnemonic_to_accounts(MNEMONIC)
 
@@ -330,4 +449,16 @@ async def test_withdrawal_history_does_not_hide_total_api_failure() -> None:
     with pytest.raises(ConnectionError, match="upstream unavailable"):
         await RestClient(_FailingRestClientOwner()).wallet_stake_withdrawals(
             "0x0000000000000000000000000000000000000001"
+        )
+
+
+@pytest.mark.asyncio
+async def test_withdrawal_history_rejects_unbounded_known_hash_reads() -> None:
+    class _RestClientOwner:
+        config = SimpleNamespace(safety=SimpleNamespace(rest_max_limit=2))
+
+    with pytest.raises(ValueError, match="At most 2"):
+        await RestClient(_RestClientOwner()).wallet_stake_withdrawals(
+            "0x0000000000000000000000000000000000000001",
+            tx_hashes=["0x01", "0x02", "0x03"],
         )

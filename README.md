@@ -194,6 +194,10 @@ assert parse_units("0.1", 18) == 100000000000000000
 rounding and keeps the token `decimals` metadata alongside the value. REST decimal literals are
 decoded as `Decimal`; integer raw values remain arbitrary-precision Python `int`.
 
+Delegation contract reads follow the same rule. `stake.amount()` returns exact `Decimal`, while
+`stake.as_dict()` returns `amount_raw`, `amount`, `token_id`, and `hold_timestamp` as strings.
+For example, raw `100000000000000000` is serialized as amount `0.1`, never as a float.
+
 ## DEL Transfer
 
 Transactions are dry-run by default in examples: SDK builds, estimates gas, checks fee/balance, signs locally, and only broadcasts when `broadcast=True`. The transaction flow follows the official Decimal Python SDK shape: wallet/request -> fee calculation -> sign -> broadcast -> inspect result.
