@@ -152,12 +152,7 @@ async def _run(args: argparse.Namespace) -> Any:
             return info.__dict__
         if args.command == "erc20-balance":
             balance = await client.erc20.balance(args.token, args.address)
-            return {
-                "token": balance.token.__dict__,
-                "owner": balance.owner,
-                "raw": str(balance.raw),
-                "formatted": str(balance.formatted),
-            }
+            return balance.as_dict()
         if args.command == "send-del":
             _require_private_key(args.private_key)
             request = NativeTransferRequest(

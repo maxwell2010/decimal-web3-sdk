@@ -10,6 +10,7 @@ from eth_account import Account
 from hexbytes import HexBytes
 from web3 import Web3
 
+from .erc20 import parse_units
 from .wallet import DEFAULT_DERIVATION_PATH, checksum, mnemonic_to_private_key, normalize_private_key, private_key_to_address
 
 
@@ -1113,7 +1114,7 @@ def user_message_from_error(error: str | None) -> str | None:
 
 
 def _parse_units(value: Decimal | str | int | float, decimals: int) -> int:
-    return int(Decimal(str(value)) * (Decimal(10) ** int(decimals)))
+    return parse_units(value, decimals)
 
 
 def _gas_limit_multiplier(client) -> float:

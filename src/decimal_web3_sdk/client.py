@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from decimal import Decimal
+
 import aiohttp
 from web3 import Web3
 
@@ -8,7 +11,7 @@ from .checks import ChecksService
 from .config import NetworkConfig
 from .contracts import AbiRegistry
 from .decimal import DecimalService
-from .erc20 import Erc20Service
+from .erc20 import Erc20Service, format_units
 from .limits import AsyncRateLimiter
 from .monitoring import DecimalMonitor
 from .nft import NftService
@@ -68,9 +71,9 @@ class DecimalClient:
         account = checksum(address)
         return await self.rpc.call(lambda w3: w3.eth.get_balance(account))
 
-    async def balance_del(self, address: str) -> float:
+    async def balance_del(self, address: str) -> Decimal:
         balance = await self.balance_wei(address)
-        return float(Web3.from_wei(balance, "ether"))
+        return format_units(balance, 18)
 
     async def transaction_count(self, address: str) -> int:
         account = checksum(address)
@@ -165,7 +168,7 @@ class DecimalClient:
         headers = {"X-API-Key": self.config.api_key} if self.config.api_key else None
         async with session.get(url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=20)) as response:
             response.raise_for_status()
-            return await response.json()
+            return await response.json(loads=_json_loads_exact)
 
     async def latest_block_info(self) -> dict:
         return await self.rest_get("/blocks/latest")
@@ -177,3 +180,7 @@ class DecimalClient:
         if self._session is None:
             self._session = aiohttp.ClientSession()
         return self._session
+
+
+def _json_loads_exact(value: str) -> object:
+    return json.loads(value, parse_float=Decimal)

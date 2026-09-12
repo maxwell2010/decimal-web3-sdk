@@ -171,6 +171,29 @@ async with DecimalClient(config) as client:
     validators = await client.rest.validators()
 ```
 
+## Exact Amounts
+
+Financial amounts never need to pass through `float`. Native DEL balance is returned as
+`Decimal`; ERC20 base units remain an integer and can be serialized with `TokenBalance.as_dict()`:
+
+```python
+from decimal import Decimal
+from decimal_web3_sdk import format_units, parse_units
+
+native_del = await client.balance_del(wallet_address)  # Decimal
+token_balance = await client.erc20.balance(token_address, wallet_address)
+payload = token_balance.as_dict()
+
+assert payload["raw"] == "100000000000000000"
+assert payload["formatted"] == "0.1"  # 18 decimals
+assert format_units(100000000000000000, 18) == Decimal("0.1")
+assert parse_units("0.1", 18) == 100000000000000000
+```
+
+`raw` and `formatted` are strings in JSON-safe balance output. This avoids JavaScript number
+rounding and keeps the token `decimals` metadata alongside the value. REST decimal literals are
+decoded as `Decimal`; integer raw values remain arbitrary-precision Python `int`.
+
 ## DEL Transfer
 
 Transactions are dry-run by default in examples: SDK builds, estimates gas, checks fee/balance, signs locally, and only broadcasts when `broadcast=True`. The transaction flow follows the official Decimal Python SDK shape: wallet/request -> fee calculation -> sign -> broadcast -> inspect result.

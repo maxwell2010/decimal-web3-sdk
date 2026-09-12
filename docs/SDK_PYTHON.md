@@ -151,6 +151,30 @@ async with DecimalClient(config) as client:
     validators = await client.rest.validators()
 ```
 
+### Точные суммы без округления
+
+SDK не переводит финансовые значения в `float`. `balance_del()` возвращает `Decimal`, raw-баланс
+ERC20 хранится как `int`, а для JSON используется строковая форма:
+
+```python
+from decimal import Decimal
+from decimal_web3_sdk import format_units, parse_units
+
+del_balance = await client.balance_del(wallet_address)
+token_balance = await client.erc20.balance(token_address, wallet_address)
+payload = token_balance.as_dict()
+
+assert isinstance(del_balance, Decimal)
+assert payload["raw"] == "100000000000000000"
+assert payload["formatted"] == "0.1"  # decimals=18
+assert format_units(100000000000000000, 18) == Decimal("0.1")
+assert parse_units("0.1", 18) == 100000000000000000
+```
+
+Нельзя отправлять raw/formatted в JSON как JavaScript `number`: большие целые потеряют точность.
+Передавайте оба значения строками и всегда сохраняйте `decimals`. Если введённая сумма содержит
+больше знаков, чем допускает токен, `parse_units()` теперь возвращает ошибку вместо усечения.
+
 ### Делегированные токены кошелька
 
 Если выбранный API-gateway поддерживает Decimal validator facade, SDK может получить активные делегации, текущий анбонд и подготовить UI для последующего `unbond`:

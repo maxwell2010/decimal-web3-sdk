@@ -48,7 +48,14 @@ from .decimal import (
     WithdrawHoldErc20Request,
     WithdrawHoldDelRequest,
 )
-from .erc20 import Erc20Service, TokenBalance, TokenInfo, format_units, parse_units
+from .erc20 import (
+    Erc20Service,
+    TokenBalance,
+    TokenInfo,
+    format_units,
+    format_units_string,
+    parse_units,
+)
 from .monitoring import DecimalMonitor
 from .mnemonic import FromMnemonicMixin
 from .nft import (
@@ -223,6 +230,7 @@ __all__ = [
     "DisableMintNftRequest",
     "EstimateGasAgent",
     "format_units",
+    "format_units_string",
     "derivation_path_for_index",
     "generate_mnemonic_account",
     "memo_capabilities",

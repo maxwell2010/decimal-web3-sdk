@@ -128,6 +128,28 @@ class TokenBalance:
     raw: int
     formatted: Decimal
 
+    @property
+    def raw_string(self) -> str:
+        return str(self.raw)
+
+    @property
+    def formatted_string(self) -> str:
+        return format_units_string(self.raw, self.token.decimals)
+
+    def as_dict(self) -> dict[str, object]:
+        """Return a JSON-safe balance without converting amounts to float."""
+        return {
+            "token": {
+                "address": self.token.address,
+                "name": self.token.name,
+                "symbol": self.token.symbol,
+                "decimals": self.token.decimals,
+            },
+            "owner": self.owner,
+            "raw": self.raw_string,
+            "formatted": self.formatted_string,
+        }
+
 
 @dataclass(frozen=True)
 class PermitSignature:
@@ -277,9 +299,39 @@ class Erc20Service:
             return None
 
 
+def format_units_string(value: int, decimals: int) -> str:
+    """Format integer base units exactly, without Decimal context rounding."""
+    if isinstance(value, bool):
+        raise TypeError("value must be an integer")
+    integer = int(value)
+    if integer != value:
+        raise ValueError("value must be an integer")
+    places = int(decimals)
+    if places < 0:
+        raise ValueError("decimals must be non-negative")
+    if places == 0:
+        return str(integer)
+
+    digits = str(abs(integer)).rjust(places + 1, "0")
+    whole = digits[:-places]
+    fraction = digits[-places:].rstrip("0")
+    formatted = whole if not fraction else f"{whole}.{fraction}"
+    if integer < 0:
+        return f"-{formatted}"
+    return formatted
+
+
 def format_units(value: int, decimals: int) -> Decimal:
-    return Decimal(value) / (Decimal(10) ** int(decimals))
+    return Decimal(format_units_string(value, decimals))
 
 
 def parse_units(value: Decimal | str | int | float, decimals: int) -> int:
-    return int(Decimal(str(value)) * (Decimal(10) ** int(decimals)))
+    places = int(decimals)
+    if places < 0:
+        raise ValueError("decimals must be non-negative")
+    amount = Decimal(str(value))
+    numerator, denominator = amount.as_integer_ratio()
+    scaled_numerator = numerator * (10**places)
+    if scaled_numerator % denominator:
+        raise ValueError(f"Amount has more than {places} decimal places")
+    return scaled_numerator // denominator

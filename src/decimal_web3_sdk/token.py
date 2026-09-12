@@ -8,6 +8,7 @@ from web3 import Web3
 from web3.logs import DISCARD
 
 from .decimal import DecimalWorkflowResult
+from .erc20 import parse_units
 from .mnemonic import FromMnemonicMixin
 from .transactions import ContractCallRequest, Erc20ApproveRequest, TransactionResult, _token_preflight_failure
 from .wallet import checksum, private_key_to_address
@@ -569,7 +570,7 @@ def _del_to_wei(value: Decimal | str | int | float) -> int:
 
 
 def _parse_units(value: Decimal | str | int | float, decimals: int) -> int:
-    return int(Decimal(str(value)) * (Decimal(10) ** int(decimals)))
+    return parse_units(value, decimals)
 
 
 def token_creation_commission_del(symbol: str) -> Decimal:

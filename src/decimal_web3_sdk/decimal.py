@@ -7,6 +7,7 @@ from typing import Any
 
 from web3 import Web3
 
+from .erc20 import parse_units
 from .transactions import (
     ContractCallRequest,
     Erc20ApproveRequest,
@@ -1879,7 +1880,7 @@ def _del_to_wei(value: Decimal | str | int | float) -> int:
 
 
 def _parse_units(value: Decimal | str | int | float, decimals: int) -> int:
-    return int(Decimal(str(value)) * (Decimal(10) ** int(decimals)))
+    return parse_units(value, decimals)
 
 
 def _hold_time(hold_timestamp: int) -> str:
