@@ -58,4 +58,3 @@ class Stopwatch:
     @property
     def elapsed_ms(self) -> float:
         return (time.perf_counter() - self.started_at) * 1000
-

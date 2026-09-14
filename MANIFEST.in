@@ -1,0 +1,15 @@
+include README.md README.ru.md LICENSE THIRD_PARTY_NOTICES.md SECURITY.md CHANGELOG.md
+include pyproject.toml .env.example
+recursive-include src/decimal_web3_sdk *.py *.json *.md
+recursive-include docs *.md *.json
+recursive-include examples *.py
+recursive-include tests *.py
+recursive-include scripts *.py
+global-exclude *.py[cod] *.key *.pem *.p12 *.db *.sqlite *.log
+prune build
+prune dist
+prune .venv
+prune .git
+prune .idea
+prune dw
+prune reports

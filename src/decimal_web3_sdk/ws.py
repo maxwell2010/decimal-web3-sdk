@@ -96,4 +96,3 @@ class DecimalWsClient:
         if self._session is None:
             self._session = aiohttp.ClientSession()
         return self._session
-

@@ -7,7 +7,7 @@ from decimal import Decimal, InvalidOperation
 import time
 from typing import Any
 
-from .erc20 import format_units
+from .erc20 import _sum_amounts, format_units, parse_units
 
 
 @dataclass(frozen=True)
@@ -35,7 +35,7 @@ class WalletStakeHold:
 
     @property
     def contract_hold_timestamp(self) -> int | None:
-        return self.hold_end_time or self.hold_start_time
+        return self.hold_end_time
 
 
 @dataclass(frozen=True)
@@ -63,7 +63,7 @@ class WalletStakePosition:
 
     @property
     def matured_hold_amount(self) -> Decimal:
-        return sum((hold.amount for hold in self.holds if hold.is_expired), Decimal(0))
+        return _sum_amounts(hold.amount for hold in self.holds if hold.is_expired)
 
     @property
     def available_to_unbond(self) -> Decimal:
@@ -115,7 +115,7 @@ class WalletStakeWithdrawal:
     validator_name: str
     symbol: str
     amount: Decimal
-    amount_raw: str
+    amount_raw: str | None
     available_timestamp: int | None = None
     available_time: str | None = None
     tx_hash: str | None = None
@@ -124,6 +124,8 @@ class WalletStakeWithdrawal:
     source: str = "api"
     is_completed: bool = False
     raw: dict[str, Any] | None = None
+    is_matured: bool = False
+    completion_estimated: bool = False
 
 
 @dataclass(frozen=True)
@@ -165,7 +167,7 @@ def _sum_positions_by_symbol(positions: tuple[WalletStakePosition, ...], attr: s
         if amount <= 0:
             continue
         symbol = position.symbol.upper()
-        totals[symbol] = totals.get(symbol, Decimal(0)) + amount
+        totals[symbol] = _sum_amounts((totals.get(symbol, Decimal(0)), amount))
     return totals
 
 
@@ -450,7 +452,7 @@ def normalize_wallet_staking_summary(
 
     total = _decimal_18(stakes.get("base_steaks") or stakes.get("total_steaks"))
     if total == 0:
-        total = sum((position.base_amount_del for position in positions), Decimal(0))
+        total = _sum_amounts(position.base_amount_del for position in positions)
     return WalletStakingSummary(
         address=address,
         total_del=total,
@@ -480,11 +482,8 @@ def normalize_wallet_stake_withdrawals(
     seen: set[tuple[Any, ...]] = set()
 
     def add(row: WalletStakeWithdrawal) -> None:
-        if not include_completed:
-            if row.available_timestamp is not None and row.available_timestamp <= now:
-                return
-            if row.available_timestamp is None and row.is_completed:
-                return
+        if not include_completed and row.is_completed:
+            return
         if cutoff is not None and row.available_timestamp is not None and row.available_timestamp < cutoff:
             return
         key = (
@@ -517,7 +516,8 @@ def normalize_wallet_stake_withdrawals(
                 available_timestamp=available_at,
                 available_time=_iso_from_timestamp(available_at) or item.get("completion_time"),
                 source="unstakes",
-                is_completed=bool(available_at is not None and available_at <= now),
+                is_completed=item.get("is_completed") is True,
+                is_matured=bool(available_at is not None and available_at <= now),
                 raw=item,
             )
         )
@@ -535,7 +535,9 @@ def normalize_wallet_stake_withdrawals(
         if tx_type not in wanted_types:
             continue
         from_address = str(tx.get("from_address") or "").lower()
-        if from_address and from_address != address_key:
+        if from_address != address_key:
+            continue
+        if tx.get("status") in (0, "0x0", "failed", "reverted") or tx.get("success") is False:
             continue
         raw = tx.get("raw_data") if isinstance(tx.get("raw_data"), dict) else {}
         meta = {**raw, **tx}
@@ -547,22 +549,28 @@ def normalize_wallet_stake_withdrawals(
             continue
         created_at = _timestamp_or_none(tx.get("timestamp") or raw.get("timestamp"))
         available_at = _timestamp_or_none(meta.get("unbonding_time") or meta.get("unlock_date") or meta.get("completion_time"))
+        completion_estimated = False
         if available_at is None and created_at is not None and tx_type in {"withdraw_with_reset", "delegation_withdraw", "withdraw", "unbond_del"}:
             available_at = created_at + max(0, int(unbonding_days)) * 24 * 60 * 60
+            completion_estimated = True
+        decimals = 18 if symbol.upper() == "DEL" else meta.get("decimals")
+        amount_raw = str(parse_units(_decimal_plain(amount), int(decimals))) if decimals is not None else None
         add(
             WalletStakeWithdrawal(
                 validator=validator,
                 validator_name=validator_name,
                 symbol=symbol,
                 amount=_decimal_plain(amount),
-                amount_raw=str(amount),
+                amount_raw=amount_raw,
                 available_timestamp=available_at,
                 available_time=_iso_from_timestamp(available_at),
                 tx_hash=tx.get("tx_hash"),
                 block=_int_or_none(tx.get("block")),
                 created_timestamp=created_at,
                 source="txs",
-                is_completed=bool(available_at is not None and available_at <= now),
+                is_completed=meta.get("is_completed") is True,
+                is_matured=bool(available_at is not None and available_at <= now),
+                completion_estimated=completion_estimated,
                 raw=tx,
             )
         )

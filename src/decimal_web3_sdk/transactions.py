@@ -10,7 +10,7 @@ from eth_account import Account
 from hexbytes import HexBytes
 from web3 import Web3
 
-from .erc20 import parse_units
+from .erc20 import format_units, parse_units
 from .wallet import DEFAULT_DERIVATION_PATH, checksum, mnemonic_to_private_key, normalize_private_key, private_key_to_address
 
 
@@ -107,8 +107,8 @@ def decode_memo_data(data: str | None) -> str | None:
 @dataclass(frozen=True)
 class NativeTransferRequest:
     to: str
-    amount_del: Decimal | str | int | float
-    private_key: str
+    amount_del: Decimal | str | int
+    private_key: str = field(repr=False)
     memo: str | None = None
     gas: int | None = None
     gas_price_wei: int | None = None
@@ -118,7 +118,7 @@ class NativeTransferRequest:
         cls,
         *,
         to: str,
-        amount_del: Decimal | str | int | float,
+        amount_del: Decimal | str | int,
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
@@ -145,7 +145,7 @@ class NativeTransferRequest:
 @dataclass(frozen=True)
 class ContractCallRequest:
     contract: str
-    private_key: str
+    private_key: str = field(repr=False)
     data: str
     value_wei: int = 0
     gas: int | None = None
@@ -184,8 +184,8 @@ class ContractCallRequest:
 class Erc20TransferRequest:
     token: str
     to: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
     gas: int | None = None
     gas_price_wei: int | None = None
@@ -196,7 +196,7 @@ class Erc20TransferRequest:
         *,
         token: str,
         to: str,
-        amount: Decimal | str | int | float,
+        amount: Decimal | str | int,
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
@@ -225,8 +225,8 @@ class Erc20TransferRequest:
 class Erc20ApproveRequest:
     token: str
     spender: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
     gas: int | None = None
     gas_price_wei: int | None = None
@@ -237,7 +237,7 @@ class Erc20ApproveRequest:
         *,
         token: str,
         spender: str,
-        amount: Decimal | str | int | float,
+        amount: Decimal | str | int,
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
@@ -267,8 +267,8 @@ class Erc20TransferFromRequest:
     token: str
     owner: str
     to: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
     gas: int | None = None
     gas_price_wei: int | None = None
@@ -280,7 +280,7 @@ class Erc20TransferFromRequest:
         token: str,
         owner: str,
         to: str,
-        amount: Decimal | str | int | float,
+        amount: Decimal | str | int,
         mnemonic: str,
         passphrase: str = "",
         account_path: str = DEFAULT_DERIVATION_PATH,
@@ -329,7 +329,7 @@ class TransactionDraft:
     def fee_del(self) -> Decimal | None:
         if self.fee_wei is None:
             return None
-        return Decimal(self.fee_wei) / Decimal(10**18)
+        return format_units(self.fee_wei, 18)
 
 
 @dataclass(frozen=True)
@@ -398,7 +398,7 @@ class FeePreflight:
 
     @property
     def fee_del(self) -> Decimal:
-        return Decimal(self.fee_wei) / Decimal(10**18)
+        return format_units(self.fee_wei, 18)
 
     @property
     def minimum_fee_wei(self) -> int:
@@ -412,29 +412,29 @@ class FeePreflight:
     def estimated_fee_del(self) -> Decimal | None:
         if self.estimated_fee_wei is None:
             return None
-        return Decimal(self.estimated_fee_wei) / Decimal(10**18)
+        return format_units(self.estimated_fee_wei, 18)
 
     @property
     def gas_limit_fee_del(self) -> Decimal | None:
         if self.gas_limit_fee_wei is None:
             return None
-        return Decimal(self.gas_limit_fee_wei) / Decimal(10**18)
+        return format_units(self.gas_limit_fee_wei, 18)
 
     @property
     def native_balance_del(self) -> Decimal:
-        return Decimal(self.native_balance_wei) / Decimal(10**18)
+        return format_units(self.native_balance_wei, 18)
 
     @property
     def value_del(self) -> Decimal:
-        return Decimal(self.value_wei) / Decimal(10**18)
+        return format_units(self.value_wei, 18)
 
     @property
     def required_del(self) -> Decimal:
-        return Decimal(self.required_wei) / Decimal(10**18)
+        return format_units(self.required_wei, 18)
 
     @property
     def missing_del(self) -> Decimal:
-        return Decimal(self.missing_wei) / Decimal(10**18)
+        return format_units(self.missing_wei, 18)
 
 
 class TransactionService:
@@ -445,7 +445,9 @@ class TransactionService:
         private_key = normalize_private_key(request.private_key)
         from_address = private_key_to_address(private_key)
         to_address = checksum(request.to)
-        value_wei = Web3.to_wei(Decimal(str(request.amount_del)), "ether")
+        value_wei = parse_units(request.amount_del, 18)
+        if value_wei < 0:
+            raise ValueError("Transfer amount must be non-negative")
         data = encode_memo_data(request.memo)
         nonce = await self._client.transaction_count(from_address)
         gas_price = request.gas_price_wei or await self._client.gas_price()
@@ -669,6 +671,10 @@ class TransactionService:
         return await self.calculate_fee(draft, exact=exact)
 
     async def sign(self, draft: TransactionDraft, private_key: str) -> TransactionDraft:
+        if checksum(draft.from_address) != private_key_to_address(private_key):
+            raise ValueError("Signing account does not match the transaction sender")
+        if draft.tx.get("chainId") != self._client.config.chain_id:
+            raise ValueError("Transaction chain ID does not match the configured network")
         signable_tx = {key: value for key, value in draft.tx.items() if key != "from"}
         signed = Account.sign_transaction(signable_tx, normalize_private_key(private_key))
         raw = getattr(signed, "raw_transaction", None) or getattr(signed, "rawTransaction")
@@ -873,7 +879,7 @@ class TransactionService:
         try:
             code = await rpc.call(lambda w3: w3.eth.get_code(checksum(to_address)))
         except Exception:
-            return True
+            raise RuntimeError("Cannot verify target contract code; transaction was not signed") from None
         return bool(code)
 
 
@@ -936,7 +942,7 @@ def _receipt_details(receipt: dict[str, Any] | None) -> dict[str, Any]:
         "gas_used": gas_used,
         "effective_gas_price_wei": effective_gas_price,
         "effective_fee_wei": effective_fee,
-        "effective_fee_del": Decimal(effective_fee) / Decimal(10**18) if effective_fee is not None else None,
+        "effective_fee_del": format_units(effective_fee, 18) if effective_fee is not None else None,
     }
 
 
@@ -966,7 +972,7 @@ def _result_from_draft(
         effective_gas_price_wei=effective_gas_price_wei,
         oracle_gas_price_wei=draft.oracle_gas_price_wei,
         effective_fee_wei=effective_fee_wei,
-        effective_fee_del=Decimal(effective_fee_wei) / Decimal(10**18) if effective_fee_wei is not None else None,
+        effective_fee_del=format_units(effective_fee_wei, 18) if effective_fee_wei is not None else None,
         fee_wei=draft.fee_wei,
         fee_del=draft.fee_del,
         gas=draft.gas,
@@ -1037,9 +1043,9 @@ def _native_value_preflight_failure(draft: TransactionDraft, native_balance_wei:
         success=False,
         error=(
             "Insufficient DEL for transaction value: "
-            f"balance={Decimal(native_balance_wei) / Decimal(10**18)} DEL, "
-            f"required={Decimal(draft.value_wei) / Decimal(10**18)} DEL, "
-            f"missing={Decimal(missing) / Decimal(10**18)} DEL"
+            f"balance={format_units(native_balance_wei, 18)} DEL, "
+            f"required={format_units(draft.value_wei, 18)} DEL, "
+            f"missing={format_units(missing, 18)} DEL"
         ),
         user_message="Недостаточно DEL на балансе.",
         native_balance_wei=int(native_balance_wei),
@@ -1113,7 +1119,7 @@ def user_message_from_error(error: str | None) -> str | None:
     return "Не удалось выполнить транзакцию. Попробуйте позже."
 
 
-def _parse_units(value: Decimal | str | int | float, decimals: int) -> int:
+def _parse_units(value: Decimal | str | int, decimals: int) -> int:
     return parse_units(value, decimals)
 
 
@@ -1144,8 +1150,8 @@ def _max_gas_price_wei(client) -> int | None:
 
 
 def _apply_gas_limit_multiplier(estimated_gas: int, multiplier: float) -> int:
-    value = Decimal(int(estimated_gas)) * Decimal(str(multiplier))
-    return int(value.to_integral_value(rounding=ROUND_CEILING))
+    numerator, denominator = Decimal(str(multiplier)).as_integer_ratio()
+    return (int(estimated_gas) * numerator + denominator - 1) // denominator
 
 
 def _retry_gas_price_from_minimum_fee_error(error: str, gas: int | None) -> int | None:
@@ -1161,7 +1167,7 @@ def _retry_gas_price_from_minimum_fee_error(error: str, gas: int | None) -> int 
     required_fee_wei = _minimum_fee_wei_from_error(error)
     if required_fee_wei is None or required_fee_wei <= 0:
         return None
-    return int((Decimal(required_fee_wei) / Decimal(int(gas))).to_integral_value(rounding=ROUND_CEILING))
+    return (required_fee_wei + int(gas) - 1) // int(gas)
 
 
 def _minimum_fee_wei_from_error(error: str) -> int | None:

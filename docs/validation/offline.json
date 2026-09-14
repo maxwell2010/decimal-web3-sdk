@@ -1,0 +1,21 @@
+{
+  "python": "3.12.8",
+  "platform": "Windows",
+  "tests": 131,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "dependencies": {
+    "web3": "7.16.0",
+    "eth-account": "0.13.7",
+    "aiohttp": "3.14.3",
+    "pytest": "9.1.1",
+    "pytest-asyncio": "1.4.0",
+    "build": "1.6.1",
+    "twine": "7.0.0",
+    "ruff": "0.16.7"
+  },
+  "network_broadcasts": 0,
+  "credentials": "generated ephemeral offline accounts only",
+  "scope": "offline tests, not live transaction parity"
+}

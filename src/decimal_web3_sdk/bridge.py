@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .mnemonic import FromMnemonicMixin
 from .transactions import ContractCallRequest, TransactionResult
@@ -54,7 +54,7 @@ class BridgeTransferNativeRequest(FromMnemonicMixin):
     service_fee_wei: int
     to_chain_id: int
     nonce: int
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -66,7 +66,7 @@ class BridgeTransferTokenRequest(FromMnemonicMixin):
     service_fee_wei: int
     to_chain_id: int
     nonce: int
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -74,7 +74,7 @@ class BridgeCompleteTransferRequest(FromMnemonicMixin):
     contract: str
     encoded_vm: str
     unwrap_weth: bool
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 class BridgeService:

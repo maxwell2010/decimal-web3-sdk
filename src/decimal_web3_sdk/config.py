@@ -46,7 +46,7 @@ def _env_optional_gas_price_wei(prefix: str = "DECIMAL") -> int | None:
         value = raw_gwei.strip().lower()
         if value in {"none", "off", "disabled", "0"}:
             return None
-        return int(float(value) * 10**9)
+        return parse_units(value, 9)
     return None
 
 
@@ -70,9 +70,9 @@ def _safety_from_env(prefix: str = "DECIMAL") -> SafetyLimits:
 class SystemContracts:
     contract_center: str = "0xc108715a06f76caa96fa2c943ebf05159c29a87d"
     delegation: str = "0xa16c34ed1c0601c0e749e17ebef19752a15faa01"
-    delegation_nft: str = "0x5a6533e337f4b7f815aefb0609200acfbe1ba231"
+    delegation_nft: str = "0xe45adfcc739a0d10ce9462b58866c9a1a06035e2"
     master_validator: str = "0x630B03FF9EeD4C4A468dA9f481DF23F542070Aa4"
-    nft_center: str = "0x9113ba675aa8f2ef0c068cee2cdabab95b6437fb"
+    nft_center: str = "0x443cc8ac24630be9257483a09c34ffa81608eace"
     token_center: str = "0x9113ba675aa8f2ef0c068cee2cdabab95b6437fb"
     wdel: str = "0x1c5d8992da64c8d56ea413dd6f723061c29a7c0b"
     multicall: str = "0x7b23eb47587ca6482fc16cb3d9d426ec64d4b5fc"
@@ -131,7 +131,7 @@ class NetworkConfig:
     api_root_url: str = ""
     api_base_url: str = ""
     api_fallback_base_urls: list[str] = field(default_factory=list)
-    api_key: str | None = None
+    api_key: str | None = field(default=None, repr=False)
     name: str = "decimal-mainnet"
     contracts: SystemContracts = field(default_factory=SystemContracts)
     safety: SafetyLimits = field(default_factory=SafetyLimits)
@@ -220,3 +220,4 @@ class NetworkConfig:
             contracts=contracts or SystemContracts(),
             safety=safety or SafetyLimits(),
         )
+from .erc20 import parse_units

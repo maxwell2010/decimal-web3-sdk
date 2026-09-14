@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from .decimal import DecimalWorkflowResult
@@ -393,7 +393,7 @@ class CreateNftCollectionRequest(FromMnemonicMixin):
     symbol: str
     name: str
     contract_uri: str
-    private_key: str
+    private_key: str = field(repr=False)
     refundable: bool = False
     creator: str | None = None
 
@@ -404,7 +404,7 @@ class MintNftRequest(FromMnemonicMixin):
     nft: str
     to: str
     token_uri: str
-    private_key: str
+    private_key: str = field(repr=False)
     token_id: int | None = None
     amount: int = 1
     reserve_amount_raw: int = 0
@@ -418,7 +418,7 @@ class NftTransferRequest(FromMnemonicMixin):
     nft: str
     to: str
     token_id: int
-    private_key: str
+    private_key: str = field(repr=False)
     amount: int = 1
     data: bytes = b""
 
@@ -429,7 +429,7 @@ class NftBatchTransferRequest(FromMnemonicMixin):
     to: str
     token_ids: list[int]
     amounts: list[int]
-    private_key: str
+    private_key: str = field(repr=False)
     data: bytes = b""
 
 
@@ -439,7 +439,7 @@ class NftApprovalRequest(FromMnemonicMixin):
     nft: str
     operator: str
     approved: bool
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -447,7 +447,7 @@ class NftApproveRequest(FromMnemonicMixin):
     nft: str
     to: str
     token_id: int
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -455,7 +455,7 @@ class BurnNftRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
     token_id: int
-    private_key: str
+    private_key: str = field(repr=False)
     amount: int = 1
 
 
@@ -463,7 +463,7 @@ class BurnNftRequest(FromMnemonicMixin):
 class DisableMintNftRequest(FromMnemonicMixin):
     kind: NftKind
     nft: str
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -472,7 +472,7 @@ class SetTokenUriNftRequest(FromMnemonicMixin):
     nft: str
     token_id: int
     token_uri: str
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -481,7 +481,7 @@ class AddDelReserveNftRequest(FromMnemonicMixin):
     nft: str
     token_id: int
     reserve_wei: int
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -490,7 +490,7 @@ class DelegateNftRequest(FromMnemonicMixin):
     nft: str
     validator: str
     token_id: int
-    private_key: str
+    private_key: str = field(repr=False)
     amount: int = 1
     auto_approve: bool = True
 
@@ -502,7 +502,7 @@ class HoldNftRequest(FromMnemonicMixin):
     validator: str
     token_id: int
     hold_timestamp: int
-    private_key: str
+    private_key: str = field(repr=False)
     amount: int = 1
     auto_approve: bool = True
 
@@ -513,7 +513,7 @@ class TransferNftStakeRequest(FromMnemonicMixin):
     validator: str
     new_validator: str
     token_id: int
-    private_key: str
+    private_key: str = field(repr=False)
     amount: int = 1
     hold_timestamp: int | None = None
 
@@ -523,7 +523,7 @@ class WithdrawNftRequest(FromMnemonicMixin):
     nft: str
     validator: str
     token_id: int
-    private_key: str
+    private_key: str = field(repr=False)
     amount: int = 1
     hold_timestamp: int | None = None
 

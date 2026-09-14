@@ -27,4 +27,3 @@ class AbiRegistry:
             raise ValueError(f"Invalid ABI format: {path}")
         self._cache[key] = abi
         return abi
-

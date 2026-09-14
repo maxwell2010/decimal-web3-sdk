@@ -1,526 +1,63 @@
-# Decimal Web3 Python SDK
+# Decimal Web3 SDK
 
-`decimal-web3-sdk` is a Python SDK for Decimal EVM/Web3 applications. It is designed for local scripts, backend services, CLI tools, mobile backends, transaction training, monitoring, and release automation.
+Independent Decimal EVM SDK by [MintCandy](https://mintcandy.ru/) and
+[@Maxwell2019](https://t.me/Maxwell2019). MIT license, Python 3.10+.
+Package: `decimal-web3-sdk`; import: `decimal_web3_sdk`.
 
-The SDK does not require MintCandy infrastructure. Use the official Decimal public RPC, your own Decimal node, or any compatible Decimal Web3/API gateway.
+**0.1.1 is a release candidate, not complete JS/Go SDK parity.**
+55 high-level transaction entry points have offline encoding/signing coverage.
+Contract compatibility still depends on the network. [Coverage and limitations](docs/en/status.md).
+[Official SDK comparison](docs/en/upstream-parity.md): JS 95 / Go 53 / Python 55 specialized EVM write entry points, not a parity percentage.
 
-Project links:
+[Русский README](README.ru.md) | [English guide](docs/en/README.md) | [Русская документация](docs/ru/README.md)
 
-- MintCandy: https://mintcandy.ru/
-- Maintainer contact: `@Maxwell2019`
+## Install Without Git
 
-## Install
+Requires Python 3.10+ and pip. Runtime dependencies install automatically:
+web3, eth-account, aiohttp and python-dotenv, plus their dependencies.
+[OS support and installation requirements](docs/en/install.md).
 
-From PyPI after release:
-
-```bash
-pip install decimal-web3-sdk
+From the versioned GitHub release (no Git installation required):
+```shell
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
 ```
 
-From GitHub release branch:
-
-```bash
-pip install "decimal-web3-sdk @ git+https://github.com/maxwell2010/decimal-web3-sdk.git@v0.1"
+Alternatively, from the same version's source archive:
+```shell
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.1.zip"
 ```
 
-From a local checkout:
+These URLs require the corresponding GitHub release/tag to be published.
+GitHub is the primary distribution source; PyPI publication is separate.
+Pin a release version rather than installing a moving branch such as main.
+[Build and publishing instructions](docs/en/releasing.md).
 
-```bash
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -e ".[dev]"
-```
-
-Build local release artifacts:
-
-```bash
-python -m build
-```
-
-## Network Configuration
-
-Mainnet uses the public Decimal Web3 RPC by default:
-
-```python
-from decimal_web3_sdk import NetworkConfig
-
-config = NetworkConfig.mainnet()
-```
-
-Default mainnet Web3 RPC:
-
-```text
-https://node.decimalchain.com/web3/
-```
-
-For production apps, pass your own infrastructure explicitly:
-
-```python
-from decimal_web3_sdk import DecimalClient, NetworkConfig
-
-config = NetworkConfig.custom(
-    chain_id=75,
-    web3_urls=["https://your-decimal-node.example/web3/"],
-    api_root_url="https://your-decimal-api.example",
-    api_base_url="https://your-decimal-api.example/v1",
-    ws_urls=["wss://your-decimal-node.example/ws/"],
-)
-
-client = DecimalClient(config)
-```
-
-Do not use `your-decimal-node.example` literally. It is a placeholder for your own Decimal node/API. For the default public mainnet RPC you only need:
-
-```python
-client = DecimalClient()
-```
-
-Environment variables are supported:
-
-```bash
-DECIMAL_WEB3_URLS=https://node.decimalchain.com/web3/
-DECIMAL_API_ROOT=https://your-decimal-api.example
-DECIMAL_API_BASE=https://your-decimal-api.example/v1
-DECIMAL_API_FALLBACK_BASES=https://your-fallback-api.example/v1
-DECIMAL_API_KEY=
-```
-
-Testnet/devnet defaults follow the official Decimal `dsc-js-sdk` network map. You can override them with your own nodes at any time:
-
-```bash
-DECIMAL_TESTNET_CHAIN_ID=202020
-DECIMAL_TESTNET_WEB3_URLS=https://testnet-val.decimalchain.com/web3/
-DECIMAL_TESTNET_API_ROOT=https://testnet-gate.decimalchain.com/api/
-DECIMAL_TESTNET_API_BASE=https://testnet-api.decimalchain.com/api/
-```
-
-```python
-config = NetworkConfig.testnet()
-```
-
-Default Decimal endpoints mirrored from `dsc-js-sdk` where available:
-
-```text
-mainnet web3: https://node.decimalchain.com/web3/
-mainnet api:  https://mainnet-api.decimalchain.com/api/
-mainnet gate: https://mainnet-gate.decimalchain.com/api/
-
-testnet web3: https://testnet-val.decimalchain.com/web3/
-testnet api:  https://testnet-api.decimalchain.com/api/
-testnet gate: https://testnet-gate.decimalchain.com/api/
-
-devnet web3: https://devnet-val.decimalchain.com/web3/
-devnet api:  https://devnet-api.decimalchain.com/api/
-devnet gate: https://devnet-gate.decimalchain.com/api/
-```
-
-If the public testnet endpoint is not reachable from your environment, provide your own Decimal-compatible RPC through `DECIMAL_TESTNET_WEB3_URLS` or `NetworkConfig.custom(...)`.
-
-## Quick Start
+## Read a Balance
 
 ```python
 import asyncio
+import os
 from decimal_web3_sdk import DecimalClient
 
 async def main():
     async with DecimalClient() as client:
-        print(await client.block_number())
+        balance = await client.balance_del(os.environ["WALLET_ADDRESS"])
+        print(format(balance, "f"))
 
 asyncio.run(main())
 ```
 
-## Wallet Helpers
-
-```python
-from decimal_web3_sdk.wallet import mnemonic_to_account, mnemonic_to_accounts, private_key_to_address
-
-seed_phrase = load_seed_phrase_from_secure_storage()
-wallet = mnemonic_to_account(seed_phrase)
-address = wallet.address
-
-# Low-level signer output, when a backend service needs it explicitly:
-private_key = wallet.private_key
-address = private_key_to_address("0x...")
-
-# EVM accounts 0..9 from the same mnemonic:
-wallets = mnemonic_to_accounts(seed_phrase, count=10)
-print([(wallet.index, wallet.address) for wallet in wallets])
-```
-
-Default mnemonic derivation path is the EVM path `m/44'/60'/0'/0/0`, which is suitable for Decimal EVM addresses. The SDK never stores seed phrases or private keys. Keep them outside source code and pass them through secure storage or environment variables.
-
-For applications, prefer request constructors such as `NativeTransferRequest.from_mnemonic(...)`. They derive the private key locally only for signing; your UI can keep working with the user's seed phrase.
-
-CLI helpers:
-
-```bash
-python -m decimal_web3_sdk.cli wallet-generate
-python -m decimal_web3_sdk.cli wallet-from-mnemonic "<your seed phrase>"
-python -m decimal_web3_sdk.cli wallet-sequence "<your seed phrase>" --count 10
-```
-
-## Read-only API
-
-REST API calls require `api_base_url`/`api_root_url` because Decimal API gateways are deployment-specific:
-
-```python
-async with DecimalClient(config) as client:
-    latest = await client.rest.latest_block()
-    tx = await client.rest.tx("0x...")
-    balances = await client.rest.wallet_balances("0x...")
-    validators = await client.rest.validators()
-```
-
-## Exact Amounts
-
-Financial amounts never need to pass through `float`. Native DEL balance is returned as
-`Decimal`; ERC20 base units remain an integer and can be serialized with `TokenBalance.as_dict()`:
-
-```python
-from decimal import Decimal
-from decimal_web3_sdk import format_units, parse_units
-
-native_del = await client.balance_del(wallet_address)  # Decimal
-token_balance = await client.erc20.balance(token_address, wallet_address)
-payload = token_balance.as_dict()
-
-assert payload["raw"] == "100000000000000000"
-assert payload["formatted"] == "0.1"  # 18 decimals
-assert format_units(100000000000000000, 18) == Decimal("0.1")
-assert parse_units("0.1", 18) == 100000000000000000
-```
-
-`raw` and `formatted` are strings in JSON-safe balance output. This avoids JavaScript number
-rounding and keeps the token `decimals` metadata alongside the value. REST decimal literals are
-decoded as `Decimal`; integer raw values remain arbitrary-precision Python `int`.
-
-Delegation contract reads follow the same rule. `stake.amount()` returns exact `Decimal`, while
-`stake.as_dict()` returns `amount_raw`, `amount`, `token_id`, and `hold_timestamp` as strings.
-For example, raw `100000000000000000` is serialized as amount `0.1`, never as a float.
-
-## DEL Transfer
-
-Transactions are dry-run by default in examples: SDK builds, estimates gas, checks fee/balance, signs locally, and only broadcasts when `broadcast=True`. The transaction flow follows the official Decimal Python SDK shape: wallet/request -> fee calculation -> sign -> broadcast -> inspect result.
-
-```python
-from decimal_web3_sdk import NativeTransferRequest
-
-seed_phrase = load_seed_phrase_from_secure_storage()
-
-request = NativeTransferRequest.from_mnemonic(
-    to="0xRecipient",
-    amount_del="0.01",
-    mnemonic=seed_phrase,
-    memo="optional",
-)
-
-result = await client.tx.send_del(request, broadcast=False)
-print(result.success, result.gas, result.fee_del, result.raw_tx_hex)
-```
-
-Broadcast:
-
-```python
-result = await client.tx.send_del(request, broadcast=True, wait_receipt=True)
-print(result.tx_hash, result.status, result.block_number, result.gas_used)
-```
-
-Low-level services may still pass `private_key="0x..."` directly when the signer is already managed outside the SDK.
-
-All transaction request classes that need a signer support `from_mnemonic(...)`: native DEL, ERC20, generic contract calls, staking, token, NFT, checks, and bridge workflows. The SDK derives the private key locally only for signing and does not persist seed phrases.
-
-## Fee Calculation
-
-You can calculate fee and balance requirements before signing:
-
-```python
-quote = await client.tx.estimate_fee_for_native_transfer(request, exact=True)
-
-print(quote.ok, quote.estimated_gas, quote.minimum_fee_del, quote.missing_del)
-```
-
-`FeePreflight` is calculated before signing. By default the SDK uses the current network `eth_gasPrice`; there is no hard `20 gwei` cap because Decimal's minimum global fee can be higher. `exact=True` reports `estimateGas * gasPrice`. The default buffered quote uses a `1.10` gas limit, while the receipt exposes the fee actually paid as `gas_used * effective_gas_price`. An operator can still set `DECIMAL_GAS_PRICE_GWEI`, `DECIMAL_MAX_GAS_PRICE_GWEI`, or `SafetyLimits(max_gas_price_wei=...)`, but an undersized cap may be rejected by the network. If broadcast returns a minimum-global-fee error, the SDK retries once with `gasPrice = ceil(required_fee / gas)` and re-signs the same transaction. After broadcast, `TransactionResult` exposes `tx_hash`, `status`, `block_number`, `transaction_index`, `gas_used`, `effective_fee_del`, and the raw `receipt`.
-
-Transaction statuses are normalized as `dry_run`, `pending`, `success`, or `failed`.
-
-Shortcuts are available for common transaction types:
-
-```python
-quote = await client.tx.estimate_fee_for_native_transfer(request)
-quote = await client.tx.estimate_fee_for_erc20_transfer(erc20_request)
-quote = await client.tx.estimate_fee_for_erc20_approve(approve_request)
-quote = await client.tx.estimate_fee_for_contract_call(contract_request)
-```
-
-`send_*` and high-level token/staking/NFT workflows call the same fee calculation before signing. If DEL is insufficient for `value + fee`, SDK returns `success=False` and does not sign or broadcast.
-
-Contract calls with calldata also verify that the target address has bytecode on the selected network before signing. If a mainnet system contract address is accidentally used on testnet/devnet, SDK returns `success=False`, `tx_hash=None`, and `user_message="Контракт сети недоступен. Проверьте сеть или адрес контракта."`
-
-## Approve and One-Transaction Workflows
-
-ERC20 workflows check token balance and allowance before signing. If allowance is already enough, only the main transaction is sent. Delegation, hold, conversion, and ERC20 multisend prefer the Decimal/EIP-2612 permit overload, so a compatible token needs one on-chain transaction. For ERC20 multisend, the same aggregate can contain `permit + transferFrom calls + memo`. A token without permit still requires a mined `approve` transaction before the action. DEL transfer/multisend, token buy, unbond, hold withdrawal, and stake transfer do not require ERC20 approval.
-
-`DecimalWorkflowResult` exposes `steps`, `one_transaction`, `requires_secondary_transaction`, `transaction_count`, and `total_fee_del` so apps can show the user whether the workflow is one transaction or approve + action.
-
-By default `NetworkConfig` applies a `1.10` gas limit multiplier after RPC `estimateGas`, matching the safety buffer used in the Decimal Go SDK, and uses the gas price returned by the selected Decimal RPC. Override these only when an operator intentionally needs exact gas limit or a custom gas-price policy:
-
-```python
-from decimal_web3_sdk import NetworkConfig
-from decimal_web3_sdk.limits import SafetyLimits
-
-config = NetworkConfig.custom(
-    chain_id=75,
-    web3_urls=["https://node.decimalchain.com/web3/"],
-    safety=SafetyLimits(gas_limit_multiplier=1.0),
-)
-```
-
-Transaction failures include `result.user_message` for UI/CLI use, for example `Недостаточно DEL для комиссии.` or `Недостаточно токенов на балансе.`.
-
-## Memo Support
-
-`memo` is only available where the underlying transaction format can safely carry it:
-
-```python
-from decimal_web3_sdk import memo_supported_for
-
-print(memo_supported_for("send-del"))          # True
-print(memo_supported_for("multisend-del"))    # True
-print(memo_supported_for("multisend-erc20"))  # True
-print(memo_supported_for("erc20-transfer"))   # False
-```
-
-Supported:
-
-- `NativeTransferRequest.memo` for native DEL transfers. The SDK encodes UTF-8 text into EVM transaction `data`, estimates gas with that payload, and includes it in the signed transaction.
-- `MultisendDelRequest.memo` for native DEL multisend. One recipient is automatically sent as a normal DEL transfer with memo; two or more recipients use aggregate and encode one memo for the whole batch as the final zero-value call to `0x000...000`.
-- `MultisendErc20Request.memo` for ERC20 multisend. ERC20 transfer calls keep their ABI calldata, and the SDK adds one final zero-value memo call to the multicall aggregate.
-
-Not supported as a generic memo:
-
-- ERC20 `transfer`, `approve`, and `transferFrom`: `data` is occupied by ERC20 ABI calldata.
-- Generic `ContractCallRequest`: pass a note only if the target contract has its own note/message argument.
-- Decimal staking/token/NFT/checks/bridge workflows: current request classes expose only the contract arguments.
-
-## ERC20 Transfer
-
-```python
-from decimal_web3_sdk import Erc20TransferFromRequest, Erc20TransferRequest
-
-result = await client.tx.send_erc20(
-    Erc20TransferRequest.from_mnemonic(
-        token="0xToken",
-        to="0xRecipient",
-        amount="1.5",
-        mnemonic=seed_phrase,
-    ),
-    broadcast=False,
-)
-```
-
-`transferFrom` with allowance preflight:
-
-```python
-result = await client.tx.transfer_from_erc20(
-    Erc20TransferFromRequest.from_mnemonic(
-        token="0xToken",
-        owner="0xOwner",
-        to="0xRecipient",
-        amount="1.5",
-        mnemonic=seed_phrase,
-    ),
-    broadcast=False,
-)
-```
-
-Before signing, the SDK checks:
-
-- native DEL balance for gas;
-- transfer value plus fee for DEL transfers;
-- token balance for ERC20 transfers;
-- allowance/permit path for token workflows that need approval.
-
-## Decimal Staking And Token Workflows
-
-```python
-from decimal_web3_sdk import (
-    DelegateDelRequest,
-    ConvertTokenRequest,
-    token_creation_required_reserve_del,
-)
-
-await client.decimal.delegate_del(
-    DelegateDelRequest.from_mnemonic(
-        validator="0xValidator",
-        amount_del="1",
-        mnemonic=seed_phrase,
-    ),
-    broadcast=False,
-)
-
-await client.token.convert(
-    ConvertTokenRequest.from_mnemonic(
-        token_in="0xTokenA",
-        token_out="0xTokenB",
-        amount_in="1",
-        min_amount_out="0.95",
-        mnemonic=seed_phrase,
-    ),
-    broadcast=False,
-)
-```
-
-`hold_*` results contain the requested `hold_timestamp` and UTC `hold_time`, so an application can persist the unlock date immediately. Current staking state and withdrawal history can be refreshed later through `client.rest.wallet_staking_summary(address)` and `client.rest.wallet_stake_withdrawals(address)`.
-
-Known token positions can also be verified directly against the Delegation contract without
-depending on an indexer:
-
-```python
-regular = await client.decimal.get_stake(validator, wallet_address, token_address)
-held = await client.decimal.get_hold_stake(
-    validator,
-    wallet_address,
-    token_address,
-    hold_timestamp,
-)
-
-print(regular.amount(decimals), regular.exists)
-print(held.amount(decimals), held.hold_time)
-```
-
-Indexer/API discovery is still needed to enumerate all validators, tokens, and hold timestamps
-for an unknown wallet. Once those identifiers are known, the direct reads above are the source
-of truth for the current contract state.
-
-Existing DEL stake can be moved or withdrawn without token approval:
-
-```python
-from decimal_web3_sdk import TransferStakeDelRequest, WithdrawDelStakeWithResetRequest
-
-move = await client.decimal.transfer_stake_del(
-    TransferStakeDelRequest.from_mnemonic(
-        validator="0xOldValidator",
-        new_validator="0xNewValidator",
-        amount_del="1",
-        mnemonic=seed_phrase,
-    ),
-    broadcast=False,
-)
-
-withdraw = await client.decimal.withdraw_del_stake_with_reset(
-    WithdrawDelStakeWithResetRequest.from_mnemonic(
-        validator="0xValidator",
-        amount_del="1",
-        hold_timestamps_to_reset=[hold_timestamp],
-        mnemonic=seed_phrase,
-    ),
-    broadcast=False,
-)
-```
-
-The same operations are available for an already delegated ERC20 token through
-`UnbondErc20Request`, `WithdrawHoldErc20Request`, and `TransferStakeErc20Request`. They do not
-need ERC20 approval because Delegation already owns the staked position. Call the matching
-`estimate_fee_for_*` method with `exact=True` before signing.
-
-Token creation reserve can be calculated before sending. If `CreateTokenRequest.reserve_value_wei` is omitted, SDK uses the Decimal Go SDK rule: `1000 DEL` minimum reserve plus symbol-length commission.
-
-```python
-print(token_creation_required_reserve_del("MINTCANDY"))  # 1250 DEL
-```
-
-Validator online/offline controls use the Decimal EVM `master-validator` contract. For node-local maintenance prefer self methods. Use a seed phrase only from secure node-local storage, or pass `private_key` only when an external signer/secret manager already owns it:
-
-```python
-from decimal_web3_sdk import ValidatorSelfPauseRequest
-
-await client.decimal.pause_self_validator(
-    ValidatorSelfPauseRequest.from_mnemonic(mnemonic=seed_phrase),
-    broadcast=False,
-)
-await client.decimal.unpause_self_validator(
-    ValidatorSelfPauseRequest.from_mnemonic(mnemonic=seed_phrase),
-    broadcast=False,
-)
-```
-
-Admin-compatible methods matching the JS SDK are also available:
-
-```python
-from decimal_web3_sdk import ValidatorPauseRequest
-
-await client.decimal.pause_validator(
-    ValidatorPauseRequest.from_mnemonic(validator="0xValidator", mnemonic=seed_phrase),
-)
-await client.decimal.unpause_validator(
-    ValidatorPauseRequest.from_mnemonic(validator="0xValidator", mnemonic=seed_phrase),
-)
-```
-
-Implemented high-level modules:
-
-- `tx`: native DEL, contract calls, ERC20 transfer/approve, fee preflight.
-- `erc20`: info, balance, allowance, permit helpers.
-- `decimal`: DEL/ERC20 delegate, hold, unbond, withdraw hold, multisend, validator online/offline.
-- `token`: buy, sell, convert, burn, mint, update details, create token.
-- `nft`: ERC721/ERC1155 create, mint, transfer, approve, delegate, hold, withdraw.
-- `checks`: create/redeem EVM checks with explicit contract address.
-- `bridge`: bridge transfer/complete helpers with explicit contract address.
-- `rest`: blocks, transactions, addresses, balances, coins, validators, rewards.
-- `ws`: explicit WebSocket subscriptions.
-- `agents`/`orchestrator`/`monitoring`: endpoint checks, timings, SLA-style transaction pipeline support.
-
-## CLI
-
-```bash
-decimal-sdk block-number
-decimal-sdk balance 0x...
-decimal-sdk erc20-info 0xToken
-python -m decimal_web3_sdk.cli wallet-from-mnemonic "<your seed phrase>"
-```
-
-For signed transactions in apps, prefer the Python `*.from_mnemonic(...)` request constructors shown above. CLI signing commands are a low-level interface for external signer/secret-manager flows and are not the normal user-facing path.
-
-## Tests
-
-Unit tests do not touch live nodes:
-
-```bash
-pytest -q
-```
-
-Live read-only smoke tests are opt-in:
-
-```bash
-DECIMAL_SDK_RUN_INTEGRATION=1 pytest -q tests/integration
-```
-
-Broadcast training is opt-in and requires a funded test wallet:
-
-```bash
-DECIMAL_TEST_NETWORK=testnet
-DECIMAL_TESTNET_TEST_MNEMONIC="<testnet seed phrase from secure storage>"
-DECIMAL_TESTNET_TEST_EXPECTED_ADDRESS=0x...
-DECIMAL_TEST_TO=0x...
-DECIMAL_TEST_DEL_AMOUNT=0.001
-DECIMAL_TEST_BROADCAST=0
-decimal-sdk train-env
-```
-
-`train-env` calculates the fee before signing/sending, then records the transaction result. For visual test reporting it also stores the account balance and nonce before/after the case. Credentials are network-scoped (`DECIMAL_TESTNET_TEST_*`, `DECIMAL_DEVNET_TEST_*`, `DECIMAL_MAINNET_TEST_*`). The derived address must match `*_TEST_EXPECTED_ADDRESS`; mainnet broadcast is rejected when the expected address is absent. Set `DECIMAL_TEST_BROADCAST=1` only on testnet/devnet or with a wallet intended for real training transactions.
-
-## Relation To The Legacy Decimal Python SDK
-
-The legacy official SDK documented the same basic flow: create/import wallet, initialize API/gateway, build transaction message, calculate fee, sign, broadcast, then inspect result. This SDK keeps that mental model but targets Decimal EVM/Web3 contracts and JSON-RPC.
-
-Legacy concepts mapped here:
-
-- `Wallet` -> local private key helpers and external secure storage.
-- `DscAPI(gateway, web3)` -> `DecimalClient(NetworkConfig.custom(...))`.
-- `Transaction.build_tx(...)` -> typed request dataclasses and service methods.
-- `calculate_fee(...)` -> `estimate()` plus `preflight_fee()`.
-- `broadcast(...)` -> `broadcast=True`.
-
-## License
-
-MIT License. See `LICENSE`.
+The client and CLI default to **mainnet**, using official Decimal RPCs.
+Select `NetworkConfig.testnet()` or CLI `--network testnet` explicitly for tests;
+custom nodes remain supported.
+No signer is required to read balances.
+`format_units_string(100000000000000000, 18)` returns exactly `"0.1"`.
+Use strings or Decimal, never float, for amounts.
+
+Every transaction has a complete example in the module guides.
+Examples derive signing keys locally from a mnemonic and disable broadcast.
+`broadcast=False` may still sign; use fee-estimation APIs for unsigned checks.
+DEL needs no approval. ERC20 permit needs compatible token and target contracts;
+otherwise an approval remains a separate transaction.
+
+[Security](SECURITY.md) | [Changelog](CHANGELOG.md) | [API reference](docs/en/api.md)

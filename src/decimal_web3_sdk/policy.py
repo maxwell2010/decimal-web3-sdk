@@ -27,4 +27,3 @@ class TransactionPolicy:
     @classmethod
     def fast(cls) -> "TransactionPolicy":
         return cls()
-

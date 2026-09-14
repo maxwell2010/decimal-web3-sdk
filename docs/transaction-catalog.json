@@ -1,0 +1,387 @@
+[
+  {
+    "method": "tx.approve_erc20",
+    "request": "Erc20ApproveRequest",
+    "group": "tokens",
+    "en": "Set a spender allowance; amount zero revokes it.",
+    "ru": "Установить лимит расходования для spender; ноль отменяет разрешение."
+  },
+  {
+    "method": "tx.send_del",
+    "request": "NativeTransferRequest",
+    "group": "del",
+    "en": "Transfer native DEL directly; memo is UTF-8 transaction data, not multicall.",
+    "ru": "Прямой перевод DEL; memo записывается в data транзакции, без multicall."
+  },
+  {
+    "method": "tx.send_erc20",
+    "request": "Erc20TransferRequest",
+    "group": "tokens",
+    "en": "Transfer ERC20 tokens from the signer; no approval is needed.",
+    "ru": "Перевод ERC20 от подписанта; approve не требуется."
+  },
+  {
+    "method": "tx.transfer_from_erc20",
+    "request": "Erc20TransferFromRequest",
+    "group": "tokens",
+    "en": "Transfer tokens using the owner's existing allowance to the signer.",
+    "ru": "Перевод токенов владельца по ранее выданному разрешению подписанту."
+  },
+  {
+    "method": "decimal.delegate_del",
+    "request": "DelegateDelRequest",
+    "group": "staking",
+    "en": "Delegate native DEL to a validator.",
+    "ru": "Делегировать DEL валидатору."
+  },
+  {
+    "method": "decimal.delegate_erc20",
+    "request": "DelegateErc20Request",
+    "group": "staking",
+    "en": "Delegate a reserve token; permission may be needed.",
+    "ru": "Делегировать резервный токен; может потребоваться разрешение."
+  },
+  {
+    "method": "decimal.hold_del",
+    "request": "HoldDelRequest",
+    "group": "staking",
+    "en": "Delegate DEL with an explicit hold-end Unix timestamp.",
+    "ru": "Делегировать DEL в hold с явным временем окончания в Unix-секундах."
+  },
+  {
+    "method": "decimal.hold_erc20",
+    "request": "HoldErc20Request",
+    "group": "staking",
+    "en": "Delegate ERC20 with a hold end; permission may be needed.",
+    "ru": "Делегировать ERC20 в hold; может потребоваться разрешение."
+  },
+  {
+    "method": "decimal.hold_stake_with_reset",
+    "request": "HoldStakeWithResetRequest",
+    "group": "staking",
+    "en": "Reset eligible token holds and create a new hold schedule.",
+    "ru": "Сбросить доступные token-hold и установить новый срок hold."
+  },
+  {
+    "method": "decimal.multisend_del",
+    "request": "MultisendDelRequest",
+    "group": "del",
+    "en": "Distribute DEL to recipients in one transaction; no approval. Optional memo.",
+    "ru": "Рассылка DEL одной транзакцией без approve, с необязательным memo."
+  },
+  {
+    "method": "decimal.multisend_erc20",
+    "request": "MultisendErc20Request",
+    "group": "tokens",
+    "en": "Distribute ERC20 via multicall; permit or separate approval may be needed. Optional memo.",
+    "ru": "Рассылка ERC20 через multicall; при необходимости permit либо отдельный approve. Поддерживается memo."
+  },
+  {
+    "method": "decimal.pause_self_validator",
+    "request": "ValidatorSelfPauseRequest",
+    "group": "validators",
+    "en": "Pause the signer's validator; requires operator authority.",
+    "ru": "Приостановить собственный валидатор; нужны полномочия оператора."
+  },
+  {
+    "method": "decimal.pause_validator",
+    "request": "ValidatorPauseRequest",
+    "group": "validators",
+    "en": "Pause a specified validator; requires contract-level authorization.",
+    "ru": "Приостановить указанный валидатор; нужны права в контракте."
+  },
+  {
+    "method": "decimal.reset_stake_hold",
+    "request": "ResetStakeHoldRequest",
+    "group": "staking",
+    "en": "Reset an eligible matured hold for the specified delegator.",
+    "ru": "Сбросить доступный созревший hold указанного делегатора."
+  },
+  {
+    "method": "decimal.stake_token_to_hold",
+    "request": "StakeTokenToHoldRequest",
+    "group": "staking",
+    "en": "Move a token stake into a hold with a new end timestamp.",
+    "ru": "Перевести токен-стейк в hold с новым сроком окончания."
+  },
+  {
+    "method": "decimal.transfer_del_stake_with_reset",
+    "request": "TransferDelStakeWithResetRequest",
+    "group": "staking",
+    "en": "Reset selected DEL holds and move stake to another validator.",
+    "ru": "Сбросить выбранные DEL-hold и перенести стейк другому валидатору."
+  },
+  {
+    "method": "decimal.transfer_stake_del",
+    "request": "TransferStakeDelRequest",
+    "group": "staking",
+    "en": "Move regular or held DEL stake to another validator.",
+    "ru": "Перенести обычный или удерживаемый DEL-стейк другому валидатору."
+  },
+  {
+    "method": "decimal.transfer_stake_erc20",
+    "request": "TransferStakeErc20Request",
+    "group": "staking",
+    "en": "Move regular or held token stake to another validator.",
+    "ru": "Перенести обычный или удерживаемый токен-стейк другому валидатору."
+  },
+  {
+    "method": "decimal.transfer_stake_with_reset",
+    "request": "TransferStakeWithResetRequest",
+    "group": "staking",
+    "en": "Reset selected token holds and move stake to another validator.",
+    "ru": "Сбросить выбранные token-hold и перенести стейк другому валидатору."
+  },
+  {
+    "method": "decimal.unbond_del",
+    "request": "UnbondDelRequest",
+    "group": "staking",
+    "en": "Request withdrawal from the regular DEL stake; this starts unbonding, not immediate payment.",
+    "ru": "Инициировать отзыв обычного DEL-стейка; зачисление происходит после unbonding, не сразу."
+  },
+  {
+    "method": "decimal.unbond_erc20",
+    "request": "UnbondErc20Request",
+    "group": "staking",
+    "en": "Request withdrawal from the regular token stake.",
+    "ru": "Инициировать отзыв обычного токен-стейка."
+  },
+  {
+    "method": "decimal.unpause_self_validator",
+    "request": "ValidatorSelfPauseRequest",
+    "group": "validators",
+    "en": "Resume the signer's validator; requires operator authority.",
+    "ru": "Возобновить работу собственного валидатора; нужны полномочия оператора."
+  },
+  {
+    "method": "decimal.unpause_validator",
+    "request": "ValidatorPauseRequest",
+    "group": "validators",
+    "en": "Resume a specified validator; requires contract-level authorization.",
+    "ru": "Возобновить указанный валидатор; нужны права в контракте."
+  },
+  {
+    "method": "decimal.withdraw_del_stake_with_reset",
+    "request": "WithdrawDelStakeWithResetRequest",
+    "group": "staking",
+    "en": "Reset selected matured DEL holds and request withdrawal.",
+    "ru": "Сбросить выбранные созревшие DEL-hold и инициировать отзыв."
+  },
+  {
+    "method": "decimal.withdraw_hold_del",
+    "request": "WithdrawHoldDelRequest",
+    "group": "staking",
+    "en": "Withdraw a matured DEL hold using its exact hold key.",
+    "ru": "Отозвать созревший DEL-hold по точному ключу времени окончания."
+  },
+  {
+    "method": "decimal.withdraw_hold_erc20",
+    "request": "WithdrawHoldErc20Request",
+    "group": "staking",
+    "en": "Withdraw a matured ERC20 hold using its exact hold key.",
+    "ru": "Отозвать созревший ERC20-hold по точному ключу времени окончания."
+  },
+  {
+    "method": "decimal.withdraw_stake_with_reset",
+    "request": "WithdrawStakeWithResetRequest",
+    "group": "staking",
+    "en": "Reset selected matured token holds and request withdrawal.",
+    "ru": "Сбросить выбранные созревшие token-hold и инициировать отзыв."
+  },
+  {
+    "method": "token.burn",
+    "request": "BurnTokenRequest",
+    "group": "tokens",
+    "en": "Burn the signer's fungible tokens.",
+    "ru": "Сжечь принадлежащие подписанту взаимозаменяемые токены."
+  },
+  {
+    "method": "token.buy",
+    "request": "BuyTokenRequest",
+    "group": "tokens",
+    "en": "Buy reserve tokens with DEL and an explicit minimum output.",
+    "ru": "Купить резервный токен за DEL с нижней границей выхода."
+  },
+  {
+    "method": "token.convert",
+    "request": "ConvertTokenRequest",
+    "group": "tokens",
+    "en": "Convert tokens with a minimum output; may use permit or two transactions.",
+    "ru": "Обменять токены с минимальным выходом; возможны permit или две транзакции."
+  },
+  {
+    "method": "token.create",
+    "request": "CreateTokenRequest",
+    "group": "tokens",
+    "en": "Create a reserve token; initial reserve and creation commission are not gas fees.",
+    "ru": "Создать резервный токен; начальный резерв и комиссия создания не являются gas-комиссией."
+  },
+  {
+    "method": "token.create_reserveless",
+    "request": "CreateReservelessTokenRequest",
+    "group": "tokens",
+    "en": "Create a token without reserve, with mint/burn flags and cap.",
+    "ru": "Создать безрезервный токен с флагами выпуска/сжигания и пределом эмиссии."
+  },
+  {
+    "method": "token.mint",
+    "request": "MintTokenRequest",
+    "group": "tokens",
+    "en": "Mint fungible tokens to a recipient; requires issuer rights.",
+    "ru": "Выпустить токены получателю; нужны права эмитента."
+  },
+  {
+    "method": "token.sell",
+    "request": "SellTokenRequest",
+    "group": "tokens",
+    "en": "Sell reserve tokens for DEL with an explicit minimum output.",
+    "ru": "Продать резервный токен за DEL с нижней границей выхода."
+  },
+  {
+    "method": "token.update_details",
+    "request": "UpdateTokenDetailsRequest",
+    "group": "tokens",
+    "en": "Update token identity and supply cap; requires issuer rights.",
+    "ru": "Обновить identity и предел эмиссии токена; нужны права эмитента."
+  },
+  {
+    "method": "nft.add_del_reserve",
+    "request": "AddDelReserveNftRequest",
+    "group": "nft",
+    "en": "Add native DEL to an NFT reserve.",
+    "ru": "Пополнить резерв NFT нативным DEL."
+  },
+  {
+    "method": "nft.approve",
+    "request": "NftApproveRequest",
+    "group": "nft",
+    "en": "Approve an operator for a single ERC721 ID.",
+    "ru": "Разрешить оператору работу с одним ERC721 ID."
+  },
+  {
+    "method": "nft.burn",
+    "request": "BurnNftRequest",
+    "group": "nft",
+    "en": "Burn owned NFTs; refundable reserves depend on the collection contract.",
+    "ru": "Сжечь NFT; возврат резерва зависит от контракта коллекции."
+  },
+  {
+    "method": "nft.create_collection",
+    "request": "CreateNftCollectionRequest",
+    "group": "nft",
+    "en": "Create an ERC721 or ERC1155 NFT collection.",
+    "ru": "Создать NFT-коллекцию ERC721 или ERC1155."
+  },
+  {
+    "method": "nft.delegate",
+    "request": "DelegateNftRequest",
+    "group": "nft",
+    "en": "Delegate NFT stake; may require collection operator approval.",
+    "ru": "Делегировать NFT; может потребоваться разрешение оператору коллекции."
+  },
+  {
+    "method": "nft.disable_mint",
+    "request": "DisableMintNftRequest",
+    "group": "nft",
+    "en": "Disable collection minting; may be irreversible.",
+    "ru": "Отключить выпуск в коллекции; операция может быть необратимой."
+  },
+  {
+    "method": "nft.hold",
+    "request": "HoldNftRequest",
+    "group": "nft",
+    "en": "Delegate NFT with a hold end; may require operator approval.",
+    "ru": "Делегировать NFT в hold; может потребоваться разрешение оператору."
+  },
+  {
+    "method": "nft.mint",
+    "request": "MintNftRequest",
+    "group": "nft",
+    "en": "Mint an NFT with optional reserve; requires collection permissions.",
+    "ru": "Выпустить NFT с необязательным резервом; нужны права коллекции."
+  },
+  {
+    "method": "nft.set_approval_for_all",
+    "request": "NftApprovalRequest",
+    "group": "nft",
+    "en": "Grant or revoke an NFT operator's authority for the collection.",
+    "ru": "Выдать или отменить полномочия NFT-оператора для коллекции."
+  },
+  {
+    "method": "nft.set_token_uri",
+    "request": "SetTokenUriNftRequest",
+    "group": "nft",
+    "en": "Update an NFT metadata URI; requires contract permissions.",
+    "ru": "Обновить URI метаданных NFT; нужны права контракта."
+  },
+  {
+    "method": "nft.transfer",
+    "request": "NftTransferRequest",
+    "group": "nft",
+    "en": "Transfer an ERC721 or ERC1155 NFT to a recipient.",
+    "ru": "Передать NFT ERC721 или ERC1155 получателю."
+  },
+  {
+    "method": "nft.transfer_batch_erc1155",
+    "request": "NftBatchTransferRequest",
+    "group": "nft",
+    "en": "Transfer parallel lists of ERC1155 IDs and amounts in one call.",
+    "ru": "Передать списки ID и количеств ERC1155 одним вызовом."
+  },
+  {
+    "method": "nft.transfer_stake",
+    "request": "TransferNftStakeRequest",
+    "group": "nft",
+    "en": "Move regular or held NFT stake to another validator.",
+    "ru": "Перенести обычный или удерживаемый NFT-стейк другому валидатору."
+  },
+  {
+    "method": "nft.withdraw",
+    "request": "WithdrawNftRequest",
+    "group": "nft",
+    "en": "Request withdrawal of regular or matured held NFT stake.",
+    "ru": "Инициировать отзыв обычного или созревшего удерживаемого NFT-стейка."
+  },
+  {
+    "method": "checks.create_del",
+    "request": "CreateChecksDelRequest",
+    "group": "checks",
+    "en": "Create equal-value DEL checks for signer addresses; value is amount times count.",
+    "ru": "Создать DEL-чеки одинакового номинала для адресов подписантов; value равен номиналу на число чеков."
+  },
+  {
+    "method": "checks.create_token",
+    "request": "CreateChecksTokenRequest",
+    "group": "checks",
+    "en": "Create token checks using existing allowance or an explicitly supplied permit.",
+    "ru": "Создать токен-чеки по существующему allowance или явно переданному permit."
+  },
+  {
+    "method": "checks.redeem",
+    "request": "RedeemChecksRequest",
+    "group": "checks",
+    "en": "Redeem checks using matching check hashes and signatures.",
+    "ru": "Погасить чеки по соответствующим хешам и подписям."
+  },
+  {
+    "method": "bridge.complete_transfer",
+    "request": "BridgeCompleteTransferRequest",
+    "group": "bridge",
+    "en": "Complete a bridge transfer with a verified encoded VM from the bridge.",
+    "ru": "Завершить мостовой перевод с проверенным encoded VM, полученным от моста."
+  },
+  {
+    "method": "bridge.transfer_native",
+    "request": "BridgeTransferNativeRequest",
+    "group": "bridge",
+    "en": "Start a native bridge transfer; destination completion is a separate workflow.",
+    "ru": "Начать мостовой перевод нативной монеты; завершение в целевой сети выполняется отдельно."
+  },
+  {
+    "method": "bridge.transfer_token",
+    "request": "BridgeTransferTokenRequest",
+    "group": "bridge",
+    "en": "Start a token bridge transfer; allowance and service fee are caller responsibilities.",
+    "ru": "Начать мостовой перевод токена; allowance и сервисную комиссию обеспечивает вызывающий."
+  }
+]

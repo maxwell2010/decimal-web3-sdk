@@ -1,0 +1,2439 @@
+{
+  "checked_on": "2026-09-14",
+  "python_version": "0.1.1",
+  "commits": {
+    "dsc-js-sdk": "6790d35e2decb0cbb06a9149a9c476c834f99223",
+    "dsc-go-sdk": "3ef4a089b6020889e60783c2026df5725fb960e2"
+  },
+  "count_unit": "named high-level EVM write entry points; not unique protocol transaction types",
+  "sources": [
+    {
+      "sdk": "dsc-js-sdk",
+      "path": "src/decimalevm/index.ts",
+      "sha256": "0daa45cda32cb8100a628d7c442e190a1defbe46ea935fdb377d780f68036289",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "path": "src/decimalevm/call.ts",
+      "sha256": "fbe697fb2c7e9456cdb1b6ae929c944781ade5949e19b0ed3db149afd98c4fcd",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/call.ts"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "path": "src/txTypesNew.ts",
+      "sha256": "9ab1d506b59c411d043687856bed6c2b032e5d1bf49169eea72a1602e3a2d4ae",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/txTypesNew.ts"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "path": "package.json",
+      "sha256": "a3707b48136e1f6c43b48c02c8ed9aeba8f4f92c0e8a6eb2f4d41a7953d05262",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/package.json"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "path": "decimalevm/methods/del.go",
+      "sha256": "52dac31696e6a7081b057f481af4fafba38d297cae045dc9252bc1f65c344171",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/del.go"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "path": "decimalevm/methods/tokens.go",
+      "sha256": "d191345f8f9a2238e08dc85f5a4e47974331b2784ac16514fcafed8fd939d906",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "path": "decimalevm/methods/delegation.go",
+      "sha256": "984fe6990bf4ea567188cdcaad1827221965123947d2f9b4d26cd8a0dc5e4767",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "path": "decimalevm/methods/nft.go",
+      "sha256": "c287ad7ac4ee951f644091ad36340c2f87630c9ed97d1b54c697782c3950f8cf",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "path": "decimalevm/methods/validators.go",
+      "sha256": "d107dfa76c826c76f51a02e97b7c428cbdb6a236a6c2855d179ac8d934a94e91",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/validators.go"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "path": "decimalevm/methods/multisig.go",
+      "sha256": "d590ecf91f01cec3003d7d866c4ebe6843c1770b39e0a9a918e43cfcd1678d7f",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/multisig.go"
+    }
+  ],
+  "operations": [
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "multiSendToken",
+      "group": "multisend",
+      "line": 405,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-405",
+      "python": [
+        "decimal.multisend_del",
+        "decimal.multisend_erc20"
+      ],
+      "status": "partial",
+      "reason": "mixed-assets"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "sendDEL",
+      "group": "del",
+      "line": 460,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-460",
+      "python": [
+        "tx.send_del"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "burnDEL",
+      "group": "del",
+      "line": 473,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-473",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createToken",
+      "group": "tokens",
+      "line": 477,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-477",
+      "python": [
+        "token.create"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createTokenReserveless",
+      "group": "tokens",
+      "line": 482,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-482",
+      "python": [
+        "token.create_reserveless"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "convertToken",
+      "group": "tokens",
+      "line": 506,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-506",
+      "python": [
+        "token.convert"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "approveToken",
+      "group": "tokens",
+      "line": 511,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-511",
+      "python": [
+        "tx.approve_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferToken",
+      "group": "tokens",
+      "line": 517,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-517",
+      "python": [
+        "tx.send_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferFromToken",
+      "group": "tokens",
+      "line": 523,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-523",
+      "python": [
+        "tx.transfer_from_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "burnToken",
+      "group": "tokens",
+      "line": 529,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-529",
+      "python": [
+        "token.burn"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "mintTokenReserveless",
+      "group": "tokens",
+      "line": 535,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-535",
+      "python": [
+        "token.mint"
+      ],
+      "status": "partial",
+      "reason": "token-mint-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "convertToDEL",
+      "group": "tokens",
+      "line": 541,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-541",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buyTokenForExactDEL",
+      "group": "tokens",
+      "line": 547,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-547",
+      "python": [
+        "token.buy"
+      ],
+      "status": "partial",
+      "reason": "token-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buyExactTokenForDEL",
+      "group": "tokens",
+      "line": 553,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-553",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "sellTokensForExactDEL",
+      "group": "tokens",
+      "line": 559,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-559",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "sellExactTokensForDEL",
+      "group": "tokens",
+      "line": 565,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-565",
+      "python": [
+        "token.sell"
+      ],
+      "status": "partial",
+      "reason": "token-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "updateTokenIdentity",
+      "group": "tokens",
+      "line": 571,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-571",
+      "python": [
+        "token.update_details"
+      ],
+      "status": "partial",
+      "reason": "token-update-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "updateTokenMaxTotalSupply",
+      "group": "tokens",
+      "line": 577,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-577",
+      "python": [
+        "token.update_details"
+      ],
+      "status": "partial",
+      "reason": "token-update-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "updateTokenMinTotalSupply",
+      "group": "tokens",
+      "line": 583,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-583",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "permitToken",
+      "group": "tokens",
+      "line": 589,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-589",
+      "python": [
+        "erc20.sign_permit"
+      ],
+      "status": "partial",
+      "reason": "signature-only"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createCollectionDRC721",
+      "group": "nft",
+      "line": 595,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-595",
+      "python": [
+        "nft.create_collection"
+      ],
+      "status": "partial",
+      "reason": "nft-collection-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createCollectionDRC1155",
+      "group": "nft",
+      "line": 600,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-600",
+      "python": [
+        "nft.create_collection"
+      ],
+      "status": "partial",
+      "reason": "nft-collection-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createCollectionDRC721Reserveless",
+      "group": "nft",
+      "line": 605,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-605",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createCollectionDRC1155Reserveless",
+      "group": "nft",
+      "line": 610,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-610",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "approveNFT721",
+      "group": "nft",
+      "line": 615,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-615",
+      "python": [
+        "nft.approve"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "approveForAllNFT",
+      "group": "nft",
+      "line": 623,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-623",
+      "python": [
+        "nft.set_approval_for_all"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "mintReserveless",
+      "group": "nft",
+      "line": 647,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-647",
+      "python": [
+        "nft.mint"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "mintNFTWithDELReserve",
+      "group": "nft",
+      "line": 661,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-661",
+      "python": [
+        "nft.mint"
+      ],
+      "status": "partial",
+      "reason": "nft-del-selector"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "mintNFTWithTokenReserve",
+      "group": "nft",
+      "line": 678,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-678",
+      "python": [
+        "nft.mint"
+      ],
+      "status": "partial",
+      "reason": "nft-permit-missing"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "addDELReserveNFT",
+      "group": "nft",
+      "line": 695,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-695",
+      "python": [
+        "nft.add_del_reserve"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "addTokenReserveNFT",
+      "group": "nft",
+      "line": 711,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-711",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferNFT",
+      "group": "nft",
+      "line": 727,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-727",
+      "python": [
+        "nft.transfer"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferBatchNFT1155",
+      "group": "nft",
+      "line": 743,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-743",
+      "python": [
+        "nft.transfer_batch_erc1155"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "disableMintNFT",
+      "group": "nft",
+      "line": 751,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-751",
+      "python": [
+        "nft.disable_mint"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "burnNFT",
+      "group": "nft",
+      "line": 758,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-758",
+      "python": [
+        "nft.burn"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "setTokenURINFT",
+      "group": "nft",
+      "line": 781,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-781",
+      "python": [
+        "nft.set_token_uri"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateDEL",
+      "group": "staking",
+      "line": 788,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-788",
+      "python": [
+        "decimal.delegate_del"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateDELHold",
+      "group": "staking",
+      "line": 793,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-793",
+      "python": [
+        "decimal.hold_del"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateToken",
+      "group": "staking",
+      "line": 798,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-798",
+      "python": [
+        "decimal.delegate_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateTokenHold",
+      "group": "staking",
+      "line": 803,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-803",
+      "python": [
+        "decimal.hold_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferStakeToken",
+      "group": "staking",
+      "line": 808,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-808",
+      "python": [
+        "decimal.transfer_stake_del",
+        "decimal.transfer_stake_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferStakeTokenHold",
+      "group": "staking",
+      "line": 813,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-813",
+      "python": [
+        "decimal.transfer_stake_del",
+        "decimal.transfer_stake_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawStakeToken",
+      "group": "staking",
+      "line": 818,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-818",
+      "python": [
+        "decimal.unbond_del",
+        "decimal.unbond_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawStakeTokenHold",
+      "group": "staking",
+      "line": 823,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-823",
+      "python": [
+        "decimal.withdraw_hold_del",
+        "decimal.withdraw_hold_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "stakeTokenToHold",
+      "group": "staking",
+      "line": 828,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-828",
+      "python": [
+        "decimal.stake_token_to_hold"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "stakeTokenResetHold",
+      "group": "staking",
+      "line": 833,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-833",
+      "python": [
+        "decimal.reset_stake_hold"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "stakeTokenResetHoldDEL",
+      "group": "staking",
+      "line": 838,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-838",
+      "python": [
+        "decimal.reset_stake_hold"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawTokenWithReset",
+      "group": "staking",
+      "line": 843,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-843",
+      "python": [
+        "decimal.withdraw_stake_with_reset",
+        "decimal.withdraw_del_stake_with_reset"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferTokenWithReset",
+      "group": "staking",
+      "line": 848,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-848",
+      "python": [
+        "decimal.transfer_stake_with_reset",
+        "decimal.transfer_del_stake_with_reset"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "holdTokenWithReset",
+      "group": "staking",
+      "line": 853,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-853",
+      "python": [
+        "decimal.hold_stake_with_reset"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "applyPenaltyToStakeToken",
+      "group": "staking",
+      "line": 859,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-859",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "applyPenaltiesToStakeToken",
+      "group": "staking",
+      "line": 864,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-864",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "completeStakeToken",
+      "group": "staking",
+      "line": 868,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-868",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateNFT",
+      "group": "nft_staking",
+      "line": 874,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-874",
+      "python": [
+        "nft.delegate"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateNFTHold",
+      "group": "nft_staking",
+      "line": 882,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-882",
+      "python": [
+        "nft.hold"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateNFTByPermit",
+      "group": "nft_staking",
+      "line": 890,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-890",
+      "python": [
+        "nft.delegate"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawNFT",
+      "group": "nft_staking",
+      "line": 898,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-898",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawNFTHold",
+      "group": "nft_staking",
+      "line": 906,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-906",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferNFTStake",
+      "group": "nft_staking",
+      "line": 914,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-914",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferNFTStakeHold",
+      "group": "nft_staking",
+      "line": 922,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-922",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateNFT1155",
+      "group": "nft_staking",
+      "line": 931,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-931",
+      "python": [
+        "nft.delegate"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateNFT1155Hold",
+      "group": "nft_staking",
+      "line": 939,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-939",
+      "python": [
+        "nft.hold"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawNFT1155",
+      "group": "nft_staking",
+      "line": 947,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-947",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawNFT1155Hold",
+      "group": "nft_staking",
+      "line": 955,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-955",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferNFT1155Stake",
+      "group": "nft_staking",
+      "line": 963,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-963",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferNFT1155StakeHold",
+      "group": "nft_staking",
+      "line": 971,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-971",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateDRC721",
+      "group": "nft_staking",
+      "line": 980,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-980",
+      "python": [
+        "nft.delegate"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateDRC721Hold",
+      "group": "nft_staking",
+      "line": 987,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-987",
+      "python": [
+        "nft.hold"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateDRC1155",
+      "group": "nft_staking",
+      "line": 994,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-994",
+      "python": [
+        "nft.delegate"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "delegateDRC1155Hold",
+      "group": "nft_staking",
+      "line": 1001,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1001",
+      "python": [
+        "nft.hold"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferStakeNFT",
+      "group": "nft_staking",
+      "line": 1008,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1008",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferStakeNFTHold",
+      "group": "nft_staking",
+      "line": 1015,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1015",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawStakeNFT",
+      "group": "nft_staking",
+      "line": 1022,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1022",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawStakeNFTHold",
+      "group": "nft_staking",
+      "line": 1029,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1029",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "stakeNFTToHold",
+      "group": "nft_staking",
+      "line": 1036,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1036",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "stakeNFTResetHold",
+      "group": "nft_staking",
+      "line": 1043,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1043",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "withdrawNFTWithReset",
+      "group": "nft_staking",
+      "line": 1050,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1050",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "transferNFTWithReset",
+      "group": "nft_staking",
+      "line": 1057,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1057",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "holdNFTWithReset",
+      "group": "nft_staking",
+      "line": 1064,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1064",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "completeStakeNFT",
+      "group": "nft_staking",
+      "line": 1071,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1071",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "addValidatorWithToken",
+      "group": "validators",
+      "line": 1076,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1076",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "addValidatorWithETH",
+      "group": "validators",
+      "line": 1083,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1083",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "removeValidator",
+      "group": "validators",
+      "line": 1090,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1090",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "pauseValidator",
+      "group": "validators",
+      "line": 1095,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1095",
+      "python": [
+        "decimal.pause_validator"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "unpauseValidator",
+      "group": "validators",
+      "line": 1100,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1100",
+      "python": [
+        "decimal.unpause_validator"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "updateValidatorMeta",
+      "group": "validators",
+      "line": 1105,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1105",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "approveHashMultiSig",
+      "group": "multisig",
+      "line": 1404,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1404",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "executeMultiSigTx",
+      "group": "multisig",
+      "line": 1433,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1433",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createMultiSig",
+      "group": "multisig",
+      "line": 1439,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1439",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "bridgeTransferNative",
+      "group": "bridge",
+      "line": 1812,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1812",
+      "python": [
+        "bridge.transfer_native"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "bridgeTransferTokens",
+      "group": "bridge",
+      "line": 1824,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1824",
+      "python": [
+        "bridge.transfer_token"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "bridgeCompleteTransfer",
+      "group": "bridge",
+      "line": 1836,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1836",
+      "python": [
+        "bridge.complete_transfer"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createChecksDEL",
+      "group": "checks",
+      "line": 1869,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1869",
+      "python": [
+        "checks.create_del"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "createChecksToken",
+      "group": "checks",
+      "line": 1876,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1876",
+      "python": [
+        "checks.create_token"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "redeemChecks",
+      "group": "checks",
+      "line": 1883,
+      "path": "src/decimalevm/index.ts",
+      "url": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/index.ts#lines-1883",
+      "python": [
+        "checks.redeem"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "SendDEL",
+      "group": "del",
+      "line": 27,
+      "path": "decimalevm/methods/del.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/del.go#lines-27",
+      "python": [
+        "tx.send_del"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BurnDEL",
+      "group": "del",
+      "line": 115,
+      "path": "decimalevm/methods/del.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/del.go#lines-115",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "CreateToken",
+      "group": "tokens",
+      "line": 31,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-31",
+      "python": [
+        "token.create"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "ApproveToken",
+      "group": "tokens",
+      "line": 157,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-157",
+      "python": [
+        "tx.approve_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "TransferToken",
+      "group": "tokens",
+      "line": 255,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-255",
+      "python": [
+        "tx.send_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "TransferFromToken",
+      "group": "tokens",
+      "line": 354,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-354",
+      "python": [
+        "tx.transfer_from_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BurnToken",
+      "group": "tokens",
+      "line": 452,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-452",
+      "python": [
+        "token.burn"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BuyTokenForExactDEL",
+      "group": "tokens",
+      "line": 549,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-549",
+      "python": [
+        "token.buy"
+      ],
+      "status": "partial",
+      "reason": "token-selector"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BuyExactTokenForDEL",
+      "group": "tokens",
+      "line": 658,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-658",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "SellTokensForExactDEL",
+      "group": "tokens",
+      "line": 769,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-769",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "SellExactTokensForDEL",
+      "group": "tokens",
+      "line": 880,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-880",
+      "python": [
+        "token.sell"
+      ],
+      "status": "partial",
+      "reason": "token-selector"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "ConvertToken",
+      "group": "tokens",
+      "line": 992,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-992",
+      "python": [
+        "token.convert"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "PermitToken",
+      "group": "tokens",
+      "line": 1185,
+      "path": "decimalevm/methods/tokens.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/tokens.go#lines-1185",
+      "python": [
+        "erc20.sign_permit"
+      ],
+      "status": "partial",
+      "reason": "signature-only"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateDel",
+      "group": "staking",
+      "line": 15,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-15",
+      "python": [
+        "decimal.delegate_del"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateDELHold",
+      "group": "staking",
+      "line": 79,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-79",
+      "python": [
+        "decimal.hold_del"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateToken",
+      "group": "staking",
+      "line": 144,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-144",
+      "python": [
+        "decimal.delegate_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateTokenHold",
+      "group": "staking",
+      "line": 236,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-236",
+      "python": [
+        "decimal.hold_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "WithdrawStakeToken",
+      "group": "staking",
+      "line": 330,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-330",
+      "python": [
+        "decimal.unbond_del",
+        "decimal.unbond_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "WithdrawStakeTokenHold",
+      "group": "staking",
+      "line": 392,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-392",
+      "python": [
+        "decimal.withdraw_hold_del",
+        "decimal.withdraw_hold_erc20"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateDRC721",
+      "group": "nft_staking",
+      "line": 455,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-455",
+      "python": [
+        "nft.delegate"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateDRC721Hold",
+      "group": "nft_staking",
+      "line": 558,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-558",
+      "python": [
+        "nft.hold"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateDRC1155",
+      "group": "nft_staking",
+      "line": 664,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-664",
+      "python": [
+        "nft.delegate"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DelegateDRC1155Hold",
+      "group": "nft_staking",
+      "line": 769,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-769",
+      "python": [
+        "nft.hold"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "WithdrawStakeNFT",
+      "group": "nft_staking",
+      "line": 877,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-877",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "WithdrawStakeNFTHold",
+      "group": "nft_staking",
+      "line": 954,
+      "path": "decimalevm/methods/delegation.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/delegation.go#lines-954",
+      "python": [
+        "nft.withdraw"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "CreateNftCollection",
+      "group": "nft",
+      "line": 22,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-22",
+      "python": [
+        "nft.create_collection"
+      ],
+      "status": "partial",
+      "reason": "nft-collection-selector"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "SetApprovalForAllNFT",
+      "group": "nft",
+      "line": 111,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-111",
+      "python": [
+        "nft.set_approval_for_all"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "MintNFT",
+      "group": "nft",
+      "line": 173,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-173",
+      "python": [
+        "nft.mint"
+      ],
+      "status": "partial",
+      "reason": "nft-standard-mint"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "TransferNFT",
+      "group": "nft",
+      "line": 247,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-247",
+      "python": [
+        "nft.transfer"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "DisableMintNFT",
+      "group": "nft",
+      "line": 327,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-327",
+      "python": [
+        "nft.disable_mint"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BurnNFT",
+      "group": "nft",
+      "line": 389,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-389",
+      "python": [
+        "nft.burn"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "SetTokenURINFT",
+      "group": "nft",
+      "line": 465,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-465",
+      "python": [
+        "nft.set_token_uri"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "MintNFTWithDELReserve",
+      "group": "nft",
+      "line": 527,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-527",
+      "python": [
+        "nft.mint"
+      ],
+      "status": "partial",
+      "reason": "nft-del-selector"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "MintReserveless",
+      "group": "nft",
+      "line": 624,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-624",
+      "python": [
+        "nft.mint"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "AddDELReserveNFT",
+      "group": "nft",
+      "line": 724,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-724",
+      "python": [
+        "nft.add_del_reserve"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "AddTokenReserveNFT",
+      "group": "nft",
+      "line": 786,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-786",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "TransferBatchNFT1155",
+      "group": "nft",
+      "line": 874,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-874",
+      "python": [
+        "nft.transfer_batch_erc1155"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "TransferStakeNFT",
+      "group": "nft_staking",
+      "line": 940,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-940",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "TransferStakeNFTHold",
+      "group": "nft_staking",
+      "line": 1019,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-1019",
+      "python": [
+        "nft.transfer_stake"
+      ],
+      "status": "partial",
+      "reason": "nft-stake-variants"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "StakeNFTToHold",
+      "group": "nft_staking",
+      "line": 1100,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-1100",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "StakeNFTResetHold",
+      "group": "nft_staking",
+      "line": 1181,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-1181",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "WithdrawNFTWithReset",
+      "group": "nft_staking",
+      "line": 1260,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-1260",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "TransferNFTWithReset",
+      "group": "nft_staking",
+      "line": 1339,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-1339",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "HoldNFTWithReset",
+      "group": "nft_staking",
+      "line": 1420,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-1420",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "CompleteStakeNFT",
+      "group": "nft_staking",
+      "line": 1501,
+      "path": "decimalevm/methods/nft.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/nft.go#lines-1501",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "AddValidatorWithToken",
+      "group": "validators",
+      "line": 17,
+      "path": "decimalevm/methods/validators.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/validators.go#lines-17",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "AddValidatorWithETH",
+      "group": "validators",
+      "line": 110,
+      "path": "decimalevm/methods/validators.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/validators.go#lines-110",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "RemoveValidator",
+      "group": "validators",
+      "line": 203,
+      "path": "decimalevm/methods/validators.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/validators.go#lines-203",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "PauseValidator",
+      "group": "validators",
+      "line": 288,
+      "path": "decimalevm/methods/validators.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/validators.go#lines-288",
+      "python": [
+        "decimal.pause_validator"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "UnpauseValidator",
+      "group": "validators",
+      "line": 373,
+      "path": "decimalevm/methods/validators.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/validators.go#lines-373",
+      "python": [
+        "decimal.unpause_validator"
+      ],
+      "status": "counterpart",
+      "reason": "network-abi-unverified"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "UpdateValidatorMeta",
+      "group": "validators",
+      "line": 458,
+      "path": "decimalevm/methods/validators.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/validators.go#lines-458",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "CreateMultiSig",
+      "group": "multisig",
+      "line": 18,
+      "path": "decimalevm/methods/multisig.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/multisig.go#lines-18",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "ExecuteSafeTransaction",
+      "group": "multisig",
+      "line": 440,
+      "path": "decimalevm/methods/multisig.go",
+      "url": "https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/decimalevm/methods/multisig.go#lines-440",
+      "python": [],
+      "status": "missing",
+      "reason": "no-typed-method"
+    }
+  ],
+  "python_operations": [
+    {
+      "method": "tx.approve_erc20",
+      "request": "Erc20ApproveRequest",
+      "group": "tokens",
+      "en": "Set a spender allowance; amount zero revokes it.",
+      "ru": "Установить лимит расходования для spender; ноль отменяет разрешение."
+    },
+    {
+      "method": "tx.send_del",
+      "request": "NativeTransferRequest",
+      "group": "del",
+      "en": "Transfer native DEL directly; memo is UTF-8 transaction data, not multicall.",
+      "ru": "Прямой перевод DEL; memo записывается в data транзакции, без multicall."
+    },
+    {
+      "method": "tx.send_erc20",
+      "request": "Erc20TransferRequest",
+      "group": "tokens",
+      "en": "Transfer ERC20 tokens from the signer; no approval is needed.",
+      "ru": "Перевод ERC20 от подписанта; approve не требуется."
+    },
+    {
+      "method": "tx.transfer_from_erc20",
+      "request": "Erc20TransferFromRequest",
+      "group": "tokens",
+      "en": "Transfer tokens using the owner's existing allowance to the signer.",
+      "ru": "Перевод токенов владельца по ранее выданному разрешению подписанту."
+    },
+    {
+      "method": "decimal.delegate_del",
+      "request": "DelegateDelRequest",
+      "group": "staking",
+      "en": "Delegate native DEL to a validator.",
+      "ru": "Делегировать DEL валидатору."
+    },
+    {
+      "method": "decimal.delegate_erc20",
+      "request": "DelegateErc20Request",
+      "group": "staking",
+      "en": "Delegate a reserve token; permission may be needed.",
+      "ru": "Делегировать резервный токен; может потребоваться разрешение."
+    },
+    {
+      "method": "decimal.hold_del",
+      "request": "HoldDelRequest",
+      "group": "staking",
+      "en": "Delegate DEL with an explicit hold-end Unix timestamp.",
+      "ru": "Делегировать DEL в hold с явным временем окончания в Unix-секундах."
+    },
+    {
+      "method": "decimal.hold_erc20",
+      "request": "HoldErc20Request",
+      "group": "staking",
+      "en": "Delegate ERC20 with a hold end; permission may be needed.",
+      "ru": "Делегировать ERC20 в hold; может потребоваться разрешение."
+    },
+    {
+      "method": "decimal.hold_stake_with_reset",
+      "request": "HoldStakeWithResetRequest",
+      "group": "staking",
+      "en": "Reset eligible token holds and create a new hold schedule.",
+      "ru": "Сбросить доступные token-hold и установить новый срок hold."
+    },
+    {
+      "method": "decimal.multisend_del",
+      "request": "MultisendDelRequest",
+      "group": "multisend",
+      "en": "Distribute DEL to recipients in one transaction; no approval. Optional memo.",
+      "ru": "Рассылка DEL одной транзакцией без approve, с необязательным memo."
+    },
+    {
+      "method": "decimal.multisend_erc20",
+      "request": "MultisendErc20Request",
+      "group": "multisend",
+      "en": "Distribute ERC20 via multicall; permit or separate approval may be needed. Optional memo.",
+      "ru": "Рассылка ERC20 через multicall; при необходимости permit либо отдельный approve. Поддерживается memo."
+    },
+    {
+      "method": "decimal.pause_self_validator",
+      "request": "ValidatorSelfPauseRequest",
+      "group": "validators",
+      "en": "Pause the signer's validator; requires operator authority.",
+      "ru": "Приостановить собственный валидатор; нужны полномочия оператора."
+    },
+    {
+      "method": "decimal.pause_validator",
+      "request": "ValidatorPauseRequest",
+      "group": "validators",
+      "en": "Pause a specified validator; requires contract-level authorization.",
+      "ru": "Приостановить указанный валидатор; нужны права в контракте."
+    },
+    {
+      "method": "decimal.reset_stake_hold",
+      "request": "ResetStakeHoldRequest",
+      "group": "staking",
+      "en": "Reset an eligible matured hold for the specified delegator.",
+      "ru": "Сбросить доступный созревший hold указанного делегатора."
+    },
+    {
+      "method": "decimal.stake_token_to_hold",
+      "request": "StakeTokenToHoldRequest",
+      "group": "staking",
+      "en": "Move a token stake into a hold with a new end timestamp.",
+      "ru": "Перевести токен-стейк в hold с новым сроком окончания."
+    },
+    {
+      "method": "decimal.transfer_del_stake_with_reset",
+      "request": "TransferDelStakeWithResetRequest",
+      "group": "staking",
+      "en": "Reset selected DEL holds and move stake to another validator.",
+      "ru": "Сбросить выбранные DEL-hold и перенести стейк другому валидатору."
+    },
+    {
+      "method": "decimal.transfer_stake_del",
+      "request": "TransferStakeDelRequest",
+      "group": "staking",
+      "en": "Move regular or held DEL stake to another validator.",
+      "ru": "Перенести обычный или удерживаемый DEL-стейк другому валидатору."
+    },
+    {
+      "method": "decimal.transfer_stake_erc20",
+      "request": "TransferStakeErc20Request",
+      "group": "staking",
+      "en": "Move regular or held token stake to another validator.",
+      "ru": "Перенести обычный или удерживаемый токен-стейк другому валидатору."
+    },
+    {
+      "method": "decimal.transfer_stake_with_reset",
+      "request": "TransferStakeWithResetRequest",
+      "group": "staking",
+      "en": "Reset selected token holds and move stake to another validator.",
+      "ru": "Сбросить выбранные token-hold и перенести стейк другому валидатору."
+    },
+    {
+      "method": "decimal.unbond_del",
+      "request": "UnbondDelRequest",
+      "group": "staking",
+      "en": "Request withdrawal from the regular DEL stake; this starts unbonding, not immediate payment.",
+      "ru": "Инициировать отзыв обычного DEL-стейка; зачисление происходит после unbonding, не сразу."
+    },
+    {
+      "method": "decimal.unbond_erc20",
+      "request": "UnbondErc20Request",
+      "group": "staking",
+      "en": "Request withdrawal from the regular token stake.",
+      "ru": "Инициировать отзыв обычного токен-стейка."
+    },
+    {
+      "method": "decimal.unpause_self_validator",
+      "request": "ValidatorSelfPauseRequest",
+      "group": "validators",
+      "en": "Resume the signer's validator; requires operator authority.",
+      "ru": "Возобновить работу собственного валидатора; нужны полномочия оператора."
+    },
+    {
+      "method": "decimal.unpause_validator",
+      "request": "ValidatorPauseRequest",
+      "group": "validators",
+      "en": "Resume a specified validator; requires contract-level authorization.",
+      "ru": "Возобновить указанный валидатор; нужны права в контракте."
+    },
+    {
+      "method": "decimal.withdraw_del_stake_with_reset",
+      "request": "WithdrawDelStakeWithResetRequest",
+      "group": "staking",
+      "en": "Reset selected matured DEL holds and request withdrawal.",
+      "ru": "Сбросить выбранные созревшие DEL-hold и инициировать отзыв."
+    },
+    {
+      "method": "decimal.withdraw_hold_del",
+      "request": "WithdrawHoldDelRequest",
+      "group": "staking",
+      "en": "Withdraw a matured DEL hold using its exact hold key.",
+      "ru": "Отозвать созревший DEL-hold по точному ключу времени окончания."
+    },
+    {
+      "method": "decimal.withdraw_hold_erc20",
+      "request": "WithdrawHoldErc20Request",
+      "group": "staking",
+      "en": "Withdraw a matured ERC20 hold using its exact hold key.",
+      "ru": "Отозвать созревший ERC20-hold по точному ключу времени окончания."
+    },
+    {
+      "method": "decimal.withdraw_stake_with_reset",
+      "request": "WithdrawStakeWithResetRequest",
+      "group": "staking",
+      "en": "Reset selected matured token holds and request withdrawal.",
+      "ru": "Сбросить выбранные созревшие token-hold и инициировать отзыв."
+    },
+    {
+      "method": "token.burn",
+      "request": "BurnTokenRequest",
+      "group": "tokens",
+      "en": "Burn the signer's fungible tokens.",
+      "ru": "Сжечь принадлежащие подписанту взаимозаменяемые токены."
+    },
+    {
+      "method": "token.buy",
+      "request": "BuyTokenRequest",
+      "group": "tokens",
+      "en": "Buy reserve tokens with DEL and an explicit minimum output.",
+      "ru": "Купить резервный токен за DEL с нижней границей выхода."
+    },
+    {
+      "method": "token.convert",
+      "request": "ConvertTokenRequest",
+      "group": "tokens",
+      "en": "Convert tokens with a minimum output; may use permit or two transactions.",
+      "ru": "Обменять токены с минимальным выходом; возможны permit или две транзакции."
+    },
+    {
+      "method": "token.create",
+      "request": "CreateTokenRequest",
+      "group": "tokens",
+      "en": "Create a reserve token; initial reserve and creation commission are not gas fees.",
+      "ru": "Создать резервный токен; начальный резерв и комиссия создания не являются gas-комиссией."
+    },
+    {
+      "method": "token.create_reserveless",
+      "request": "CreateReservelessTokenRequest",
+      "group": "tokens",
+      "en": "Create a token without reserve, with mint/burn flags and cap.",
+      "ru": "Создать безрезервный токен с флагами выпуска/сжигания и пределом эмиссии."
+    },
+    {
+      "method": "token.mint",
+      "request": "MintTokenRequest",
+      "group": "tokens",
+      "en": "Mint fungible tokens to a recipient; requires issuer rights.",
+      "ru": "Выпустить токены получателю; нужны права эмитента."
+    },
+    {
+      "method": "token.sell",
+      "request": "SellTokenRequest",
+      "group": "tokens",
+      "en": "Sell reserve tokens for DEL with an explicit minimum output.",
+      "ru": "Продать резервный токен за DEL с нижней границей выхода."
+    },
+    {
+      "method": "token.update_details",
+      "request": "UpdateTokenDetailsRequest",
+      "group": "tokens",
+      "en": "Update token identity and supply cap; requires issuer rights.",
+      "ru": "Обновить identity и предел эмиссии токена; нужны права эмитента."
+    },
+    {
+      "method": "nft.add_del_reserve",
+      "request": "AddDelReserveNftRequest",
+      "group": "nft",
+      "en": "Add native DEL to an NFT reserve.",
+      "ru": "Пополнить резерв NFT нативным DEL."
+    },
+    {
+      "method": "nft.approve",
+      "request": "NftApproveRequest",
+      "group": "nft",
+      "en": "Approve an operator for a single ERC721 ID.",
+      "ru": "Разрешить оператору работу с одним ERC721 ID."
+    },
+    {
+      "method": "nft.burn",
+      "request": "BurnNftRequest",
+      "group": "nft",
+      "en": "Burn owned NFTs; refundable reserves depend on the collection contract.",
+      "ru": "Сжечь NFT; возврат резерва зависит от контракта коллекции."
+    },
+    {
+      "method": "nft.create_collection",
+      "request": "CreateNftCollectionRequest",
+      "group": "nft",
+      "en": "Create an ERC721 or ERC1155 NFT collection.",
+      "ru": "Создать NFT-коллекцию ERC721 или ERC1155."
+    },
+    {
+      "method": "nft.delegate",
+      "request": "DelegateNftRequest",
+      "group": "nft_staking",
+      "en": "Delegate NFT stake; may require collection operator approval.",
+      "ru": "Делегировать NFT; может потребоваться разрешение оператору коллекции."
+    },
+    {
+      "method": "nft.disable_mint",
+      "request": "DisableMintNftRequest",
+      "group": "nft",
+      "en": "Disable collection minting; may be irreversible.",
+      "ru": "Отключить выпуск в коллекции; операция может быть необратимой."
+    },
+    {
+      "method": "nft.hold",
+      "request": "HoldNftRequest",
+      "group": "nft_staking",
+      "en": "Delegate NFT with a hold end; may require operator approval.",
+      "ru": "Делегировать NFT в hold; может потребоваться разрешение оператору."
+    },
+    {
+      "method": "nft.mint",
+      "request": "MintNftRequest",
+      "group": "nft",
+      "en": "Mint an NFT with optional reserve; requires collection permissions.",
+      "ru": "Выпустить NFT с необязательным резервом; нужны права коллекции."
+    },
+    {
+      "method": "nft.set_approval_for_all",
+      "request": "NftApprovalRequest",
+      "group": "nft",
+      "en": "Grant or revoke an NFT operator's authority for the collection.",
+      "ru": "Выдать или отменить полномочия NFT-оператора для коллекции."
+    },
+    {
+      "method": "nft.set_token_uri",
+      "request": "SetTokenUriNftRequest",
+      "group": "nft",
+      "en": "Update an NFT metadata URI; requires contract permissions.",
+      "ru": "Обновить URI метаданных NFT; нужны права контракта."
+    },
+    {
+      "method": "nft.transfer",
+      "request": "NftTransferRequest",
+      "group": "nft",
+      "en": "Transfer an ERC721 or ERC1155 NFT to a recipient.",
+      "ru": "Передать NFT ERC721 или ERC1155 получателю."
+    },
+    {
+      "method": "nft.transfer_batch_erc1155",
+      "request": "NftBatchTransferRequest",
+      "group": "nft",
+      "en": "Transfer parallel lists of ERC1155 IDs and amounts in one call.",
+      "ru": "Передать списки ID и количеств ERC1155 одним вызовом."
+    },
+    {
+      "method": "nft.transfer_stake",
+      "request": "TransferNftStakeRequest",
+      "group": "nft_staking",
+      "en": "Move regular or held NFT stake to another validator.",
+      "ru": "Перенести обычный или удерживаемый NFT-стейк другому валидатору."
+    },
+    {
+      "method": "nft.withdraw",
+      "request": "WithdrawNftRequest",
+      "group": "nft_staking",
+      "en": "Request withdrawal of regular or matured held NFT stake.",
+      "ru": "Инициировать отзыв обычного или созревшего удерживаемого NFT-стейка."
+    },
+    {
+      "method": "checks.create_del",
+      "request": "CreateChecksDelRequest",
+      "group": "checks",
+      "en": "Create equal-value DEL checks for signer addresses; value is amount times count.",
+      "ru": "Создать DEL-чеки одинакового номинала для адресов подписантов; value равен номиналу на число чеков."
+    },
+    {
+      "method": "checks.create_token",
+      "request": "CreateChecksTokenRequest",
+      "group": "checks",
+      "en": "Create token checks using existing allowance or an explicitly supplied permit.",
+      "ru": "Создать токен-чеки по существующему allowance или явно переданному permit."
+    },
+    {
+      "method": "checks.redeem",
+      "request": "RedeemChecksRequest",
+      "group": "checks",
+      "en": "Redeem checks using matching check hashes and signatures.",
+      "ru": "Погасить чеки по соответствующим хешам и подписям."
+    },
+    {
+      "method": "bridge.complete_transfer",
+      "request": "BridgeCompleteTransferRequest",
+      "group": "bridge",
+      "en": "Complete a bridge transfer with a verified encoded VM from the bridge.",
+      "ru": "Завершить мостовой перевод с проверенным encoded VM, полученным от моста."
+    },
+    {
+      "method": "bridge.transfer_native",
+      "request": "BridgeTransferNativeRequest",
+      "group": "bridge",
+      "en": "Start a native bridge transfer; destination completion is a separate workflow.",
+      "ru": "Начать мостовой перевод нативной монеты; завершение в целевой сети выполняется отдельно."
+    },
+    {
+      "method": "bridge.transfer_token",
+      "request": "BridgeTransferTokenRequest",
+      "group": "bridge",
+      "en": "Start a token bridge transfer; allowance and service fee are caller responsibilities.",
+      "ru": "Начать мостовой перевод токена; allowance и сервисную комиссию обеспечивает вызывающий."
+    }
+  ],
+  "helpers_excluded": [
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxSendDEL"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxSendToken"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxBurnToken"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxSendNFT"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateDEL"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateToken"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateDRC721"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateDRC1155"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxTransferStakeToken"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxTransferStakeNFT"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxWithdrawStakeToken"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxWithdrawStakeNFT"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateDELHold"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateTokenHold"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxTransferStakeTokenHold"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxWithdrawStakeTokenHold"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateNFT"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxDelegateNFT1155"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxWithdrawNFT"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxWithdrawNFT1155"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxTransferNFTStake"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxTransferNFT1155Stake"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "signMultiSigTx"
+    },
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "buildMultiSigTxSetFallbackHandler"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BuildSafeTransaction"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BuildMultiSigTxSendDEL"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BuildMultiSigTxSendToken"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "BuildMultiSigTxSendNFT"
+    },
+    {
+      "sdk": "dsc-go-sdk",
+      "name": "SignSafeTransaction"
+    }
+  ],
+  "generic_excluded": [
+    {
+      "sdk": "dsc-js-sdk",
+      "name": "multiCall",
+      "reason": "generic-executor"
+    }
+  ],
+  "js_legacy_catalog_ids": 42
+}

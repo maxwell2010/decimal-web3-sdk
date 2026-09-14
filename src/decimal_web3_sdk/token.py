@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
@@ -191,16 +191,16 @@ TOKEN_CENTER_ABI: list[dict[str, Any]] = [
 @dataclass(frozen=True)
 class BuyTokenRequest(FromMnemonicMixin):
     token: str
-    amount_del: Decimal | str | int | float
-    private_key: str
+    amount_del: Decimal | str | int
+    private_key: str = field(repr=False)
     min_amount_out_raw: int = 0
 
 
 @dataclass(frozen=True)
 class SellTokenRequest(FromMnemonicMixin):
     token: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     min_amount_del_out_wei: int = 1
     decimals: int | None = None
 
@@ -209,9 +209,9 @@ class SellTokenRequest(FromMnemonicMixin):
 class ConvertTokenRequest(FromMnemonicMixin):
     token_in: str
     token_out: str
-    amount_in: Decimal | str | int | float
-    min_amount_out: Decimal | str | int | float
-    private_key: str
+    amount_in: Decimal | str | int
+    min_amount_out: Decimal | str | int
+    private_key: str = field(repr=False)
     token_in_decimals: int | None = None
     token_out_decimals: int | None = None
     auto_approve: bool = True
@@ -222,8 +222,8 @@ class ConvertTokenRequest(FromMnemonicMixin):
 @dataclass(frozen=True)
 class BurnTokenRequest(FromMnemonicMixin):
     token: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
@@ -231,8 +231,8 @@ class BurnTokenRequest(FromMnemonicMixin):
 class MintTokenRequest(FromMnemonicMixin):
     token: str
     to: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
@@ -241,7 +241,7 @@ class UpdateTokenDetailsRequest(FromMnemonicMixin):
     token: str
     identity: str
     max_total_supply_raw: int
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -253,7 +253,7 @@ class CreateReservelessTokenRequest(FromMnemonicMixin):
     initial_mint_raw: int
     cap_raw: int
     identity: str
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -265,7 +265,7 @@ class CreateTokenRequest(FromMnemonicMixin):
     max_total_supply_raw: int
     crr: int
     identity: str
-    private_key: str
+    private_key: str = field(repr=False)
     reserve_value_wei: int | None = None
     creator: str | None = None
 
@@ -565,11 +565,11 @@ class TokenService:
         return None
 
 
-def _del_to_wei(value: Decimal | str | int | float) -> int:
-    return int(Web3.to_wei(Decimal(str(value)), "ether"))
+def _del_to_wei(value: Decimal | str | int) -> int:
+    return parse_units(value, 18)
 
 
-def _parse_units(value: Decimal | str | int | float, decimals: int) -> int:
+def _parse_units(value: Decimal | str | int, decimals: int) -> int:
     return parse_units(value, decimals)
 
 
@@ -588,7 +588,7 @@ def token_creation_commission_wei(symbol: str) -> int:
     return _del_to_wei(token_creation_commission_del(symbol))
 
 
-def token_creation_required_reserve_del(symbol: str, extra_reserve_del: Decimal | str | int | float = 0) -> Decimal:
+def token_creation_required_reserve_del(symbol: str, extra_reserve_del: Decimal | str | int = 0) -> Decimal:
     return TOKEN_CREATION_MIN_RESERVE_DEL + token_creation_commission_del(symbol) + Decimal(str(extra_reserve_del))
 
 

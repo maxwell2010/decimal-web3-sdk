@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from eth_account import Account
 from web3 import Web3
@@ -12,8 +12,8 @@ DEFAULT_DERIVATION_PATH_TEMPLATE = "m/44'/60'/{account}'/{change}/{index}"
 @dataclass(frozen=True)
 class WalletAccount:
     address: str
-    private_key: str
-    mnemonic: str | None = None
+    private_key: str = field(repr=False)
+    mnemonic: str | None = field(default=None, repr=False)
     derivation_path: str = DEFAULT_DERIVATION_PATH
 
 

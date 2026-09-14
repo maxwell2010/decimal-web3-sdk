@@ -1,0 +1,82 @@
+{
+  "network": "mainnet",
+  "checked_at": "2026-09-14T14:37:16.035193+00:00",
+  "rpc_source": "official Decimal defaults",
+  "broadcast": false,
+  "block": 33636510,
+  "chain_id": 75,
+  "gas_price_wei": "1190475000000",
+  "contracts": {
+    "contract_center": {
+      "address": "0xc108715a06f76caa96fa2c943ebf05159c29a87d",
+      "code_present": true,
+      "code_bytes": 170
+    },
+    "delegation": {
+      "address": "0xa16c34ed1c0601c0e749e17ebef19752a15faa01",
+      "code_present": true,
+      "code_bytes": 170
+    },
+    "delegation_nft": {
+      "address": "0xe45adfcc739a0d10ce9462b58866c9a1a06035e2",
+      "code_present": true,
+      "code_bytes": 170
+    },
+    "master_validator": {
+      "address": "0x630B03FF9EeD4C4A468dA9f481DF23F542070Aa4",
+      "code_present": true,
+      "code_bytes": 170
+    },
+    "nft_center": {
+      "address": "0x443cc8ac24630be9257483a09c34ffa81608eace",
+      "code_present": true,
+      "code_bytes": 170
+    },
+    "token_center": {
+      "address": "0x9113ba675aa8f2ef0c068cee2cdabab95b6437fb",
+      "code_present": true,
+      "code_bytes": 183
+    },
+    "wdel": {
+      "address": "0x1c5d8992da64c8d56ea413dd6f723061c29a7c0b",
+      "code_present": true,
+      "code_bytes": 1730
+    },
+    "multicall": {
+      "address": "0x7b23eb47587ca6482fc16cb3d9d426ec64d4b5fc",
+      "code_present": true,
+      "code_bytes": 1226
+    },
+    "del_token": {
+      "address": "0x16049a46126d69211de7c042465122badefa360c",
+      "code_present": true,
+      "code_bytes": 333
+    },
+    "checks": {
+      "address": "0x9c3326594b49AFa24db9b988Cda1258d0dcb4e40",
+      "code_present": true,
+      "code_bytes": 6318
+    },
+    "gas_center": {
+      "address": "0xeF21c8573715F9c6b644d209B1E860Dbd2f7A947",
+      "code_present": true,
+      "code_bytes": 1488
+    },
+    "safe": {
+      "address": "0x15949c33775154549D073168C1094C5f3b28b5CB",
+      "code_present": true,
+      "code_bytes": 14325
+    },
+    "safe_factory": {
+      "address": "0x92466f09D5c82e8DdB8AaA7c5AdC63d43111F6c1",
+      "code_present": true,
+      "code_bytes": 1984
+    },
+    "multi_send": {
+      "address": "0x72b80471AAFabd1469ed1C51453DC9ca66068bC0",
+      "code_present": true,
+      "code_bytes": 604
+    }
+  },
+  "status": "read_only_ok"
+}

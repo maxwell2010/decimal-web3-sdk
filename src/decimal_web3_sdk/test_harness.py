@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from .client import DecimalClient
 from .config import NetworkConfig
+from .erc20 import format_units
 from .decimal import (
     DelegateDelRequest,
     DelegateErc20Request,
@@ -474,12 +475,12 @@ async def _run_tracked_case(
 async def _account_state(client: DecimalClient, account: str) -> tuple[str, int]:
     balance_wei = int(await client.balance_wei(account))
     nonce = int(await client.transaction_count(account))
-    return str(Decimal(balance_wei) / Decimal(10**18)), nonce
+    return format(format_units(balance_wei, 18), "f"), nonce
 
 
 async def _wait_for_training_receipt(client: DecimalClient, result):
-    timeout = float(os.getenv("DECIMAL_TEST_RECEIPT_TIMEOUT_SECONDS", "20"))
-    poll = float(os.getenv("DECIMAL_TEST_RECEIPT_POLL_SECONDS", "1"))
+    timeout = float(os.getenv("DECIMAL_TEST_RECEIPT_TIMEOUT_SECONDS", "7"))
+    poll = float(os.getenv("DECIMAL_TEST_RECEIPT_POLL_SECONDS", "3"))
     deadline = asyncio.get_running_loop().time() + timeout
     while asyncio.get_running_loop().time() < deadline:
         receipt = await client.transaction_receipt(result.tx_hash)
@@ -498,7 +499,7 @@ async def _wait_for_training_receipt(client: DecimalClient, result):
                 gas_used=gas_used,
                 effective_gas_price_wei=gas_price,
                 effective_fee_wei=effective_fee,
-                effective_fee_del=Decimal(effective_fee) / Decimal(10**18) if effective_fee is not None else None,
+                effective_fee_del=format_units(effective_fee, 18) if effective_fee is not None else None,
                 receipt=dict(receipt),
             )
         await asyncio.sleep(poll)

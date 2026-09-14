@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import IntEnum
@@ -342,57 +342,57 @@ MASTER_VALIDATOR_ABI: list[dict[str, Any]] = [
 @dataclass(frozen=True)
 class DelegateDelRequest(FromMnemonicMixin):
     validator: str
-    amount_del: Decimal | str | int | float
-    private_key: str
+    amount_del: Decimal | str | int
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
 class HoldDelRequest(FromMnemonicMixin):
     validator: str
-    amount_del: Decimal | str | int | float
+    amount_del: Decimal | str | int
     hold_timestamp: int
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
 class UnbondDelRequest(FromMnemonicMixin):
     validator: str
-    amount_del: Decimal | str | int | float
-    private_key: str
+    amount_del: Decimal | str | int
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
 class WithdrawHoldDelRequest(FromMnemonicMixin):
     validator: str
-    amount_del: Decimal | str | int | float
+    amount_del: Decimal | str | int
     hold_timestamp: int
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
 class MultisendRecipient:
     to: str
-    amount_del: Decimal | str | int | float
+    amount_del: Decimal | str | int
 
 
 @dataclass(frozen=True)
 class MultisendDelRequest(FromMnemonicMixin):
     recipients: list[MultisendRecipient]
-    private_key: str
+    private_key: str = field(repr=False)
     memo: str | None = None
 
 
 @dataclass(frozen=True)
 class MultisendErc20Recipient:
     to: str
-    amount: Decimal | str | int | float
+    amount: Decimal | str | int
 
 
 @dataclass(frozen=True)
 class MultisendErc20Request(FromMnemonicMixin):
     token: str
     recipients: list[MultisendErc20Recipient]
-    private_key: str
+    private_key: str = field(repr=False)
     decimals: int | None = None
     memo: str | None = None
     auto_approve: bool = True
@@ -404,8 +404,8 @@ class MultisendErc20Request(FromMnemonicMixin):
 class DelegateErc20Request(FromMnemonicMixin):
     token: str
     validator: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
     auto_approve: bool = True
     prefer_permit: bool = True
@@ -416,9 +416,9 @@ class DelegateErc20Request(FromMnemonicMixin):
 class HoldErc20Request(FromMnemonicMixin):
     token: str
     validator: str
-    amount: Decimal | str | int | float
+    amount: Decimal | str | int
     hold_timestamp: int
-    private_key: str
+    private_key: str = field(repr=False)
     decimals: int | None = None
     auto_approve: bool = True
     prefer_permit: bool = True
@@ -429,8 +429,8 @@ class HoldErc20Request(FromMnemonicMixin):
 class UnbondErc20Request(FromMnemonicMixin):
     token: str
     validator: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
@@ -438,9 +438,9 @@ class UnbondErc20Request(FromMnemonicMixin):
 class WithdrawHoldErc20Request(FromMnemonicMixin):
     token: str
     validator: str
-    amount: Decimal | str | int | float
+    amount: Decimal | str | int
     hold_timestamp: int
-    private_key: str
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
@@ -449,8 +449,8 @@ class TransferStakeErc20Request(FromMnemonicMixin):
     token: str
     validator: str
     new_validator: str
-    amount: Decimal | str | int | float
-    private_key: str
+    amount: Decimal | str | int
+    private_key: str = field(repr=False)
     decimals: int | None = None
     hold_timestamp: int | None = None
 
@@ -459,8 +459,8 @@ class TransferStakeErc20Request(FromMnemonicMixin):
 class TransferStakeDelRequest(FromMnemonicMixin):
     validator: str
     new_validator: str
-    amount_del: Decimal | str | int | float
-    private_key: str
+    amount_del: Decimal | str | int
+    private_key: str = field(repr=False)
     hold_timestamp: int | None = None
 
 
@@ -468,10 +468,10 @@ class TransferStakeDelRequest(FromMnemonicMixin):
 class StakeTokenToHoldRequest(FromMnemonicMixin):
     token: str
     validator: str
-    amount: Decimal | str | int | float
+    amount: Decimal | str | int
     old_hold_timestamp: int
     new_hold_timestamp: int
-    private_key: str
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
@@ -479,7 +479,7 @@ class StakeTokenToHoldRequest(FromMnemonicMixin):
 class ResetStakeHoldRequest(FromMnemonicMixin):
     validator: str
     delegator: str
-    private_key: str
+    private_key: str = field(repr=False)
     hold_timestamp: int
     token: str | None = None
 
@@ -488,18 +488,18 @@ class ResetStakeHoldRequest(FromMnemonicMixin):
 class WithdrawStakeWithResetRequest(FromMnemonicMixin):
     token: str
     validator: str
-    amount: Decimal | str | int | float
+    amount: Decimal | str | int
     hold_timestamps_to_reset: list[int]
-    private_key: str
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
 @dataclass(frozen=True)
 class WithdrawDelStakeWithResetRequest(FromMnemonicMixin):
     validator: str
-    amount_del: Decimal | str | int | float
+    amount_del: Decimal | str | int
     hold_timestamps_to_reset: list[int]
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -507,9 +507,9 @@ class TransferStakeWithResetRequest(FromMnemonicMixin):
     token: str
     old_validator: str
     new_validator: str
-    amount: Decimal | str | int | float
+    amount: Decimal | str | int
     hold_timestamps_to_reset: list[int]
-    private_key: str
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
@@ -517,31 +517,31 @@ class TransferStakeWithResetRequest(FromMnemonicMixin):
 class TransferDelStakeWithResetRequest(FromMnemonicMixin):
     old_validator: str
     new_validator: str
-    amount_del: Decimal | str | int | float
+    amount_del: Decimal | str | int
     hold_timestamps_to_reset: list[int]
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
 class HoldStakeWithResetRequest(FromMnemonicMixin):
     token: str
     validator: str
-    amount: Decimal | str | int | float
+    amount: Decimal | str | int
     new_hold_timestamp: int
     hold_timestamps_to_reset: list[int]
-    private_key: str
+    private_key: str = field(repr=False)
     decimals: int | None = None
 
 
 @dataclass(frozen=True)
 class ValidatorSelfPauseRequest(FromMnemonicMixin):
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
 class ValidatorPauseRequest(FromMnemonicMixin):
     validator: str
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 class DelegationTokenType(IntEnum):
@@ -710,7 +710,7 @@ class DecimalWorkflowResult:
     def total_fee_del(self) -> Decimal | None:
         if self.total_fee_wei is None:
             return None
-        return Decimal(self.total_fee_wei) / Decimal(10**18)
+        return format_units(self.total_fee_wei, 18)
 
     @property
     def tx_hash(self) -> str | None:
@@ -749,7 +749,7 @@ class DecimalWorkflowResult:
     def fee_del(self) -> Decimal | None:
         if self.fee_wei is None:
             return None
-        return Decimal(self.fee_wei) / Decimal(10**18)
+        return format_units(self.fee_wei, 18)
 
 
 class DecimalService:
@@ -1156,7 +1156,7 @@ class DecimalService:
                         Erc20ApproveRequest(
                             token=request.token,
                             spender=spender,
-                            amount=Decimal(total_raw) / (Decimal(10) ** int(decimals)),
+                            amount=format_units(total_raw, decimals),
                             private_key=request.private_key,
                             decimals=decimals,
                         ),
@@ -1739,7 +1739,7 @@ class DecimalService:
         name: str,
         token: str,
         validator: str,
-        amount: Decimal | str | int | float,
+        amount: Decimal | str | int,
         private_key: str,
         decimals: int | None,
         auto_approve: bool,
@@ -1903,7 +1903,7 @@ class DecimalService:
     async def _erc20_amount_raw(
         self,
         token: str,
-        amount: Decimal | str | int | float,
+        amount: Decimal | str | int,
         decimals: int | None,
     ) -> int:
         if decimals is None:
@@ -2065,11 +2065,11 @@ class DecimalService:
         )
 
 
-def _del_to_wei(value: Decimal | str | int | float) -> int:
-    return int(Web3.to_wei(Decimal(str(value)), "ether"))
+def _del_to_wei(value: Decimal | str | int) -> int:
+    return parse_units(value, 18)
 
 
-def _parse_units(value: Decimal | str | int | float, decimals: int) -> int:
+def _parse_units(value: Decimal | str | int, decimals: int) -> int:
     return parse_units(value, decimals)
 
 

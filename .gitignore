@@ -1,4 +1,11 @@
 .venv/
+.venv-*/
+.idea/
+.pypirc
+*.pem
+*.key
+*.p12
+*.secret
 venv/
 __pycache__/
 *.py[cod]

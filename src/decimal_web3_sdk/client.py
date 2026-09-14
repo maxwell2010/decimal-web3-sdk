@@ -5,6 +5,7 @@ from decimal import Decimal
 
 import aiohttp
 from web3 import Web3
+from web3.exceptions import TransactionNotFound
 
 from .bridge import BridgeService
 from .checks import ChecksService
@@ -30,6 +31,7 @@ class DecimalClient:
         self.rpc = RpcPool(
             self.config.web3_urls,
             min_interval_seconds=self.config.safety.rpc_min_interval_seconds,
+            chain_id=self.config.chain_id,
         )
         self.abi = AbiRegistry()
         self.rest = RestClient(self)
@@ -77,7 +79,7 @@ class DecimalClient:
 
     async def transaction_count(self, address: str) -> int:
         account = checksum(address)
-        return await self.rpc.call(lambda w3: w3.eth.get_transaction_count(account))
+        return await self.rpc.call(lambda w3: w3.eth.get_transaction_count(account, "pending"))
 
     async def gas_price(self) -> int:
         return await self.rpc.call(lambda w3: int(w3.eth.gas_price))
@@ -97,10 +99,12 @@ class DecimalClient:
         return tx_hash.hex() if hasattr(tx_hash, "hex") else str(tx_hash)
 
     async def transaction_receipt(self, tx_hash: str) -> dict | None:
-        try:
-            receipt = await self.rpc.call(lambda w3: w3.eth.get_transaction_receipt(tx_hash))
-        except Exception:
-            return None
+        def read(w3):
+            try:
+                return w3.eth.get_transaction_receipt(tx_hash)
+            except TransactionNotFound:
+                return None
+        receipt = await self.rpc.call(read)
         if receipt is None:
             return None
         return dict(receipt)

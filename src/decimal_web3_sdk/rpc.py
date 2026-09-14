@@ -12,10 +12,12 @@ T = TypeVar("T")
 
 
 class RpcPool:
-    def __init__(self, urls: list[str], timeout: int = 10, min_interval_seconds: float = 0.05) -> None:
+    def __init__(self, urls: list[str], timeout: int = 10, min_interval_seconds: float = 0.05, *, chain_id: int | None = None) -> None:
         if not urls:
             raise ValueError("At least one Web3 RPC URL is required")
-        self._urls = urls
+        self._urls = list(urls)
+        self._chain_id = chain_id
+        self._validated_web3: Web3 | None = None
         self._timeout = timeout
         self._index = 0
         self._web3: Web3 | None = None
@@ -32,14 +34,14 @@ class RpcPool:
         return self._web3
 
     async def connect(self) -> bool:
-        for _ in self._urls:
-            w3 = self._create_web3(self.current_url)
-            ok = await self._run(lambda: w3.is_connected())
-            if ok:
-                self._web3 = w3
-                return True
-            self.rotate()
-        return False
+        def ready(w3):
+            if not w3.is_connected():
+                raise ConnectionError("RPC is not connected")
+            return True
+        try:
+            return await self.call(ready)
+        except RuntimeError:
+            return False
 
     def rotate(self) -> None:
         self._index = (self._index + 1) % len(self._urls)
@@ -50,7 +52,13 @@ class RpcPool:
         for _ in self._urls:
             try:
                 await self._limiter.wait()
-                return await self._run(lambda: fn(self.web3))
+                w3 = self.web3
+                if self._chain_id is not None and self._validated_web3 is not w3:
+                    actual = await self._run(lambda: w3.eth.chain_id)
+                    if int(actual) != self._chain_id:
+                        raise ValueError("RPC chain ID does not match the configured network")
+                    self._validated_web3 = w3
+                return await self._run(lambda: fn(w3))
             except Exception as exc:
                 last_error = exc
                 self.rotate()

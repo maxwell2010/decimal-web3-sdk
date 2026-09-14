@@ -197,6 +197,7 @@ def test_normalize_wallet_stake_withdrawals_reads_pending_unstakes() -> None:
                     "amount": "1000000000000000000",
                     "coin": {"symbol": "DEL"},
                     "completion_time": "2026-01-01T00:00:00Z",
+                    "is_completed": True,
                 },
             ]
         },
@@ -217,7 +218,7 @@ def test_normalize_wallet_stake_withdrawals_reads_pending_unstakes() -> None:
 
 
 def test_normalize_wallet_stake_withdrawals_derives_withdraw_with_reset_release() -> None:
-    tx_hash = "0xc1dac6b3c70b0c689c6d0f1cb19c5bba57e93bc7f254788128d860dc238b492a"
+    tx_hash = "0x" + "12" * 32
     payload = {
         "data": [
             {

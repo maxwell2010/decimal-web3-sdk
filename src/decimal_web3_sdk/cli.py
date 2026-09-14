@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import getpass
 import asyncio
 import json
 from decimal import Decimal
 from typing import Any
 
 from .client import DecimalClient
+from .config import NetworkConfig
 from .decimal import (
     DelegateDelRequest,
     DelegateErc20Request,
@@ -81,16 +83,21 @@ async def _run(args: argparse.Namespace) -> Any:
         return wallet.__dict__
     if args.command == "wallet-from-mnemonic":
         wallet = mnemonic_to_account(
-            args.mnemonic,
+            args.mnemonic or getpass.getpass("Mnemonic (local, hidden): "),
             passphrase=args.passphrase or "",
             account_path=args.path,
             account_index=args.index,
             include_mnemonic=args.include_mnemonic,
         )
-        return wallet.__dict__
+        return {
+            "address": wallet.address,
+            "derivation_path": wallet.derivation_path,
+            **({"private_key": wallet.private_key} if args.include_private_key else {}),
+            **({"mnemonic": wallet.mnemonic} if args.include_mnemonic else {}),
+        }
     if args.command == "wallet-sequence":
         wallets = mnemonic_to_accounts(
-            args.mnemonic,
+            args.mnemonic or getpass.getpass("Mnemonic (local, hidden): "),
             passphrase=args.passphrase or "",
             start_index=args.start_index,
             count=args.count,
@@ -105,7 +112,11 @@ async def _run(args: argparse.Namespace) -> Any:
             for offset, wallet in enumerate(wallets)
         ]
 
-    async with DecimalClient() as client:
+    if hasattr(args, "private_key") and not args.private_key:
+        args.private_key = mnemonic_to_account(
+            getpass.getpass("Mnemonic (local, hidden): "), account_index=args.account_index
+        ).private_key
+    async with DecimalClient(getattr(NetworkConfig, args.network)()) as client:
         if args.command == "health":
             return await client.rest.health()
         if args.command == "monitor":
@@ -703,6 +714,9 @@ async def _run(args: argparse.Namespace) -> Any:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="decimal-sdk")
+    parser.add_argument("--network", choices=("mainnet", "testnet", "devnet"), default="mainnet",
+                        help="Decimal network (default: mainnet)")
+    parser.add_argument("--account-index", type=int, default=0)
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("health")
@@ -715,14 +729,15 @@ def _build_parser() -> argparse.ArgumentParser:
     wallet_generate.add_argument("--path", default=DEFAULT_DERIVATION_PATH)
 
     wallet_from_mnemonic = sub.add_parser("wallet-from-mnemonic")
-    wallet_from_mnemonic.add_argument("mnemonic")
+    wallet_from_mnemonic.add_argument("mnemonic", nargs="?")
+    wallet_from_mnemonic.add_argument("--include-private-key", action="store_true")
     wallet_from_mnemonic.add_argument("--passphrase")
     wallet_from_mnemonic.add_argument("--path", default=DEFAULT_DERIVATION_PATH)
     wallet_from_mnemonic.add_argument("--index", type=int)
     wallet_from_mnemonic.add_argument("--include-mnemonic", action="store_true")
 
     wallet_sequence = sub.add_parser("wallet-sequence")
-    wallet_sequence.add_argument("mnemonic")
+    wallet_sequence.add_argument("mnemonic", nargs="?")
     wallet_sequence.add_argument("--passphrase")
     wallet_sequence.add_argument("--start-index", type=int, default=0)
     wallet_sequence.add_argument("--count", type=int, default=10)
@@ -771,14 +786,14 @@ def _build_parser() -> argparse.ArgumentParser:
     send_del = sub.add_parser("send-del")
     send_del.add_argument("--to", required=True)
     send_del.add_argument("--amount", required=True)
-    send_del.add_argument("--private-key", required=True)
+    send_del.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     send_del.add_argument("--memo")
     _broadcast_flags(send_del)
 
     fee_del = sub.add_parser("fee-del")
     fee_del.add_argument("--to", required=True)
     fee_del.add_argument("--amount", required=True)
-    fee_del.add_argument("--private-key", required=True)
+    fee_del.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     fee_del.add_argument("--memo")
     fee_del.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
@@ -786,7 +801,7 @@ def _build_parser() -> argparse.ArgumentParser:
     send_erc20.add_argument("--token", required=True)
     send_erc20.add_argument("--to", required=True)
     send_erc20.add_argument("--amount", required=True)
-    send_erc20.add_argument("--private-key", required=True)
+    send_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     send_erc20.add_argument("--decimals", type=int)
     _broadcast_flags(send_erc20)
 
@@ -794,7 +809,7 @@ def _build_parser() -> argparse.ArgumentParser:
     fee_erc20.add_argument("--token", required=True)
     fee_erc20.add_argument("--to", required=True)
     fee_erc20.add_argument("--amount", required=True)
-    fee_erc20.add_argument("--private-key", required=True)
+    fee_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     fee_erc20.add_argument("--decimals", type=int)
     fee_erc20.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
@@ -802,7 +817,7 @@ def _build_parser() -> argparse.ArgumentParser:
     approve_erc20.add_argument("--token", required=True)
     approve_erc20.add_argument("--spender", required=True)
     approve_erc20.add_argument("--amount", required=True)
-    approve_erc20.add_argument("--private-key", required=True)
+    approve_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     approve_erc20.add_argument("--decimals", type=int)
     _broadcast_flags(approve_erc20)
 
@@ -810,7 +825,7 @@ def _build_parser() -> argparse.ArgumentParser:
     fee_erc20_approve.add_argument("--token", required=True)
     fee_erc20_approve.add_argument("--spender", required=True)
     fee_erc20_approve.add_argument("--amount", required=True)
-    fee_erc20_approve.add_argument("--private-key", required=True)
+    fee_erc20_approve.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     fee_erc20_approve.add_argument("--decimals", type=int)
     fee_erc20_approve.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
@@ -819,46 +834,46 @@ def _build_parser() -> argparse.ArgumentParser:
     transfer_from_erc20.add_argument("--owner", required=True)
     transfer_from_erc20.add_argument("--to", required=True)
     transfer_from_erc20.add_argument("--amount", required=True)
-    transfer_from_erc20.add_argument("--private-key", required=True)
+    transfer_from_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     transfer_from_erc20.add_argument("--decimals", type=int)
     _broadcast_flags(transfer_from_erc20)
 
     fee_contract = sub.add_parser("fee-contract")
     fee_contract.add_argument("--contract", required=True)
     fee_contract.add_argument("--data", required=True)
-    fee_contract.add_argument("--private-key", required=True)
+    fee_contract.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     fee_contract.add_argument("--value-wei", type=int, default=0)
     fee_contract.add_argument("--exact", action="store_true", help="Show exact estimateGas fee instead of buffered gas-limit fee")
 
     delegate_del = sub.add_parser("delegate-del")
     delegate_del.add_argument("--validator", required=True)
     delegate_del.add_argument("--amount", required=True)
-    delegate_del.add_argument("--private-key", required=True)
+    delegate_del.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(delegate_del)
 
     hold_del = sub.add_parser("hold-del")
     hold_del.add_argument("--validator", required=True)
     hold_del.add_argument("--amount", required=True)
     hold_del.add_argument("--hold-timestamp", required=True, type=int)
-    hold_del.add_argument("--private-key", required=True)
+    hold_del.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(hold_del)
 
     unbond_del = sub.add_parser("unbond-del")
     unbond_del.add_argument("--validator", required=True)
     unbond_del.add_argument("--amount", required=True)
-    unbond_del.add_argument("--private-key", required=True)
+    unbond_del.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(unbond_del)
 
     withdraw_hold_del = sub.add_parser("withdraw-hold-del")
     withdraw_hold_del.add_argument("--validator", required=True)
     withdraw_hold_del.add_argument("--amount", required=True)
     withdraw_hold_del.add_argument("--hold-timestamp", required=True, type=int)
-    withdraw_hold_del.add_argument("--private-key", required=True)
+    withdraw_hold_del.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(withdraw_hold_del)
 
     multisend_del = sub.add_parser("multisend-del")
     multisend_del.add_argument("--recipient", action="append", required=True, help="Format: 0xaddress:amount")
-    multisend_del.add_argument("--private-key", required=True)
+    multisend_del.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     multisend_del.add_argument("--memo")
     _broadcast_flags(multisend_del)
 
@@ -866,7 +881,7 @@ def _build_parser() -> argparse.ArgumentParser:
     delegate_erc20.add_argument("--token", required=True)
     delegate_erc20.add_argument("--validator", required=True)
     delegate_erc20.add_argument("--amount", required=True)
-    delegate_erc20.add_argument("--private-key", required=True)
+    delegate_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     delegate_erc20.add_argument("--decimals", type=int)
     delegate_erc20.add_argument("--no-auto-approve", action="store_true")
     _broadcast_flags(delegate_erc20)
@@ -874,7 +889,7 @@ def _build_parser() -> argparse.ArgumentParser:
     multisend_erc20 = sub.add_parser("multisend-erc20")
     multisend_erc20.add_argument("--token", required=True)
     multisend_erc20.add_argument("--recipient", action="append", required=True, help="Format: 0xaddress:amount")
-    multisend_erc20.add_argument("--private-key", required=True)
+    multisend_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     multisend_erc20.add_argument("--decimals", type=int)
     multisend_erc20.add_argument("--memo")
     multisend_erc20.add_argument("--no-auto-approve", action="store_true")
@@ -885,7 +900,7 @@ def _build_parser() -> argparse.ArgumentParser:
     hold_erc20.add_argument("--validator", required=True)
     hold_erc20.add_argument("--amount", required=True)
     hold_erc20.add_argument("--hold-timestamp", required=True, type=int)
-    hold_erc20.add_argument("--private-key", required=True)
+    hold_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     hold_erc20.add_argument("--decimals", type=int)
     hold_erc20.add_argument("--no-auto-approve", action="store_true")
     _broadcast_flags(hold_erc20)
@@ -894,7 +909,7 @@ def _build_parser() -> argparse.ArgumentParser:
     unbond_erc20.add_argument("--token", required=True)
     unbond_erc20.add_argument("--validator", required=True)
     unbond_erc20.add_argument("--amount", required=True)
-    unbond_erc20.add_argument("--private-key", required=True)
+    unbond_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     unbond_erc20.add_argument("--decimals", type=int)
     _broadcast_flags(unbond_erc20)
 
@@ -903,7 +918,7 @@ def _build_parser() -> argparse.ArgumentParser:
     withdraw_hold_erc20.add_argument("--validator", required=True)
     withdraw_hold_erc20.add_argument("--amount", required=True)
     withdraw_hold_erc20.add_argument("--hold-timestamp", required=True, type=int)
-    withdraw_hold_erc20.add_argument("--private-key", required=True)
+    withdraw_hold_erc20.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     withdraw_hold_erc20.add_argument("--decimals", type=int)
     _broadcast_flags(withdraw_hold_erc20)
 
@@ -911,14 +926,14 @@ def _build_parser() -> argparse.ArgumentParser:
     buy_token.add_argument("--token", required=True)
     buy_token.add_argument("--amount-del", required=True)
     buy_token.add_argument("--min-amount-out-raw", type=int, default=0)
-    buy_token.add_argument("--private-key", required=True)
+    buy_token.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(buy_token)
 
     sell_token = sub.add_parser("sell-token")
     sell_token.add_argument("--token", required=True)
     sell_token.add_argument("--amount", required=True)
     sell_token.add_argument("--min-amount-del-out-wei", type=int, default=1)
-    sell_token.add_argument("--private-key", required=True)
+    sell_token.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     sell_token.add_argument("--decimals", type=int)
     _broadcast_flags(sell_token)
 
@@ -927,7 +942,7 @@ def _build_parser() -> argparse.ArgumentParser:
     convert_token.add_argument("--token-out", required=True)
     convert_token.add_argument("--amount-in", required=True)
     convert_token.add_argument("--min-amount-out", required=True)
-    convert_token.add_argument("--private-key", required=True)
+    convert_token.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     convert_token.add_argument("--token-in-decimals", type=int)
     convert_token.add_argument("--token-out-decimals", type=int)
     convert_token.add_argument("--no-auto-approve", action="store_true")
@@ -936,7 +951,7 @@ def _build_parser() -> argparse.ArgumentParser:
     burn_token = sub.add_parser("burn-token")
     burn_token.add_argument("--token", required=True)
     burn_token.add_argument("--amount", required=True)
-    burn_token.add_argument("--private-key", required=True)
+    burn_token.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     burn_token.add_argument("--decimals", type=int)
     _broadcast_flags(burn_token)
 
@@ -944,7 +959,7 @@ def _build_parser() -> argparse.ArgumentParser:
     mint_token.add_argument("--token", required=True)
     mint_token.add_argument("--to", required=True)
     mint_token.add_argument("--amount", required=True)
-    mint_token.add_argument("--private-key", required=True)
+    mint_token.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     mint_token.add_argument("--decimals", type=int)
     _broadcast_flags(mint_token)
 
@@ -952,7 +967,7 @@ def _build_parser() -> argparse.ArgumentParser:
     update_token_details.add_argument("--token", required=True)
     update_token_details.add_argument("--identity", required=True)
     update_token_details.add_argument("--max-total-supply-raw", required=True, type=int)
-    update_token_details.add_argument("--private-key", required=True)
+    update_token_details.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(update_token_details)
 
     create_reserveless = sub.add_parser("create-reserveless-token")
@@ -963,7 +978,7 @@ def _build_parser() -> argparse.ArgumentParser:
     create_reserveless.add_argument("--initial-mint-raw", required=True, type=int)
     create_reserveless.add_argument("--cap-raw", required=True, type=int)
     create_reserveless.add_argument("--identity", required=True)
-    create_reserveless.add_argument("--private-key", required=True)
+    create_reserveless.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(create_reserveless)
 
     create_token = sub.add_parser("create-token")
@@ -976,7 +991,7 @@ def _build_parser() -> argparse.ArgumentParser:
     create_token.add_argument("--identity", required=True)
     create_token.add_argument("--reserve-value-wei", type=int)
     create_token.add_argument("--creator")
-    create_token.add_argument("--private-key", required=True)
+    create_token.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(create_token)
 
     create_nft = sub.add_parser("create-nft")
@@ -986,7 +1001,7 @@ def _build_parser() -> argparse.ArgumentParser:
     create_nft.add_argument("--contract-uri", required=True)
     create_nft.add_argument("--refundable", action="store_true")
     create_nft.add_argument("--creator")
-    create_nft.add_argument("--private-key", required=True)
+    create_nft.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(create_nft)
 
     mint_nft = sub.add_parser("mint-nft")
@@ -999,7 +1014,7 @@ def _build_parser() -> argparse.ArgumentParser:
     mint_nft.add_argument("--reserve-amount-raw", type=int, default=0)
     mint_nft.add_argument("--reserve-token", default="0x0000000000000000000000000000000000000000")
     mint_nft.add_argument("--value-wei", type=int, default=0)
-    mint_nft.add_argument("--private-key", required=True)
+    mint_nft.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(mint_nft)
 
     transfer_nft = sub.add_parser("transfer-nft")
@@ -1008,7 +1023,7 @@ def _build_parser() -> argparse.ArgumentParser:
     transfer_nft.add_argument("--to", required=True)
     transfer_nft.add_argument("--token-id", required=True, type=int)
     transfer_nft.add_argument("--amount", type=int, default=1)
-    transfer_nft.add_argument("--private-key", required=True)
+    transfer_nft.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(transfer_nft)
 
     approve_nft = sub.add_parser("approve-nft")
@@ -1016,7 +1031,7 @@ def _build_parser() -> argparse.ArgumentParser:
     approve_nft.add_argument("--nft", required=True)
     approve_nft.add_argument("--operator", required=True)
     approve_nft.add_argument("--revoke", action="store_true")
-    approve_nft.add_argument("--private-key", required=True)
+    approve_nft.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(approve_nft)
 
     delegate_nft = sub.add_parser("delegate-nft")
@@ -1025,7 +1040,7 @@ def _build_parser() -> argparse.ArgumentParser:
     delegate_nft.add_argument("--validator", required=True)
     delegate_nft.add_argument("--token-id", required=True, type=int)
     delegate_nft.add_argument("--amount", type=int, default=1)
-    delegate_nft.add_argument("--private-key", required=True)
+    delegate_nft.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     delegate_nft.add_argument("--no-auto-approve", action="store_true")
     _broadcast_flags(delegate_nft)
 
@@ -1036,7 +1051,7 @@ def _build_parser() -> argparse.ArgumentParser:
     hold_nft.add_argument("--token-id", required=True, type=int)
     hold_nft.add_argument("--hold-timestamp", required=True, type=int)
     hold_nft.add_argument("--amount", type=int, default=1)
-    hold_nft.add_argument("--private-key", required=True)
+    hold_nft.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     hold_nft.add_argument("--no-auto-approve", action="store_true")
     _broadcast_flags(hold_nft)
 
@@ -1047,7 +1062,7 @@ def _build_parser() -> argparse.ArgumentParser:
     transfer_nft_stake.add_argument("--token-id", required=True, type=int)
     transfer_nft_stake.add_argument("--amount", type=int, default=1)
     transfer_nft_stake.add_argument("--hold-timestamp", type=int)
-    transfer_nft_stake.add_argument("--private-key", required=True)
+    transfer_nft_stake.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(transfer_nft_stake)
 
     withdraw_nft = sub.add_parser("withdraw-nft")
@@ -1056,25 +1071,25 @@ def _build_parser() -> argparse.ArgumentParser:
     withdraw_nft.add_argument("--token-id", required=True, type=int)
     withdraw_nft.add_argument("--amount", type=int, default=1)
     withdraw_nft.add_argument("--hold-timestamp", type=int)
-    withdraw_nft.add_argument("--private-key", required=True)
+    withdraw_nft.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(withdraw_nft)
 
     validator_offline_self = sub.add_parser("validator-offline-self")
-    validator_offline_self.add_argument("--private-key", required=True)
+    validator_offline_self.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(validator_offline_self)
 
     validator_online_self = sub.add_parser("validator-online-self")
-    validator_online_self.add_argument("--private-key", required=True)
+    validator_online_self.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(validator_online_self)
 
     validator_offline = sub.add_parser("validator-offline")
     validator_offline.add_argument("--validator", required=True)
-    validator_offline.add_argument("--private-key", required=True)
+    validator_offline.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(validator_offline)
 
     validator_online = sub.add_parser("validator-online")
     validator_online.add_argument("--validator", required=True)
-    validator_online.add_argument("--private-key", required=True)
+    validator_online.add_argument("--private-key", default=None, help="Technical key override; omit for a hidden mnemonic prompt")
     _broadcast_flags(validator_online)
 
     validator_status = sub.add_parser("validator-status")

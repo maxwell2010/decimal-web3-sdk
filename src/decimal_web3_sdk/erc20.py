@@ -301,14 +301,12 @@ class Erc20Service:
 
 def format_units_string(value: int, decimals: int) -> str:
     """Format integer base units exactly, without Decimal context rounding."""
-    if isinstance(value, bool):
+    if not isinstance(value, int) or isinstance(value, bool):
         raise TypeError("value must be an integer")
     integer = int(value)
     if integer != value:
         raise ValueError("value must be an integer")
-    places = int(decimals)
-    if places < 0:
-        raise ValueError("decimals must be non-negative")
+    places = _decimal_places(decimals)
     if places == 0:
         return str(integer)
 
@@ -325,13 +323,36 @@ def format_units(value: int, decimals: int) -> Decimal:
     return Decimal(format_units_string(value, decimals))
 
 
-def parse_units(value: Decimal | str | int | float, decimals: int) -> int:
-    places = int(decimals)
-    if places < 0:
-        raise ValueError("decimals must be non-negative")
+def parse_units(value: Decimal | str | int, decimals: int) -> int:
+    places = _decimal_places(decimals)
+    if isinstance(value, (float, bool)):
+        raise TypeError("Use str, int or Decimal for exact amounts, not float or bool")
     amount = Decimal(str(value))
+    if not amount.is_finite():
+        raise ValueError("Amount must be finite")
     numerator, denominator = amount.as_integer_ratio()
     scaled_numerator = numerator * (10**places)
     if scaled_numerator % denominator:
         raise ValueError(f"Amount has more than {places} decimal places")
     return scaled_numerator // denominator
+
+
+def _decimal_places(decimals: int) -> int:
+    if not isinstance(decimals, int) or isinstance(decimals, bool) or not 0 <= decimals <= 255:
+        raise ValueError("decimals must be an integer between 0 and 255")
+    return decimals
+
+
+def _sum_amounts(values) -> Decimal:
+    items = [Decimal(value) for value in values]
+    if not items:
+        return Decimal(0)
+    if any(not value.is_finite() for value in items):
+        raise ValueError("Amounts must be finite")
+    exponent = min(value.as_tuple().exponent for value in items)
+    total = 0
+    for value in items:
+        sign, digits, scale = value.as_tuple()
+        coefficient = int("".join(map(str, digits)))
+        total += (-coefficient if sign else coefficient) * 10 ** (scale - exponent)
+    return Decimal((int(total < 0), tuple(map(int, str(abs(total)))), exponent))

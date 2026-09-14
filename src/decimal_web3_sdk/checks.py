@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .erc20 import PermitSignature
 from .mnemonic import FromMnemonicMixin
@@ -77,7 +77,7 @@ class CreateChecksDelRequest(FromMnemonicMixin):
     signers: list[str]
     amount_wei: int
     due_block: int
-    private_key: str
+    private_key: str = field(repr=False)
     nonce: int | None = None
 
 
@@ -88,7 +88,7 @@ class CreateChecksTokenRequest(FromMnemonicMixin):
     signers: list[str]
     amount_raw: int
     due_block: int
-    private_key: str
+    private_key: str = field(repr=False)
     nonce: int | None = None
     permit: PermitSignature | None = None
 
@@ -98,7 +98,7 @@ class RedeemChecksRequest(FromMnemonicMixin):
     contract: str
     signatures: list[str]
     checks: list[str]
-    private_key: str
+    private_key: str = field(repr=False)
 
 
 class ChecksService:
