@@ -4,10 +4,11 @@ Independent Decimal EVM SDK by [MintCandy](https://mintcandy.ru/) and
 [@Maxwell2019](https://t.me/Maxwell2019). MIT license, Python 3.10+.
 Package: `decimal-web3-sdk`; import: `decimal_web3_sdk`.
 
-**0.1.1 is a release candidate, not complete JS/Go SDK parity.**
-55 high-level transaction entry points have offline encoding/signing coverage.
-Contract compatibility still depends on the network. [Coverage and limitations](docs/en/status.md).
-[Official SDK comparison](docs/en/upstream-parity.md): JS 95 / Go 53 / Python 55 specialized EVM write entry points, not a parity percentage.
+**This branch is unpublished 0.1.2.dev0. The published package remains 0.1.1.**
+79 high-level transaction entry points have offline encoding/signing coverage, not full live parity.
+New methods, legacy limitations and the updated NFT sources are described in the
+[development notes](docs/en/transaction-parity-development.md).
+[Official SDK comparison](docs/en/upstream-parity.md): JS 95 / Go 53 / Python 79 specialized EVM write entry points, not a parity percentage.
 
 [Русский README](README.ru.md) | [English guide](docs/en/README.md) | [Русская документация](docs/ru/README.md)
 
@@ -17,7 +18,7 @@ Requires Python 3.10+ and pip. Runtime dependencies install automatically:
 web3, eth-account, aiohttp and python-dotenv, plus their dependencies.
 [OS support and installation requirements](docs/en/install.md).
 
-From the versioned GitHub release (no Git installation required):
+The following installs the published 0.1.1, not the new development methods (no Git required):
 ```shell
 python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
 ```

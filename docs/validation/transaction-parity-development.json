@@ -1,0 +1,35 @@
+{
+  "version": "0.1.2.dev0",
+  "published": false,
+  "checked_on": "2026-09-15",
+  "offline": {
+    "tests_passed": 225,
+    "catalog_methods": 79,
+    "new_methods": 24,
+    "python": "3.12",
+    "os": "Windows",
+    "funded_credentials_loaded": false,
+    "broadcasts": 0,
+    "warning": "Dependency websockets.legacy deprecation"
+  },
+  "mainnet_read_only": {
+    "chain_id": 75,
+    "block": 33638332,
+    "contracts_with_code": ["delegation_nft", "master_validator", "gas_center", "safe", "safe_factory"],
+    "nft_withdraw_freeze_seconds": "2592000",
+    "nft_transfer_freeze_seconds": "1296000",
+    "unused_nft_stake_amount_raw": "0"
+  },
+  "testnet_read_only": {
+    "expected_chain_id": 202020,
+    "status": "not_connected",
+    "note": "Official endpoint unavailable or expected chain could not be confirmed; no testnet submission was attempted"
+  },
+  "limitations": [
+    "Offline gas tests use mocked gas and price; not live fee quotes",
+    "New transaction submission and settlement are not verified on either network",
+    "Three legacy-only methods require explicit opt-in and are absent from inspected current ABIs",
+    "Current reserveless NFT metadata differs from the pinned JS type",
+    "Pre-existing partial JS/Go parity items remain"
+  ]
+}

@@ -20,6 +20,7 @@ from .transactions import (
     user_message_from_error,
 )
 from .mnemonic import FromMnemonicMixin
+from .validator_operations import ValidatorOperations
 from .wallet import checksum, private_key_to_address
 
 
@@ -752,7 +753,7 @@ class DecimalWorkflowResult:
         return format_units(self.fee_wei, 18)
 
 
-class DecimalService:
+class DecimalService(ValidatorOperations):
     def __init__(self, client) -> None:
         self._client = client
 

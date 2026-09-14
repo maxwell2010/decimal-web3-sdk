@@ -4,6 +4,141 @@
 
 Complete examples below use testnet, require EXPECTED_ADDRESS and never broadcast. Other required environment variables appear in each example. They can sign locally; for unsigned fees use the fee guide. Auto-approval is disabled in examples. Contract-dependent methods require compatible deployed code and permissions.
 
+## decimal.apply_stake_penalties
+
+Legacy accumulated penalties call; explicit opt-in required.
+
+[ApplyStakePenaltiesRequest](../reference/staking_operations.md#applystakepenaltiesrequest)
+
+```python
+import asyncio
+import getpass
+import json
+import os
+import time
+from decimal_web3_sdk import (
+    DecimalClient, NetworkConfig, mnemonic_to_account, ApplyStakePenaltiesRequest
+)
+
+
+async def main():
+    mnemonic = getpass.getpass("Mnemonic (local, hidden): ")
+    wallet = mnemonic_to_account(mnemonic, account_index=0)
+    expected = os.environ["EXPECTED_ADDRESS"]
+    if wallet.address.lower() != expected.lower():
+        raise ValueError("Unexpected signing account")
+    request = ApplyStakePenaltiesRequest.from_mnemonic(
+        mnemonic=mnemonic,
+        account_index=0,
+        validator=os.environ["VALIDATOR"],
+        delegator=wallet.address,
+        token=os.environ["TOKEN"],
+        allow_legacy=os.environ.get("ALLOW_LEGACY_CONTRACT", "0") == "1",
+    )
+    async with DecimalClient(NetworkConfig.testnet()) as client:
+        # Signs locally when preflight passes. NEVER broadcasts in this example.
+        result = await client.decimal.apply_stake_penalties(
+            request, broadcast=False, wait_receipt=False
+        )
+        print("success:", result.success)
+        print("fee_DEL:", str(result.fee_del))
+        print("message:", result.user_message)
+        print("tx_hash:", result.tx_hash)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## decimal.apply_stake_penalty
+
+Legacy single penalty call; not in the inspected current Delegation ABI.
+
+[ApplyStakePenaltyRequest](../reference/staking_operations.md#applystakepenaltyrequest)
+
+```python
+import asyncio
+import getpass
+import json
+import os
+import time
+from decimal_web3_sdk import (
+    DecimalClient, NetworkConfig, mnemonic_to_account, ApplyStakePenaltyRequest
+)
+
+
+async def main():
+    mnemonic = getpass.getpass("Mnemonic (local, hidden): ")
+    wallet = mnemonic_to_account(mnemonic, account_index=0)
+    expected = os.environ["EXPECTED_ADDRESS"]
+    if wallet.address.lower() != expected.lower():
+        raise ValueError("Unexpected signing account")
+    request = ApplyStakePenaltyRequest.from_mnemonic(
+        mnemonic=mnemonic,
+        account_index=0,
+        validator=os.environ["VALIDATOR"],
+        delegator=wallet.address,
+        token=os.environ["TOKEN"],
+        allow_legacy=os.environ.get("ALLOW_LEGACY_CONTRACT", "0") == "1",
+    )
+    async with DecimalClient(NetworkConfig.testnet()) as client:
+        # Signs locally when preflight passes. NEVER broadcasts in this example.
+        result = await client.decimal.apply_stake_penalty(
+            request, broadcast=False, wait_receipt=False
+        )
+        print("success:", result.success)
+        print("fee_DEL:", str(result.fee_del))
+        print("message:", result.user_message)
+        print("tx_hash:", result.tx_hash)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## decimal.complete_stake
+
+Finalize frozen fungible stakes by queue index after the freeze period.
+
+[CompleteStakeRequest](../reference/staking_operations.md#completestakerequest)
+
+```python
+import asyncio
+import getpass
+import json
+import os
+import time
+from decimal_web3_sdk import (
+    DecimalClient, NetworkConfig, mnemonic_to_account, CompleteStakeRequest
+)
+
+
+async def main():
+    mnemonic = getpass.getpass("Mnemonic (local, hidden): ")
+    wallet = mnemonic_to_account(mnemonic, account_index=0)
+    expected = os.environ["EXPECTED_ADDRESS"]
+    if wallet.address.lower() != expected.lower():
+        raise ValueError("Unexpected signing account")
+    request = CompleteStakeRequest.from_mnemonic(
+        mnemonic=mnemonic,
+        account_index=0,
+        indexes=tuple(json.loads(os.environ["FROZEN_STAKE_INDEXES"])),
+    )
+    async with DecimalClient(NetworkConfig.testnet()) as client:
+        # Signs locally when preflight passes. NEVER broadcasts in this example.
+        result = await client.decimal.complete_stake(
+            request, broadcast=False, wait_receipt=False
+        )
+        print("success:", result.success)
+        print("fee_DEL:", str(result.fee_del))
+        print("message:", result.user_message)
+        print("tx_hash:", result.tx_hash)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
 ## decimal.delegate_del
 
 Delegate native DEL to a validator.
@@ -220,7 +355,7 @@ async def main():
         validator=os.environ["VALIDATOR"],
         amount="0.000001",
         new_hold_timestamp=int(os.environ["NEW_HOLD_TIMESTAMP"]),
-        hold_timestamps_to_reset=json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"]),
+        hold_timestamps_to_reset=tuple(json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"])),
     )
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.
@@ -358,7 +493,7 @@ async def main():
         old_validator=os.environ["OLD_VALIDATOR"],
         new_validator=os.environ["NEW_VALIDATOR"],
         amount_del="0.000001",
-        hold_timestamps_to_reset=json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"]),
+        hold_timestamps_to_reset=tuple(json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"])),
     )
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.
@@ -496,7 +631,7 @@ async def main():
         old_validator=os.environ["OLD_VALIDATOR"],
         new_validator=os.environ["NEW_VALIDATOR"],
         amount="0.000001",
-        hold_timestamps_to_reset=json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"]),
+        hold_timestamps_to_reset=tuple(json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"])),
     )
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.
@@ -630,7 +765,7 @@ async def main():
         account_index=0,
         validator=os.environ["VALIDATOR"],
         amount_del="0.000001",
-        hold_timestamps_to_reset=json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"]),
+        hold_timestamps_to_reset=tuple(json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"])),
     )
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.
@@ -767,7 +902,7 @@ async def main():
         token=os.environ["TOKEN"],
         validator=os.environ["VALIDATOR"],
         amount="0.000001",
-        hold_timestamps_to_reset=json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"]),
+        hold_timestamps_to_reset=tuple(json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"])),
     )
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.

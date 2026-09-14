@@ -85,6 +85,7 @@ class SystemContracts:
 
 
 TESTNET_SYSTEM_CONTRACTS = SystemContracts(
+    delegation_nft="0x07e2ad4dfc91412de09e33e4650254948b21a20c",
     multicall="0x81FD5FAe106dFD0343B0435a1bc0ef89BB14C317",
     checks="0xb6161CAA8Bd7167C2fa67b93b041FF9a94d6a735",
     gas_center="0xB32439bF0C3742D0a227BFEc78276F7bA15F8Aa1",

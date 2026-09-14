@@ -49,6 +49,11 @@ def offline_client(account):
     client.nft.balance_of = AsyncMock(return_value=100)
     client.nft.is_approved_for_all = AsyncMock(return_value=True)
     client.checks._nonce = AsyncMock(return_value=1)
+    client.multisig.state = AsyncMock(return_value=sdk.MultisigState(
+        nonce=0, owners=(sdk.WeightedOwner(owner, 1),), weight_threshold=1, block_number=1,
+    ))
+    client.multisig._simulate_execution = AsyncMock(return_value=True)
+    client.multisig._singleton_has_code = AsyncMock(return_value=True)
     return client
 
 
@@ -64,6 +69,30 @@ def make_request(row, account, monkeypatch):
     monkeypatch.setenv("ENCODED_VM", "0x01")
     monkeypatch.setenv("CHECKS", json.dumps(["0x" + "12" * 32]))
     monkeypatch.setenv("SIGNATURES", json.dumps(["0x" + "12" * 65]))
+    monkeypatch.setenv("OLD_HOLD_TIMESTAMP", "1700000000")
+    monkeypatch.setenv("HOLD_TIMESTAMPS", "[1700000000]")
+    monkeypatch.setenv("FROZEN_STAKE_INDEXES", "[0, 2]")
+    monkeypatch.setenv("ALLOW_LEGACY_CONTRACT", "1")
+    monkeypatch.setenv("ESTIMATED_GAS", "100000")
+    monkeypatch.setenv("PERMIT_DEADLINE", "1800000000")
+    monkeypatch.setenv("PERMIT_V", "27")
+    monkeypatch.setenv("PERMIT_R", "12" * 32)
+    monkeypatch.setenv("PERMIT_S", "23" * 32)
+    monkeypatch.setenv("SAFE_ADDRESS", "0x" + "33" * 20)
+    monkeypatch.setenv("SALT_NONCE", "1")
+    monkeypatch.setenv("WEIGHT_THRESHOLD", "1")
+    monkeypatch.setenv("SAFE_OWNERS", json.dumps([{"owner": owner.address, "weight": 1}]))
+    monkeypatch.setenv("SAFE_TRANSACTION", json.dumps({"to": owner.address, "nonce": 0}))
+    safe_tx = sdk.SafeTransaction(owner.address, 0)
+    sig = sdk.sign_safe_transaction(sdk.SignSafeTransactionRequest.from_mnemonic(
+        safe="0x" + "33" * 20, chain_id=75, transaction=safe_tx, mnemonic=mnemonic,
+    ))
+    monkeypatch.setenv("SAFE_SIGNATURES", json.dumps([{"signer": sig.signer, "data": sig.data, "kind": sig.kind}]))
+    monkeypatch.setenv("VALIDATOR_METADATA", json.dumps({
+        "operator_address": owner.address, "reward_address": owner.address,
+        "consensus_pubkey": "test-public-consensus-key", "commission": "5",
+        "description": {"moniker": "Offline candidate"},
+    }))
     context = {**vars(sdk), "os": os, "json": json, "time": time, "wallet": owner}
     # Only evaluate our generated fixed expressions, never runtime user input.
     kwargs = {name: eval(expr, context) for name, expr in reference.request_arguments(row["request"]).items()}

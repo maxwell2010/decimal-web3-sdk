@@ -9,10 +9,12 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import runpy
 from pathlib import Path
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+VERSION = runpy.run_path(str(ROOT / "src/decimal_web3_sdk/_version.py"))["__version__"]
 COMMITS = {
     "dsc-js-sdk": "6790d35e2decb0cbb06a9149a9c476c834f99223",
     "dsc-go-sdk": "3ef4a089b6020889e60783c2026df5725fb960e2",
@@ -85,6 +87,30 @@ PARTIAL = {
     "mintNFTWithTokenReserve": "nft-permit-missing",
 }
 PARTIAL.update({name: "nft-stake-variants" for name in GROUPS["nft_staking"].split() if name in RELATED})
+RELATED.update({
+    "burnDEL": "tx.burn_del", "convertToDEL": "token.convert_to_del",
+    "buyExactTokenForDEL": "token.buy_exact", "sellTokensForExactDEL": "token.sell_for_exact_del",
+    "updateTokenMinTotalSupply": "token.update_min_supply",
+    "createCollectionDRC721Reserveless": "nft.create_reserveless_collection",
+    "createCollectionDRC1155Reserveless": "nft.create_reserveless_collection",
+    "addTokenReserveNFT": "nft.add_token_reserve",
+    "applyPenaltyToStakeToken": "decimal.apply_stake_penalty",
+    "applyPenaltiesToStakeToken": "decimal.apply_stake_penalties",
+    "completeStakeToken": "decimal.complete_stake", "stakeNFTToHold": "nft.stake_to_hold",
+    "stakeNFTResetHold": "nft.reset_stake_hold", "withdrawNFTWithReset": "nft.withdraw_with_reset",
+    "transferNFTWithReset": "nft.transfer_with_reset", "holdNFTWithReset": "nft.hold_with_reset",
+    "completeStakeNFT": "nft.complete_stake",
+    "addValidatorWithToken": "decimal.add_validator_token", "addValidatorWithETH": "decimal.add_validator_del",
+    "removeValidator": "decimal.remove_validator", "updateValidatorMeta": "decimal.update_validator_metadata",
+    "approveHashMultiSig": "multisig.approve_transaction", "executeMultiSigTx": "multisig.execute",
+    "createMultiSig": "multisig.create",
+})
+PARTIAL.update({name: "legacy-explicit-opt-in" for name in (
+    "updateTokenMinTotalSupply", "applyPenaltyToStakeToken", "applyPenaltiesToStakeToken",
+)})
+PARTIAL.update({name: "current-nft-metadata" for name in (
+    "createCollectionDRC721Reserveless", "createCollectionDRC1155Reserveless",
+)})
 GO_ALIASES = {
     "CreateNftCollection": "createCollectionDRC721", "SetApprovalForAllNFT": "approveForAllNFT",
     "MintNFT": "mintReserveless", "ExecuteSafeTransaction": "executeMultiSigTx",
@@ -157,9 +183,14 @@ def extract(source_dir):
     for row in python_rows:
         if "multisend" in row["method"]:
             row["group"] = "multisend"
-        if row["method"] in {"nft.delegate", "nft.hold", "nft.withdraw", "nft.transfer_stake"}:
+        if row["method"] in {"nft.delegate", "nft.hold", "nft.withdraw", "nft.transfer_stake", "nft.stake_to_hold",
+                              "nft.reset_stake_hold", "nft.reset_stake_holds", "nft.withdraw_with_reset",
+                              "nft.transfer_with_reset", "nft.hold_with_reset", "nft.complete_stake"}:
             row["group"] = "nft_staking"
-    return {"checked_on": "2026-09-14", "python_version": "0.1.1", "commits": COMMITS,
+    return {"checked_on": "2026-09-15", "python_version": VERSION, "commits": COMMITS,
+            "unreleased": True,
+            "additional_nft_source": "7dc2e4600ce4aa3dd8baf685d2f31b4f53bc08c7",
+            "node_source": "9e6c6d718d662083c4a524376a66d2c50bd4bc77",
             "count_unit": "named high-level EVM write entry points; not unique protocol transaction types",
             "sources": sources, "operations": rows, "python_operations": python_rows,
             "helpers_excluded": helpers, "generic_excluded": excluded,
@@ -182,7 +213,8 @@ def render(report, lang):
              "| SDK | Commit / version |", "| --- | --- |"]
     for sdk, commit in COMMITS.items():
         lines.append(f"| {sdk} | [{commit[:12]}](https://bitbucket.org/decimalteam/{sdk}/src/{commit}/) |")
-    lines += ["| Python | 0.1.1 |", "", "| Group | JS | Go | Python |", "| --- | ---: | ---: | ---: |"]
+    lines += [f"| Python (unreleased) | {VERSION} |", "", "[Development notes](transaction-parity-development.md)", "",
+              "| Group | JS | Go | Python |", "| --- | ---: | ---: | ---: |"]
     counts = {sdk: Counter(row["group"] for row in report["operations"] if row["sdk"] == sdk) for sdk in COMMITS}
     py = Counter(row["group"] for row in report["python_operations"])
     for group in GROUPS:
@@ -192,12 +224,14 @@ def render(report, lang):
         "JS: 92 специализированных публичных метода + 3 операции multisig (create, approveHash, executeTx). "
         "Отдельно: 1 generic multiCall, 23 Safe-builder и 1 локальная подпись. "
         "Go: 58 экспортированных функций в methods, из них 53 отправки и 5 builder/sign-helper. "
-        "Python: 55 методов из каталога; generic contract executors, оценки комиссий и чтение исключены."
+        f"Python: {len(report['python_operations'])} методов из каталога; generic contract executors, оценки комиссий и чтение исключены. "
+        "Дополнительно учтен пакетный сброс NFT-hold из feature-ветки; база JS в этой таблице остается закрепленным master."
         if ru else
         "JS: 92 specialized public methods + 3 multisig writes (create, approveHash, executeTx). "
         "Separately: 1 generic multiCall, 23 Safe builders and 1 local signer. "
         "Go: 58 exported methods-package functions, comprising 53 writes and 5 build/sign helpers. "
-        "Python: 55 catalog methods; generic contract executors, fee estimators and reads are excluded.", "",
+        f"Python: {len(report['python_operations'])} catalog methods; generic contract executors, fee estimators and reads are excluded. "
+        "The NFT feature-branch batch reset is an extra Python method; the JS baseline remains pinned master.", "",
         "JS также содержит 42 идентификатора legacy-каталога txTypesNew.ts, включая локальное создание чека и EVM-envelope. "
         "Это не 42 дополнительных подтвержденных EVM-операции; в таблицу они не входят. Закомментированный JS mintNFT "
         "и диагностический redeemChecksTest не считаются. В Go проверен пакет decimalevm/methods, не код ноды или Swagger-обертки."
@@ -230,13 +264,13 @@ def render(report, lang):
         "- nft-permit-missing: mint с токен-резервом есть, полный permit-маршрут отсутствует."
         if ru else "- nft-permit-missing: token-reserve mint exists but the complete permit route is absent.", "",
         "## Приоритетные Пробелы" if ru else "## Priority Gaps", "",
-        "Safe multisig; burn DEL; exact-output покупки/продажи; GasCenter.convertToDEL; минимальная эмиссия; "
-        "создание/удаление/метаданные валидаторов; complete/penalty стейка; NFT token-reserve, hold/reset/complete и permit; "
-        "смешанная рассылка. Сначала нужно сверить существующие token/NFT ABI, затем добавлять недостающие методы."
+        "Добавленные методы проверены offline, но еще не сетевыми отправками. Остаются прежние частичные "
+        "соответствия ABI, permit-варианты и смешанная рассылка. Три legacy-метода требуют явного opt-in; "
+        "их нет в проверенных актуальных ABI. У безрезервных NFT текущий ABI использует refundable вместо JS allowMint."
         if ru else
-        "Safe multisig; burn DEL; exact-output buy/sell; GasCenter.convertToDEL; minimum supply; "
-        "validator creation/removal/metadata; stake complete/penalty; NFT token-reserve, hold/reset/complete and permit; "
-        "mixed-asset multisend. Reconcile existing token/NFT ABIs before extending the method inventory.", "",
+        "New methods have offline checks, not broadcast verification. Existing partial ABI matches, permit variants "
+        "and mixed-asset multisend remain. Three legacy methods require explicit opt-in and are absent from the "
+        "inspected current ABIs. Reserveless NFT metadata uses the current refundable flag instead of JS allowMint.", "",
     ]
     for sdk in COMMITS:
         lines += [f"## {sdk}", "", "| Method | Python counterpart | Status / reason |", "| --- | --- | --- |"]
@@ -266,9 +300,9 @@ def main():
                 with urlopen(url, timeout=30) as response:
                     dest.write_bytes(response.read())
     report = extract(args.source_dir)
-    (ROOT / "docs/upstream-parity.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (ROOT / "docs/upstream-parity.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
     for lang in ("en", "ru"):
-        (ROOT / f"docs/{lang}/upstream-parity.md").write_text(render(report, lang), encoding="utf-8")
+        (ROOT / f"docs/{lang}/upstream-parity.md").write_text(render(report, lang), encoding="utf-8", newline="\n")
     for sdk in COMMITS:
         ops = [row for row in report["operations"] if row["sdk"] == sdk]
         print(sdk, len(ops), dict(Counter(row["group"] for row in ops)))

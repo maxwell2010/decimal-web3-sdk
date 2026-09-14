@@ -8,6 +8,11 @@ studied using the official Decimal SDKs:
 
 - [dsc-js-sdk](https://bitbucket.org/decimalteam/dsc-js-sdk/src/master/), including
   the endpoint map and EVM interface definitions. Reference revision: 6790d35.
+- NFT feature revision: 7dc2e4600ce4aa3dd8baf685d2f31b4f53bc08c7.
+- Minimal ABI interface fragments from the official Decimal Contract API, with
+  per-file source URLs and retrieval dates in `abi/*.json`. No bytecode is bundled.
+- [go-smart-node](https://bitbucket.org/decimalteam/go-smart-node/src/9e6c6d718d662083c4a524376a66d2c50bd4bc77/)
+  was inspected as a reference; its source code and generated bindings are not bundled.
 - [dsc-go-sdk](https://bitbucket.org/decimalteam/dsc-go-sdk/src/master/).
 - [dsc-python-sdk](https://bitbucket.org/decimalteam/dsc-python-sdk/src/master/),
   used as a documentation/workflow reference, not bundled as a dependency.

@@ -355,6 +355,30 @@ async approve(self, request: 'NftApproveRequest', broadcast: 'bool' = False, wai
 async balance_of(self, nft: 'str', owner: 'str', token_id: 'int | None' = None, kind: 'NftKind' = 'erc721') -> 'int'
 ```
 
+### build_operation
+
+Подготовка calldata/черновика без отправки. Единицы и ограничения ABI описаны в руководстве раздела.
+
+```python
+async build_operation(self, request: 'ContractOperationRequest | WithdrawNftRequest | TransferNftStakeRequest') -> 'TransactionDraft'
+```
+
+### build_transfer_stake
+
+Подготовка calldata/черновика без отправки. Единицы и ограничения ABI описаны в руководстве раздела.
+
+```python
+async build_transfer_stake(self, request: 'TransferNftStakeRequest') -> 'TransactionDraft'
+```
+
+### build_withdraw
+
+Подготовка calldata/черновика без отправки. Единицы и ограничения ABI описаны в руководстве раздела.
+
+```python
+async build_withdraw(self, request: 'WithdrawNftRequest') -> 'TransactionDraft'
+```
+
 ### burn
 
 Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.

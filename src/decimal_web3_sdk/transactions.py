@@ -11,6 +11,7 @@ from hexbytes import HexBytes
 from web3 import Web3
 
 from .erc20 import format_units, parse_units
+from .mnemonic import FromMnemonicMixin
 from .wallet import DEFAULT_DERIVATION_PATH, checksum, mnemonic_to_private_key, normalize_private_key, private_key_to_address
 
 
@@ -102,6 +103,12 @@ def decode_memo_data(data: str | None) -> str | None:
         return bytes.fromhex(hex_data).decode("utf-8")
     except (ValueError, UnicodeDecodeError) as exc:
         raise ValueError("Transaction data is not a UTF-8 memo") from exc
+
+
+@dataclass(frozen=True)
+class BurnDelRequest(FromMnemonicMixin):
+    amount_del: Decimal | str | int
+    private_key: str = field(repr=False)
 
 
 @dataclass(frozen=True)
@@ -440,6 +447,25 @@ class FeePreflight:
 class TransactionService:
     def __init__(self, client) -> None:
         self._client = client
+
+    async def build_burn_del(self, request: BurnDelRequest) -> TransactionDraft:
+        amount = parse_units(request.amount_del, 18)
+        if not 0 < amount < 2**256:
+            raise ValueError("The DEL burn amount must be positive and fit uint256")
+        return await self.build_native_transfer(NativeTransferRequest(
+            to="0x" + "00" * 20, amount_del=request.amount_del, private_key=request.private_key,
+        ))
+
+    async def estimate_fee_for_burn_del(self, request: BurnDelRequest, *, exact: bool = False) -> FeePreflight:
+        return await self.calculate_fee(await self.build_burn_del(request), exact=exact)
+
+    async def burn_del(self, request: BurnDelRequest, broadcast: bool = False, wait_receipt: bool = False) -> TransactionResult:
+        """Irreversibly send native DEL to the zero address, as in the official JS SDK."""
+        try:
+            draft = await self.build_burn_del(request)
+            return await self.send_draft(draft, request.private_key, broadcast, wait_receipt)
+        except Exception as exc:
+            return _exception_failure(exc)
 
     async def build_native_transfer(self, request: NativeTransferRequest) -> TransactionDraft:
         private_key = normalize_private_key(request.private_key)

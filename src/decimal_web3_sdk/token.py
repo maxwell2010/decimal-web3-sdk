@@ -10,6 +10,7 @@ from web3.logs import DISCARD
 from .decimal import DecimalWorkflowResult
 from .erc20 import parse_units
 from .mnemonic import FromMnemonicMixin
+from .token_operations import TokenOperations
 from .transactions import ContractCallRequest, Erc20ApproveRequest, TransactionResult, _token_preflight_failure
 from .wallet import checksum, private_key_to_address
 
@@ -270,7 +271,7 @@ class CreateTokenRequest(FromMnemonicMixin):
     creator: str | None = None
 
 
-class TokenService:
+class TokenService(TokenOperations):
     def __init__(self, client) -> None:
         self._client = client
 

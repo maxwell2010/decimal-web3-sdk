@@ -1,6 +1,6 @@
 # Documentation
 
-Release candidate 0.1.1. [Russian](../ru/README.md) | [Package](../../README.md)
+Unpublished development version 0.1.2.dev0. [Russian](../ru/README.md) | [Package](../../README.md)
 
 Start with [installation, OS support and dependencies](install.md).
 
@@ -17,11 +17,13 @@ Start with [installation, OS support and dependencies](install.md).
 11. [Coverage and limitations](status.md)
 12. [Build and publish](releasing.md)
 13. [Official JS/Go comparison](upstream-parity.md)
+14. [Additional operations, Safe and updated NFT sources](transaction-parity-development.md)
 
 Required request fields have no default. Optional fields are listed in the
 reference. `*_wei` means DEL base units, `*_raw` means token base units;
 `amount_del`, `amount`, `amount_in` use human units. One DEL is 10^18 base units.
 Read token decimals from its contract. Rebase does not justify dividing twice.
+Exception: NFT `amount` is an integer count, not an 18-decimal fungible amount.
 
 Every transaction has a standalone example. Set the environment variables
 referenced by that example first. Mnemonics are entered through a hidden prompt;

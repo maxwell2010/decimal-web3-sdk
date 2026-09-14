@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.2.dev0 (Unreleased)
+
+- Add 23 typed methods covering the 24 previously missing JS operations; reserveless
+  NFT collection variants share one method. Add the NFT feature-branch batch hold reset.
+- Add fee-only preparation for every new operation, without signing or approvals.
+- Add weighted Safe creation, EIP-712 signatures, on-chain tuple approvals, execution
+  simulation, nonce/weight validation and inner receipt outcome checks.
+- Add exact NFT stake/frozen-stake reads and current four-field frozen state decoding.
+- Correct the testnet delegation-nft target from the official NFT feature branch.
+- Bundle minimal, source-attributed API ABI fragments. Keep three legacy methods
+  disabled unless explicitly opted in; do not claim full JS or live network parity.
+- Add bilingual examples, independent calldata/precision tests and read-only RPC checks.
+- No release publication, funded credentials or network broadcasts during this work.
+
 ## 0.1.1
 
 GitHub prerelease in the 0.1 series. The existing v0.1 / package 0.1.0 is unchanged.

@@ -15,6 +15,7 @@ from .decimal import DecimalService
 from .erc20 import Erc20Service, format_units
 from .limits import AsyncRateLimiter
 from .monitoring import DecimalMonitor
+from .multisig import MultisigService
 from .nft import NftService
 from .policy import TransactionPolicy
 from .rest import RestClient
@@ -40,6 +41,7 @@ class DecimalClient:
         self.erc20 = Erc20Service(self)
         self.token = TokenService(self)
         self.nft = NftService(self)
+        self.multisig = MultisigService(self)
         self.checks = ChecksService(self)
         self.bridge = BridgeService(self)
         self.ws = DecimalWsClient(self.config)

@@ -1,0 +1,32 @@
+{
+  "source": "https://api.decimalchain.com/api/v1/contracts/compact/0xa4567e1a2182b630fb57441ae788dce98721d358",
+  "retrieved": "2026-09-14",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "stakeIds",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "applyPenaltiesToStakes",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "indexes",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "complete",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ]
+}

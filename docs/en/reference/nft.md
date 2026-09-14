@@ -355,6 +355,30 @@ Balance of; types, defaults and return value are specified below.
 async balance_of(self, nft: 'str', owner: 'str', token_id: 'int | None' = None, kind: 'NftKind' = 'erc721') -> 'int'
 ```
 
+### build_operation
+
+Build transaction data/draft without broadcasting. See units and ABI constraints in the module guide.
+
+```python
+async build_operation(self, request: 'ContractOperationRequest | WithdrawNftRequest | TransferNftStakeRequest') -> 'TransactionDraft'
+```
+
+### build_transfer_stake
+
+Build transaction data/draft without broadcasting. See units and ABI constraints in the module guide.
+
+```python
+async build_transfer_stake(self, request: 'TransferNftStakeRequest') -> 'TransactionDraft'
+```
+
+### build_withdraw
+
+Build transaction data/draft without broadcasting. See units and ABI constraints in the module guide.
+
+```python
+async build_withdraw(self, request: 'WithdrawNftRequest') -> 'TransactionDraft'
+```
+
 ### burn
 
 Burn; types, defaults and return value are specified below.

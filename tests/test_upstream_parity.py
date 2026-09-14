@@ -22,7 +22,7 @@ def test_python_inventory_matches_current_catalog():
     catalog = json.loads((ROOT / "docs/transaction-catalog.json").read_text(encoding="utf-8"))
     methods = {row["method"] for row in catalog}
     assert {row["method"] for row in REPORT["python_operations"]} == methods
-    assert len(methods) == 55
+    assert len(methods) == 79
     for row in REPORT["operations"]:
         assert set(row["python"]) <= methods | {"erc20.sign_permit"}
 
@@ -37,13 +37,19 @@ def test_known_abi_differences_are_not_claimed_as_equivalent():
     methods = {row["name"]: row for row in REPORT["operations"] if row["sdk"] == "dsc-js-sdk"}
     for name in ("buyTokenForExactDEL", "sellExactTokensForDEL", "mintNFTWithDELReserve", "permitToken"):
         assert methods[name]["status"] == "partial"
-    assert methods["completeStakeNFT"]["status"] == "missing"
+    assert methods["completeStakeNFT"]["status"] == "counterpart"
+    for name in ("updateTokenMinTotalSupply", "applyPenaltyToStakeToken", "applyPenaltiesToStakeToken"):
+        assert methods[name]["status"] == "partial"
+        assert methods[name]["reason"] == "legacy-explicit-opt-in"
     assert methods["addDELReserveNFT"]["status"] == "counterpart"
 
 
 def test_release_versions_and_github_install_urls_match():
     from decimal_web3_sdk import __version__
     assert REPORT["python_version"] == __version__
-    url = f"https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v{__version__}/decimal_web3_sdk-{__version__}-py3-none-any.whl"
+    # The development branch must not advertise an unpublished wheel URL.
+    assert __version__ == "0.1.2.dev0"
+    assert REPORT["unreleased"] is True
+    url = "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
     for name in ("README.md", "README.ru.md", "docs/en/releasing.md", "docs/ru/releasing.md"):
         assert url in (ROOT / name).read_text(encoding="utf-8")

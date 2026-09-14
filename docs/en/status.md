@@ -1,8 +1,9 @@
 # Release Status
 [Guide](README.md) | [Transaction catalog](../transaction-catalog.json)
 
-Version: 0.1.1. This is a candidate, NOT a complete or security-audited
-implementation of every official JS/Go transaction.
+Development: 0.1.2.dev0, unpublished. See [new operation checks and limitations](transaction-parity-development.md).
+The historical scope/results below describe the published 0.1.1 candidate, not the new development methods.
+Neither version is a complete or independently security-audited implementation of every official JS/Go transaction.
 
 ## Verified Scope
 - 55 high-level entry points: offline request creation from generated mnemonics,

@@ -58,7 +58,7 @@ namespaces = false
 version = {attr = "decimal_web3_sdk._version.__version__"}
 
 [tool.setuptools.package-data]
-decimal_web3_sdk = ["abi/*.md", "profiles/*.json"]
+decimal_web3_sdk = ["abi/*.md", "abi/*.json", "profiles/*.json"]
 
 [tool.ruff]
 line-length = 100

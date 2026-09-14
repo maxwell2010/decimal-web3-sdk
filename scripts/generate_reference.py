@@ -15,8 +15,32 @@ import decimal_web3_sdk as sdk
 
 SERVICES = {"tx": sdk.TransactionService, "decimal": sdk.DecimalService,
             "token": sdk.TokenService, "nft": sdk.NftService,
-            "checks": sdk.ChecksService, "bridge": sdk.BridgeService}
+            "checks": sdk.ChecksService, "bridge": sdk.BridgeService, "multisig": sdk.MultisigService}
 DESCRIPTIONS = {
+    "burn_del": ("Irreversibly burn native DEL by sending it to the zero address; no approve.", "Необратимо сжечь DEL переводом на нулевой адрес; без approve."),
+    "buy_exact": ("Buy an exact raw token amount with a maximum DEL input.", "Купить точное количество токена в raw-единицах с максимальным расходом DEL."),
+    "sell_for_exact_del": ("Sell tokens for an exact DEL output, bounded by maximum raw token input.", "Продать токен для точного выхода DEL с максимальным расходом токенов в raw."),
+    "convert_to_del": ("GasCenter conversion with a supplied owner permit; distinct from token selling.", "Конвертация GasCenter с permit владельца; не обычная продажа токена."),
+    "update_min_supply": ("Legacy-only minimum supply update; disabled unless explicitly opted in.", "Legacy-изменение минимальной эмиссии; по умолчанию отключено."),
+    "decimal.complete_stake": ("Finalize frozen fungible stakes by queue index after the freeze period.", "Завершить разморозку токен-стейков по индексам очереди после freeze-периода."),
+    "apply_stake_penalty": ("Legacy single penalty call; not in the inspected current Delegation ABI.", "Legacy-вызов одного штрафа; отсутствует в проверенном текущем ABI Delegation."),
+    "apply_stake_penalties": ("Legacy accumulated penalties call; explicit opt-in required.", "Legacy-вызов накопленных штрафов; требуется явное включение."),
+    "add_validator_token": ("Register a candidate with token stake and metadata; pre-existing allowance required.", "Зарегистрировать кандидата с токен-стейком и метаданными; нужен существующий allowance."),
+    "add_validator_del": ("Register a candidate with native DEL stake; no token approval.", "Зарегистрировать кандидата с нативным DEL-стейком; approve не требуется."),
+    "remove_validator": ("Remove a validator; contract authorization required.", "Удалить валидатора; требуются права в контракте."),
+    "update_validator_metadata": ("Update structured validator metadata; operator authorization required.", "Обновить структурированные метаданные валидатора; нужны полномочия оператора."),
+    "create_reserveless_collection": ("Create DRC721/DRC1155 without reserve using the current NFTCenter ABI.", "Создать DRC721/DRC1155 без резерва по текущему ABI NFTCenter."),
+    "add_token_reserve": ("Add raw token reserve to an NFT using existing allowance or a supplied permit.", "Пополнить токен-резерв NFT в raw по существующему allowance либо переданному permit."),
+    "stake_to_hold": ("Move existing NFT stake into hold through delegation-nft.", "Перевести существующий NFT-стейк в hold через delegation-nft."),
+    "nft.reset_stake_hold": ("Reset one eligible NFT hold for a delegator.", "Сбросить один доступный NFT-hold делегатора."),
+    "reset_stake_holds": ("Reset a batch of eligible NFT holds, as in the JS feature branch.", "Сбросить несколько доступных NFT-hold, как в новой ветке JS SDK."),
+    "withdraw_with_reset": ("Reset selected NFT holds and request withdrawal; completion remains a separate step.", "Сбросить выбранные NFT-hold и запросить вывод; завершение остается отдельным шагом."),
+    "transfer_with_reset": ("Reset selected NFT holds and request transfer to another validator.", "Сбросить выбранные NFT-hold и запросить перенос другому валидатору."),
+    "hold_with_reset": ("Reset selected NFT holds and establish a new hold timestamp.", "Сбросить выбранные NFT-hold и установить новый срок hold."),
+    "nft.complete_stake": ("Finalize frozen NFT stakes by their exact queue indices.", "Завершить разморозку NFT-стейков по точным индексам очереди."),
+    "multisig.create": ("Create a weighted Decimal Safe through SafeFactory with an explicit salt.", "Создать взвешенный Decimal Safe через SafeFactory с явным salt."),
+    "approve_transaction": ("Approve a full Safe transaction tuple on-chain; this spends gas.", "Подтвердить полный tuple транзакции Safe в сети; расходует gas."),
+    "execute": ("Execute a Safe transaction after nonce, signature and weight checks; inspect inner outcome.", "Выполнить Safe-транзакцию после проверки nonce, подписей и весов; проверить внутренний результат."),
     "send_del": ("Transfer native DEL directly; memo is UTF-8 transaction data, not multicall.", "Прямой перевод DEL; memo записывается в data транзакции, без multicall."),
     "send_erc20": ("Transfer ERC20 tokens from the signer; no approval is needed.", "Перевод ERC20 от подписанта; approve не требуется."),
     "approve_erc20": ("Set a spender allowance; amount zero revokes it.", "Установить лимит расходования для spender; ноль отменяет разрешение."),
@@ -107,10 +131,28 @@ def request_arguments(request_name: str) -> dict[str, str]:
         if name == "private_key":
             continue
         required = item.default is dataclasses.MISSING and item.default_factory is dataclasses.MISSING
-        if not required and name not in {"memo", "auto_approve", "prefer_permit", "permit_deadline"}:
+        if not required and name not in {"memo", "auto_approve", "prefer_permit", "permit_deadline", "allow_legacy"}:
             continue
-        if name in {"to", "owner", "delegator", "creator"}:
+        if name in {"to", "owner", "delegator", "creator", "recipient"}:
             value = "wallet.address"
+        elif name == "metadata":
+            value = 'ValidatorMetadata.from_dict(json.loads(os.environ["VALIDATOR_METADATA"]))'
+        elif name == "owners":
+            value = 'tuple(WeightedOwner(**item) for item in json.loads(os.environ["SAFE_OWNERS"]))'
+        elif name == "transaction":
+            value = 'SafeTransaction(**json.loads(os.environ["SAFE_TRANSACTION"]))'
+        elif name == "signatures" and request_name == "ExecuteMultisigTransactionRequest":
+            value = 'tuple(SafeSignature(**item) for item in json.loads(os.environ["SAFE_SIGNATURES"]))'
+        elif name == "permit":
+            value = 'PermitSignature(deadline=int(os.environ["PERMIT_DEADLINE"]), v=int(os.environ["PERMIT_V"]), r=bytes.fromhex(os.environ["PERMIT_R"].removeprefix("0x")), s=bytes.fromhex(os.environ["PERMIT_S"].removeprefix("0x")))'
+        elif name in {"weight_threshold", "salt_nonce", "estimated_gas"}:
+            value = f'int(os.environ["{name.upper()}"])'
+        elif name == "allow_legacy":
+            value = 'os.environ.get("ALLOW_LEGACY_CONTRACT", "0") == "1"'
+        elif name == "indexes":
+            value = 'tuple(json.loads(os.environ["FROZEN_STAKE_INDEXES"]))'
+        elif name == "safe":
+            value = 'os.environ["SAFE_ADDRESS"]'
         elif "validator" in name:
             value = f'os.environ["{name.upper()}"]'
         elif name in {"token", "token_in", "token_out", "nft", "contract", "encoded_vm", "identity", "token_uri", "contract_uri", "operator", "spender"}:
@@ -122,16 +164,16 @@ def request_arguments(request_name: str) -> dict[str, str]:
             value = "[wallet.address]"
         elif name in {"checks", "signatures"}:
             value = f'json.loads(os.environ["{name.upper()}"])'
-        elif name in {"hold_timestamps_to_reset"}:
-            value = 'json.loads(os.environ["HOLD_TIMESTAMPS_TO_RESET"])'
+        elif name in {"hold_timestamps_to_reset", "hold_timestamps"}:
+            value = f'tuple(json.loads(os.environ["{name.upper()}"]))'
         elif "hold_timestamp" in name or name == "due_block":
             value = f'int(os.environ["{name.upper()}"])'
         elif name == "permit_deadline":
             value = "int(time.time()) + 600"
         elif name in {"token_ids", "amounts"}:
             value = "[1, 2]" if name == "token_ids" else "[1, 1]"
-        elif name in {"amount_del", "amount", "amount_in", "min_amount_out"}:
-            value = '"0.000001"'
+        elif name in {"amount_del", "amount", "amount_in", "min_amount_out", "max_amount_del", "amount_out_del"}:
+            value = "1" if str(item.type) == "int" else '"0.000001"'
         elif name.endswith(("_wei", "_raw")):
             value = "1000000000000"
         elif name == "kind":
@@ -159,6 +201,10 @@ def example(row):
     imports = ["DecimalClient", "NetworkConfig", "mnemonic_to_account", cls]
     if cls == "MultisendDelRequest": imports.append("MultisendRecipient")
     if cls == "MultisendErc20Request": imports.append("MultisendErc20Recipient")
+    extra = {"metadata": "ValidatorMetadata", "owners": "WeightedOwner", "transaction": "SafeTransaction", "permit": "PermitSignature"}
+    for name in request_arguments(cls):
+        if name in extra: imports.append(extra[name])
+    if cls == "ExecuteMultisigTransactionRequest": imports.append("SafeSignature")
     arguments = "\n".join(f"        {key}={value}," for key, value in request_arguments(cls).items())
     return f'''import asyncio
 import getpass
@@ -268,7 +314,7 @@ def generated_files():
                         if lang == "en" else "Полные примеры ниже используют testnet, требуют EXPECTED_ADDRESS и не отправляют транзакции. Остальные обязательные переменные окружения указаны в коде. Возможна локальная подпись; для расчета без подписи используйте раздел комиссий. Автоматический approve в примерах отключен. Контрактные методы требуют совместимого развернутого контракта и прав."), ""]
             for row in rows:
                 if row["group"] != group: continue
-                module = SERVICES[row["method"].split(".")[0]].__module__.rsplit(".", 1)[1]
+                module = getattr(sdk, row["request"]).__module__.rsplit(".", 1)[1]
                 content += [f"## {row['method']}", "", row[lang], "",
                             f"[{row['request']}](../reference/{module}.md#{row['request'].lower()})", "",
                             "```python", example(row).rstrip(), "```", ""]

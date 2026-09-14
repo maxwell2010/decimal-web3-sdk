@@ -276,6 +276,52 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## token.buy_exact
+
+Купить точное количество токена в raw-единицах с максимальным расходом DEL.
+
+[BuyExactTokenRequest](../reference/token_operations.md#buyexacttokenrequest)
+
+```python
+import asyncio
+import getpass
+import json
+import os
+import time
+from decimal_web3_sdk import (
+    DecimalClient, NetworkConfig, mnemonic_to_account, BuyExactTokenRequest
+)
+
+
+async def main():
+    mnemonic = getpass.getpass("Mnemonic (local, hidden): ")
+    wallet = mnemonic_to_account(mnemonic, account_index=0)
+    expected = os.environ["EXPECTED_ADDRESS"]
+    if wallet.address.lower() != expected.lower():
+        raise ValueError("Unexpected signing account")
+    request = BuyExactTokenRequest.from_mnemonic(
+        mnemonic=mnemonic,
+        account_index=0,
+        token=os.environ["TOKEN"],
+        recipient=wallet.address,
+        amount_out_raw=1000000000000,
+        max_amount_del="0.000001",
+    )
+    async with DecimalClient(NetworkConfig.testnet()) as client:
+        # Signs locally when preflight passes. NEVER broadcasts in this example.
+        result = await client.token.buy_exact(
+            request, broadcast=False, wait_receipt=False
+        )
+        print("success:", result.success)
+        print("fee_DEL:", str(result.fee_del))
+        print("message:", result.user_message)
+        print("tx_hash:", result.tx_hash)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
 ## token.convert
 
 Обменять токены с минимальным выходом; возможны permit или две транзакции.
@@ -313,6 +359,53 @@ async def main():
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.
         result = await client.token.convert(
+            request, broadcast=False, wait_receipt=False
+        )
+        print("success:", result.success)
+        print("fee_DEL:", str(result.fee_del))
+        print("message:", result.user_message)
+        print("tx_hash:", result.tx_hash)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## token.convert_to_del
+
+Конвертация GasCenter с permit владельца; не обычная продажа токена.
+
+[ConvertToDelRequest](../reference/token_operations.md#converttodelrequest)
+
+```python
+import asyncio
+import getpass
+import json
+import os
+import time
+from decimal_web3_sdk import (
+    DecimalClient, NetworkConfig, mnemonic_to_account, ConvertToDelRequest, PermitSignature
+)
+
+
+async def main():
+    mnemonic = getpass.getpass("Mnemonic (local, hidden): ")
+    wallet = mnemonic_to_account(mnemonic, account_index=0)
+    expected = os.environ["EXPECTED_ADDRESS"]
+    if wallet.address.lower() != expected.lower():
+        raise ValueError("Unexpected signing account")
+    request = ConvertToDelRequest.from_mnemonic(
+        mnemonic=mnemonic,
+        account_index=0,
+        owner=wallet.address,
+        token=os.environ["TOKEN"],
+        amount_raw=1000000000000,
+        estimated_gas=int(os.environ["ESTIMATED_GAS"]),
+        permit=PermitSignature(deadline=int(os.environ["PERMIT_DEADLINE"]), v=int(os.environ["PERMIT_V"]), r=bytes.fromhex(os.environ["PERMIT_R"].removeprefix("0x")), s=bytes.fromhex(os.environ["PERMIT_S"].removeprefix("0x"))),
+    )
+    async with DecimalClient(NetworkConfig.testnet()) as client:
+        # Signs locally when preflight passes. NEVER broadcasts in this example.
+        result = await client.token.convert_to_del(
             request, broadcast=False, wait_receipt=False
         )
         print("success:", result.success)
@@ -512,6 +605,52 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## token.sell_for_exact_del
+
+Продать токен для точного выхода DEL с максимальным расходом токенов в raw.
+
+[SellForExactDelRequest](../reference/token_operations.md#sellforexactdelrequest)
+
+```python
+import asyncio
+import getpass
+import json
+import os
+import time
+from decimal_web3_sdk import (
+    DecimalClient, NetworkConfig, mnemonic_to_account, SellForExactDelRequest
+)
+
+
+async def main():
+    mnemonic = getpass.getpass("Mnemonic (local, hidden): ")
+    wallet = mnemonic_to_account(mnemonic, account_index=0)
+    expected = os.environ["EXPECTED_ADDRESS"]
+    if wallet.address.lower() != expected.lower():
+        raise ValueError("Unexpected signing account")
+    request = SellForExactDelRequest.from_mnemonic(
+        mnemonic=mnemonic,
+        account_index=0,
+        token=os.environ["TOKEN"],
+        recipient=wallet.address,
+        amount_out_del="0.000001",
+        max_amount_in_raw=1000000000000,
+    )
+    async with DecimalClient(NetworkConfig.testnet()) as client:
+        # Signs locally when preflight passes. NEVER broadcasts in this example.
+        result = await client.token.sell_for_exact_del(
+            request, broadcast=False, wait_receipt=False
+        )
+        print("success:", result.success)
+        print("fee_DEL:", str(result.fee_del))
+        print("message:", result.user_message)
+        print("tx_hash:", result.tx_hash)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
 ## token.update_details
 
 Обновить identity и предел эмиссии токена; нужны права эмитента.
@@ -545,6 +684,51 @@ async def main():
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.
         result = await client.token.update_details(
+            request, broadcast=False, wait_receipt=False
+        )
+        print("success:", result.success)
+        print("fee_DEL:", str(result.fee_del))
+        print("message:", result.user_message)
+        print("tx_hash:", result.tx_hash)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## token.update_min_supply
+
+Legacy-изменение минимальной эмиссии; по умолчанию отключено.
+
+[UpdateTokenMinSupplyRequest](../reference/token_operations.md#updatetokenminsupplyrequest)
+
+```python
+import asyncio
+import getpass
+import json
+import os
+import time
+from decimal_web3_sdk import (
+    DecimalClient, NetworkConfig, mnemonic_to_account, UpdateTokenMinSupplyRequest
+)
+
+
+async def main():
+    mnemonic = getpass.getpass("Mnemonic (local, hidden): ")
+    wallet = mnemonic_to_account(mnemonic, account_index=0)
+    expected = os.environ["EXPECTED_ADDRESS"]
+    if wallet.address.lower() != expected.lower():
+        raise ValueError("Unexpected signing account")
+    request = UpdateTokenMinSupplyRequest.from_mnemonic(
+        mnemonic=mnemonic,
+        account_index=0,
+        token=os.environ["TOKEN"],
+        min_total_supply_raw=1000000000000,
+        allow_legacy=os.environ.get("ALLOW_LEGACY_CONTRACT", "0") == "1",
+    )
+    async with DecimalClient(NetworkConfig.testnet()) as client:
+        # Signs locally when preflight passes. NEVER broadcasts in this example.
+        result = await client.token.update_min_supply(
             request, broadcast=False, wait_receipt=False
         )
         print("success:", result.success)

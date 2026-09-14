@@ -1,0 +1,9 @@
+{
+  "source": "https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/src/decimalevm/call.ts",
+  "warning": "Derived from legacy JS calls, NOT present in the inspected current contract ABIs. Explicit opt-in required.",
+  "abi": [
+    {"type":"function","name":"updateMinTotalSupply","stateMutability":"nonpayable","inputs":[{"name":"newMinTotalSupply","type":"uint256"}],"outputs":[]},
+    {"type":"function","name":"applyPenaltyToStake","stateMutability":"nonpayable","inputs":[{"name":"validator","type":"address"},{"name":"delegator","type":"address"},{"name":"token","type":"address"}],"outputs":[]},
+    {"type":"function","name":"applyPenaltiesToStake","stateMutability":"nonpayable","inputs":[{"name":"validator","type":"address"},{"name":"delegator","type":"address"},{"name":"token","type":"address"}],"outputs":[]}
+  ]
+}

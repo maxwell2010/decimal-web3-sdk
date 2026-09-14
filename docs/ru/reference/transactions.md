@@ -50,6 +50,25 @@ encode_memo_data(memo: 'str | None') -> 'str'
 decode_memo_data(data: 'str | None') -> 'str | None'
 ```
 
+## BurnDelRequest
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+BurnDelRequest(amount_del: 'Decimal | str | int', private_key: 'str') -> None
+```
+
+- `amount_del`: `Decimal | str | int`; required.
+- `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
+
+### from_mnemonic
+
+Локально получить технический ключ подписи; поля запроса передаются именованными аргументами.
+
+```python
+from_mnemonic(*, mnemonic: 'str', passphrase: 'str' = '', account_path: 'str' = "m/44'/60'/0'/0/0", account_index: 'int | None' = None, **kwargs) -> 'T'
+```
+
 ## NativeTransferRequest
 
 Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
@@ -389,6 +408,14 @@ async broadcast(self, draft: 'TransactionDraft') -> 'TransactionDraft'
 async broadcast_with_fee_retry(self, draft: 'TransactionDraft', private_key: 'str') -> 'TransactionDraft'
 ```
 
+### build_burn_del
+
+Подготовка calldata/черновика без отправки. Единицы и ограничения ABI описаны в руководстве раздела.
+
+```python
+async build_burn_del(self, request: 'BurnDelRequest') -> 'TransactionDraft'
+```
+
 ### build_contract_call
 
 Подготовка calldata/черновика без отправки. Единицы и ограничения ABI описаны в руководстве раздела.
@@ -429,6 +456,14 @@ async build_erc20_transfer_from(self, request: 'Erc20TransferFromRequest') -> 'T
 async build_native_transfer(self, request: 'NativeTransferRequest') -> 'TransactionDraft'
 ```
 
+### burn_del
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+async burn_del(self, request: 'BurnDelRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
+```
+
 ### calculate_fee
 
 Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
@@ -443,6 +478,14 @@ async calculate_fee(self, draft: 'TransactionDraft', *, exact: 'bool' = False) -
 
 ```python
 async estimate(self, draft: 'TransactionDraft', *, exact: 'bool' = False) -> 'TransactionDraft'
+```
+
+### estimate_fee_for_burn_del
+
+Расчет gas и необходимого баланса без подписи; RPC-симуляция может завершиться revert.
+
+```python
+async estimate_fee_for_burn_del(self, request: 'BurnDelRequest', *, exact: 'bool' = False) -> 'FeePreflight'
 ```
 
 ### estimate_fee_for_contract_call

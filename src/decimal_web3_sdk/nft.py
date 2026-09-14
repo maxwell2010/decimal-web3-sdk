@@ -5,7 +5,9 @@ from typing import Any, Literal
 
 from .decimal import DecimalWorkflowResult
 from .mnemonic import FromMnemonicMixin
-from .transactions import ContractCallRequest, TransactionResult
+from .nft_operations import NftOperations
+from ._contract_operations import ContractOperationRequest, uint
+from .transactions import ContractCallRequest, TransactionDraft, TransactionResult
 from .wallet import checksum, private_key_to_address
 
 
@@ -528,7 +530,7 @@ class WithdrawNftRequest(FromMnemonicMixin):
     hold_timestamp: int | None = None
 
 
-class NftService:
+class NftService(NftOperations):
     def __init__(self, client) -> None:
         self._client = client
 
@@ -779,25 +781,31 @@ class NftService:
         broadcast: bool = False,
         wait_receipt: bool = False,
     ) -> TransactionResult:
+        draft = await self.build_transfer_stake(request)
+        return await self._client.tx.send_draft(draft, request.private_key, broadcast, wait_receipt)
+
+    async def build_transfer_stake(self, request: TransferNftStakeRequest) -> TransactionDraft:
         contract = self._delegation_nft_contract()
         if request.hold_timestamp is None:
             data = contract.functions.transfer(
                 checksum(request.validator),
                 checksum(request.nft),
-                int(request.token_id),
-                int(request.amount),
+                uint(request.token_id, "token_id"),
+                uint(request.amount, "amount", positive=True),
                 checksum(request.new_validator),
             )._encode_transaction_data()
         else:
             data = contract.functions.transferHold(
                 checksum(request.validator),
                 checksum(request.nft),
-                int(request.token_id),
-                int(request.amount),
-                int(request.hold_timestamp),
+                uint(request.token_id, "token_id"),
+                uint(request.amount, "amount", positive=True),
+                uint(request.hold_timestamp, "hold_timestamp"),
                 checksum(request.new_validator),
             )._encode_transaction_data()
-        return await self._send_contract(request.private_key, self._client.config.contracts.delegation_nft, data, 0, broadcast, wait_receipt)
+        return await self._client.tx.build_contract_call(ContractCallRequest(
+            contract=self._client.config.contracts.delegation_nft, private_key=request.private_key, data=data,
+        ))
 
     async def withdraw(
         self,
@@ -805,23 +813,36 @@ class NftService:
         broadcast: bool = False,
         wait_receipt: bool = False,
     ) -> TransactionResult:
+        draft = await self.build_withdraw(request)
+        return await self._client.tx.send_draft(draft, request.private_key, broadcast, wait_receipt)
+
+    async def build_withdraw(self, request: WithdrawNftRequest) -> TransactionDraft:
         contract = self._delegation_nft_contract()
         if request.hold_timestamp is None:
             data = contract.functions.withdraw(
                 checksum(request.validator),
                 checksum(request.nft),
-                int(request.token_id),
-                int(request.amount),
+                uint(request.token_id, "token_id"),
+                uint(request.amount, "amount", positive=True),
             )._encode_transaction_data()
         else:
             data = contract.functions.withdrawHold(
                 checksum(request.validator),
                 checksum(request.nft),
-                int(request.token_id),
-                int(request.amount),
-                int(request.hold_timestamp),
+                uint(request.token_id, "token_id"),
+                uint(request.amount, "amount", positive=True),
+                uint(request.hold_timestamp, "hold_timestamp"),
             )._encode_transaction_data()
-        return await self._send_contract(request.private_key, self._client.config.contracts.delegation_nft, data, 0, broadcast, wait_receipt)
+        return await self._client.tx.build_contract_call(ContractCallRequest(
+            contract=self._client.config.contracts.delegation_nft, private_key=request.private_key, data=data,
+        ))
+
+    async def build_operation(self, request: ContractOperationRequest | WithdrawNftRequest | TransferNftStakeRequest) -> TransactionDraft:
+        if isinstance(request, WithdrawNftRequest):
+            return await self.build_withdraw(request)
+        if isinstance(request, TransferNftStakeRequest):
+            return await self.build_transfer_stake(request)
+        return await super().build_operation(request)
 
     async def _delegate_or_hold(
         self,

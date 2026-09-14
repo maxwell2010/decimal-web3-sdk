@@ -7,6 +7,13 @@
     "ru": "Установить лимит расходования для spender; ноль отменяет разрешение."
   },
   {
+    "method": "tx.burn_del",
+    "request": "BurnDelRequest",
+    "group": "del",
+    "en": "Irreversibly burn native DEL by sending it to the zero address; no approve.",
+    "ru": "Необратимо сжечь DEL переводом на нулевой адрес; без approve."
+  },
+  {
     "method": "tx.send_del",
     "request": "NativeTransferRequest",
     "group": "del",
@@ -26,6 +33,41 @@
     "group": "tokens",
     "en": "Transfer tokens using the owner's existing allowance to the signer.",
     "ru": "Перевод токенов владельца по ранее выданному разрешению подписанту."
+  },
+  {
+    "method": "decimal.add_validator_del",
+    "request": "AddValidatorDelRequest",
+    "group": "validators",
+    "en": "Register a candidate with native DEL stake; no token approval.",
+    "ru": "Зарегистрировать кандидата с нативным DEL-стейком; approve не требуется."
+  },
+  {
+    "method": "decimal.add_validator_token",
+    "request": "AddValidatorTokenRequest",
+    "group": "validators",
+    "en": "Register a candidate with token stake and metadata; pre-existing allowance required.",
+    "ru": "Зарегистрировать кандидата с токен-стейком и метаданными; нужен существующий allowance."
+  },
+  {
+    "method": "decimal.apply_stake_penalties",
+    "request": "ApplyStakePenaltiesRequest",
+    "group": "staking",
+    "en": "Legacy accumulated penalties call; explicit opt-in required.",
+    "ru": "Legacy-вызов накопленных штрафов; требуется явное включение."
+  },
+  {
+    "method": "decimal.apply_stake_penalty",
+    "request": "ApplyStakePenaltyRequest",
+    "group": "staking",
+    "en": "Legacy single penalty call; not in the inspected current Delegation ABI.",
+    "ru": "Legacy-вызов одного штрафа; отсутствует в проверенном текущем ABI Delegation."
+  },
+  {
+    "method": "decimal.complete_stake",
+    "request": "CompleteStakeRequest",
+    "group": "staking",
+    "en": "Finalize frozen fungible stakes by queue index after the freeze period.",
+    "ru": "Завершить разморозку токен-стейков по индексам очереди после freeze-периода."
   },
   {
     "method": "decimal.delegate_del",
@@ -89,6 +131,13 @@
     "group": "validators",
     "en": "Pause a specified validator; requires contract-level authorization.",
     "ru": "Приостановить указанный валидатор; нужны права в контракте."
+  },
+  {
+    "method": "decimal.remove_validator",
+    "request": "RemoveValidatorRequest",
+    "group": "validators",
+    "en": "Remove a validator; contract authorization required.",
+    "ru": "Удалить валидатора; требуются права в контракте."
   },
   {
     "method": "decimal.reset_stake_hold",
@@ -161,6 +210,13 @@
     "ru": "Возобновить указанный валидатор; нужны права в контракте."
   },
   {
+    "method": "decimal.update_validator_metadata",
+    "request": "UpdateValidatorMetadataRequest",
+    "group": "validators",
+    "en": "Update structured validator metadata; operator authorization required.",
+    "ru": "Обновить структурированные метаданные валидатора; нужны полномочия оператора."
+  },
+  {
     "method": "decimal.withdraw_del_stake_with_reset",
     "request": "WithdrawDelStakeWithResetRequest",
     "group": "staking",
@@ -203,11 +259,25 @@
     "ru": "Купить резервный токен за DEL с нижней границей выхода."
   },
   {
+    "method": "token.buy_exact",
+    "request": "BuyExactTokenRequest",
+    "group": "tokens",
+    "en": "Buy an exact raw token amount with a maximum DEL input.",
+    "ru": "Купить точное количество токена в raw-единицах с максимальным расходом DEL."
+  },
+  {
     "method": "token.convert",
     "request": "ConvertTokenRequest",
     "group": "tokens",
     "en": "Convert tokens with a minimum output; may use permit or two transactions.",
     "ru": "Обменять токены с минимальным выходом; возможны permit или две транзакции."
+  },
+  {
+    "method": "token.convert_to_del",
+    "request": "ConvertToDelRequest",
+    "group": "tokens",
+    "en": "GasCenter conversion with a supplied owner permit; distinct from token selling.",
+    "ru": "Конвертация GasCenter с permit владельца; не обычная продажа токена."
   },
   {
     "method": "token.create",
@@ -238,6 +308,13 @@
     "ru": "Продать резервный токен за DEL с нижней границей выхода."
   },
   {
+    "method": "token.sell_for_exact_del",
+    "request": "SellForExactDelRequest",
+    "group": "tokens",
+    "en": "Sell tokens for an exact DEL output, bounded by maximum raw token input.",
+    "ru": "Продать токен для точного выхода DEL с максимальным расходом токенов в raw."
+  },
+  {
     "method": "token.update_details",
     "request": "UpdateTokenDetailsRequest",
     "group": "tokens",
@@ -245,11 +322,25 @@
     "ru": "Обновить identity и предел эмиссии токена; нужны права эмитента."
   },
   {
+    "method": "token.update_min_supply",
+    "request": "UpdateTokenMinSupplyRequest",
+    "group": "tokens",
+    "en": "Legacy-only minimum supply update; disabled unless explicitly opted in.",
+    "ru": "Legacy-изменение минимальной эмиссии; по умолчанию отключено."
+  },
+  {
     "method": "nft.add_del_reserve",
     "request": "AddDelReserveNftRequest",
     "group": "nft",
     "en": "Add native DEL to an NFT reserve.",
     "ru": "Пополнить резерв NFT нативным DEL."
+  },
+  {
+    "method": "nft.add_token_reserve",
+    "request": "AddTokenReserveNftRequest",
+    "group": "nft",
+    "en": "Add raw token reserve to an NFT using existing allowance or a supplied permit.",
+    "ru": "Пополнить токен-резерв NFT в raw по существующему allowance либо переданному permit."
   },
   {
     "method": "nft.approve",
@@ -266,11 +357,25 @@
     "ru": "Сжечь NFT; возврат резерва зависит от контракта коллекции."
   },
   {
+    "method": "nft.complete_stake",
+    "request": "CompleteNftStakeRequest",
+    "group": "nft",
+    "en": "Finalize frozen NFT stakes by their exact queue indices.",
+    "ru": "Завершить разморозку NFT-стейков по точным индексам очереди."
+  },
+  {
     "method": "nft.create_collection",
     "request": "CreateNftCollectionRequest",
     "group": "nft",
     "en": "Create an ERC721 or ERC1155 NFT collection.",
     "ru": "Создать NFT-коллекцию ERC721 или ERC1155."
+  },
+  {
+    "method": "nft.create_reserveless_collection",
+    "request": "CreateReservelessNftCollectionRequest",
+    "group": "nft",
+    "en": "Create DRC721/DRC1155 without reserve using the current NFTCenter ABI.",
+    "ru": "Создать DRC721/DRC1155 без резерва по текущему ABI NFTCenter."
   },
   {
     "method": "nft.delegate",
@@ -294,11 +399,32 @@
     "ru": "Делегировать NFT в hold; может потребоваться разрешение оператору."
   },
   {
+    "method": "nft.hold_with_reset",
+    "request": "HoldNftWithResetRequest",
+    "group": "nft",
+    "en": "Reset selected NFT holds and establish a new hold timestamp.",
+    "ru": "Сбросить выбранные NFT-hold и установить новый срок hold."
+  },
+  {
     "method": "nft.mint",
     "request": "MintNftRequest",
     "group": "nft",
     "en": "Mint an NFT with optional reserve; requires collection permissions.",
     "ru": "Выпустить NFT с необязательным резервом; нужны права коллекции."
+  },
+  {
+    "method": "nft.reset_stake_hold",
+    "request": "ResetNftStakeHoldRequest",
+    "group": "nft",
+    "en": "Reset one eligible NFT hold for a delegator.",
+    "ru": "Сбросить один доступный NFT-hold делегатора."
+  },
+  {
+    "method": "nft.reset_stake_holds",
+    "request": "ResetNftStakeHoldsRequest",
+    "group": "nft",
+    "en": "Reset a batch of eligible NFT holds, as in the JS feature branch.",
+    "ru": "Сбросить несколько доступных NFT-hold, как в новой ветке JS SDK."
   },
   {
     "method": "nft.set_approval_for_all",
@@ -313,6 +439,13 @@
     "group": "nft",
     "en": "Update an NFT metadata URI; requires contract permissions.",
     "ru": "Обновить URI метаданных NFT; нужны права контракта."
+  },
+  {
+    "method": "nft.stake_to_hold",
+    "request": "StakeNftToHoldRequest",
+    "group": "nft",
+    "en": "Move existing NFT stake into hold through delegation-nft.",
+    "ru": "Перевести существующий NFT-стейк в hold через delegation-nft."
   },
   {
     "method": "nft.transfer",
@@ -336,11 +469,25 @@
     "ru": "Перенести обычный или удерживаемый NFT-стейк другому валидатору."
   },
   {
+    "method": "nft.transfer_with_reset",
+    "request": "TransferNftWithResetRequest",
+    "group": "nft",
+    "en": "Reset selected NFT holds and request transfer to another validator.",
+    "ru": "Сбросить выбранные NFT-hold и запросить перенос другому валидатору."
+  },
+  {
     "method": "nft.withdraw",
     "request": "WithdrawNftRequest",
     "group": "nft",
     "en": "Request withdrawal of regular or matured held NFT stake.",
     "ru": "Инициировать отзыв обычного или созревшего удерживаемого NFT-стейка."
+  },
+  {
+    "method": "nft.withdraw_with_reset",
+    "request": "WithdrawNftWithResetRequest",
+    "group": "nft",
+    "en": "Reset selected NFT holds and request withdrawal; completion remains a separate step.",
+    "ru": "Сбросить выбранные NFT-hold и запросить вывод; завершение остается отдельным шагом."
   },
   {
     "method": "checks.create_del",
@@ -383,5 +530,26 @@
     "group": "bridge",
     "en": "Start a token bridge transfer; allowance and service fee are caller responsibilities.",
     "ru": "Начать мостовой перевод токена; allowance и сервисную комиссию обеспечивает вызывающий."
+  },
+  {
+    "method": "multisig.approve_transaction",
+    "request": "ApproveMultisigTransactionRequest",
+    "group": "multisig",
+    "en": "Approve a full Safe transaction tuple on-chain; this spends gas.",
+    "ru": "Подтвердить полный tuple транзакции Safe в сети; расходует gas."
+  },
+  {
+    "method": "multisig.create",
+    "request": "CreateMultisigRequest",
+    "group": "multisig",
+    "en": "Create a weighted Decimal Safe through SafeFactory with an explicit salt.",
+    "ru": "Создать взвешенный Decimal Safe через SafeFactory с явным salt."
+  },
+  {
+    "method": "multisig.execute",
+    "request": "ExecuteMultisigTransactionRequest",
+    "group": "multisig",
+    "en": "Execute a Safe transaction after nonce, signature and weight checks; inspect inner outcome.",
+    "ru": "Выполнить Safe-транзакцию после проверки nonce, подписей и весов; проверить внутренний результат."
   }
 ]
