@@ -17,10 +17,14 @@ The SDK wheel is `py3-none-any`: no SDK-specific native binary or OS lock.
 
 | Platform | Verification / limitations |
 | --- | --- |
-| Windows | Local tests and clean pip installation passed on CPython 3.12, 64-bit. |
-| Linux | CI targets Ubuntu with CPython 3.10, 3.12 and 3.13; consult the actual run result before claiming a pass. |
+| Windows | Local clean pip installation on CPython 3.12; CI tests/builds passed on 3.10, 3.12 and 3.13. |
+| Linux | Ubuntu CI tests/builds passed on CPython 3.10, 3.12 and 3.13. |
 | macOS | Expected to work with compatible Python/dependency wheels; not tested in this release preparation. |
 | Other architectures / Python 3.14+ | Not verified; dependency wheel availability must be checked. |
+
+[Verified CI run](https://github.com/maxwell2010/decimal-web3-sdk/actions/runs/34864115558)
+checks the release code before this documentation-only update. These are offline
+tests and packaging checks, not live blockchain transaction verification.
 
 Use an OS version supported by your chosen Python distribution. Some transitive
 dependencies contain native extensions. If pip cannot find a compatible wheel,

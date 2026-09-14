@@ -37,7 +37,9 @@ websockets.legacy deprecation warning remains; it is not a transaction failure.
    cannot be inferred from a timestamp or an API delta alone.
 6. Audit public-export history separately and configure package ownership/publishing.
    A clean artifact does not sanitize inherited Git history.
-7. Run the CI Python/OS matrix; the current local verification is Python 3.12/Windows.
+7. CI matrix completed: Windows/Ubuntu with Python 3.10, 3.12 and 3.13.
+   [All six jobs passed](https://github.com/maxwell2010/decimal-web3-sdk/actions/runs/34864115558).
+   macOS and additional architectures remain unverified.
 
 ## Official SDK Parity
 
