@@ -1,6 +1,13 @@
 # Changelog
 
-## 0.1.2.dev0 (Unreleased)
+## 0.1.2 - 2026-09-15
+
+GitHub preview in the 0.1 series. New operations have offline coverage; live
+transaction and ABI limitations remain documented. This is not a stable-parity claim.
+
+- Add a permanent GitHub requirements URL for pip install/upgrade of the latest
+  published preview. Each update points to an immutable versioned wheel.
+- Keep authored documentation punctuation to ASCII hyphens and enforce it in tests.
 
 - Use certifi for SDK-owned REST/WSS TLS trust, with explicit custom CA configuration
   shared with RPC. Keep certificate and hostname verification enabled; do not mutate
@@ -15,7 +22,7 @@
 - Bundle minimal, source-attributed API ABI fragments. Keep three legacy methods
   disabled unless explicitly opted in; do not claim full JS or live network parity.
 - Add bilingual examples, independent calldata/precision tests and read-only RPC checks.
-- No release publication, funded credentials or network broadcasts during this work.
+- No funded credentials or network broadcasts during release verification.
 
 ## 0.1.1
 

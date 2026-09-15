@@ -1,6 +1,6 @@
 # Documentation
 
-Unpublished development version 0.1.2.dev0. [Russian](../ru/README.md) | [Package](../../README.md)
+Version 0.1.2, GitHub preview. [Russian](../ru/README.md) | [Package](../../README.md)
 
 Start with [installation, OS support and dependencies](install.md).
 

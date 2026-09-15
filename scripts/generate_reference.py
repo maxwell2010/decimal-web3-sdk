@@ -297,7 +297,11 @@ def reference(module_name, lang):
 
 def generated_files():
     rows = transaction_catalog()
-    files = {}
+    files = {"requirements-latest.txt": (
+        "# Latest published GitHub preview. Regenerate for each reviewed release.\n"
+        "decimal-web3-sdk @ https://github.com/maxwell2010/decimal-web3-sdk/releases/download/"
+        f"v{sdk.__version__}/decimal_web3_sdk-{sdk.__version__}-py3-none-any.whl\n"
+    )}
     index = []
     modules = sorted(p.stem for p in (ROOT / "src/decimal_web3_sdk").glob("*.py") if not p.stem.startswith("_") and p.stem != "cli")
     for lang in ("en", "ru"):

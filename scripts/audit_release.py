@@ -104,7 +104,15 @@ def audit(items: list[tuple[str, bytes]]) -> list[str]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("archives", nargs="*", type=Path)
+    parser.add_argument("--dist", action="store_true", help="Audit both artifacts for the current package version")
     args = parser.parse_args()
+    if args.dist:
+        version_tree = ast.parse((ROOT / "src/decimal_web3_sdk/_version.py").read_text(encoding="utf-8"))
+        version = ast.literal_eval(version_tree.body[0].value)
+        args.archives.extend([
+            ROOT / "dist" / f"decimal_web3_sdk-{version}-py3-none-any.whl",
+            ROOT / "dist" / f"decimal_web3_sdk-{version}.tar.gz",
+        ])
     collections = [("snapshot", snapshot())] + [(str(path.name), archive(path)) for path in args.archives]
     failed = False
     for label, items in collections:

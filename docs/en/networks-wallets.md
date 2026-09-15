@@ -37,9 +37,9 @@ needed only for those services. For a custom network supply SystemContracts
 explicitly: its fallback is the mainnet snapshot, not discovery.
 Placeholder URLs are not functioning nodes.
 
-## TLS Trust (Unreleased)
+## TLS Trust
 
-From development version `0.1.2.dev0`, SDK-owned REST and WebSocket sessions use
+From version `0.1.2`, SDK-owned REST and WebSocket sessions use
 certifi's CA bundle instead of automatically loading the Windows certificate cache.
 Certificate validity, trusted issuer and hostname checks remain enabled. Missing or
 invalid custom CA files fail closed; there is no retry with verification disabled.

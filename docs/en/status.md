@@ -1,64 +1,56 @@
 # Release Status
 [Guide](README.md) | [Transaction catalog](../transaction-catalog.json)
 
-Development: 0.1.2.dev0, unpublished. See [new operation checks and limitations](transaction-parity-development.md).
-The historical scope/results below describe the published 0.1.1 candidate, not the new development methods.
-Neither version is a complete or independently security-audited implementation of every official JS/Go transaction.
+Version **0.1.2**, GitHub preview. This is not a stable, full-parity or independently
+security-audited replacement for the official JS/Go SDKs.
 
 ## Verified Scope
-- 55 high-level entry points: offline request creation from generated mnemonics,
-  ABI encoding, gas preflight and local transaction signing with sender recovery.
-- Existing allowance/permit/DEL multisend regression tests, memo handling,
-  exact amount handling, staking normalization and held-stake reads.
-- Official mainnet RPC responded, chain ID 75, system code present. This is
-  a read-only deployment check, not proof that every ABI selector works.
-- Official testnet RPC did not connect during this check; testnet broadcasts
-  and fresh on-chain transaction receipts are NOT verified.
-- No production mnemonic was loaded and no network transaction was sent in release QA.
+- 79 high-level transaction entry points with offline request construction,
+  ABI encoding, unsigned fee preparation and/or local signing coverage.
+- 24 new Python methods: weighted Safe, NFT reset/withdraw/transfer/complete,
+  validator administration, exact token operations and additional staking helpers.
+- Exact integer/Decimal amounts, memo, DEL/ERC20 multisend and allowance/permit regressions.
+- REST/WSS certificate validation using certifi or explicit custom CAs. Expired,
+  untrusted and wrong-host certificates are rejected, without insecure fallback.
+- Official mainnet RPC read checks, including contract code and NFT freeze times.
+  These do not prove that every ABI method executes successfully.
+- Verified HTTPS to Decimal IPFS returned HTTP 404 at the root. This verifies TLS,
+  not an upload, pinning or WebSocket round-trip.
+- No funded credentials loaded and no transactions broadcast in release QA.
 
-[Mainnet report](../validation/mainnet.json) | [Testnet report](../validation/testnet.json)
-| [Offline test environment and results](../validation/offline.json)
+[Operation and TLS validation](../validation/transaction-parity-development.json)
+| [Detailed development results](transaction-parity-development.md)
+| [Release CI runs](https://github.com/maxwell2010/decimal-web3-sdk/actions/workflows/ci.yml)
 
-Local result: 131 tests passed, lint and compilation passed. One upstream
-websockets.legacy deprecation warning remains; it is not a transaction failure.
+The 225-test operation stage and 242-test TLS stage are historical checkpoints;
+the final release suite also checks the latest manifest and documentation typography.
+One upstream websockets.legacy deprecation warning remains.
+CI targets Windows/Ubuntu on Python 3.10, 3.12 and 3.13. macOS and additional
+architectures are not verified. Inspect the CI run for the release commit.
 
 ## Stable-Release Gates
-1. Verify current TokenCenter, Delegation, NftCenter, DelegationNFT and
-   MasterValidator ABI/method compatibility on each target network.
-   NFT defaults are now consistent with the reviewed mainnet profile, but typed
-   legacy NFT method variants still need live validation.
-2. Complete confirmed transaction testing on an available testnet with minimal
-   funds. Offline tests do not prove permissions, economic limits or settlement.
-3. Validate approve-dependent workflows after confirmed approval, including
-   pending-approval handling and a complete two-step unsigned fee quote.
-   A dry-run cannot make allowance exist for the second simulation.
-4. Validate nonstandard permit domains and atomic permit routes against actual tokens.
-5. Check official REST schemas/routes; facade-specific wallet/staking routes
-   require a compatible backend. Stake-page discovery and withdrawal completion
-   cannot be inferred from a timestamp or an API delta alone.
-6. Audit public-export history separately and configure package ownership/publishing.
-   A clean artifact does not sanitize inherited Git history.
-7. CI matrix completed: Windows/Ubuntu with Python 3.10, 3.12 and 3.13.
-   [All six jobs passed](https://github.com/maxwell2010/decimal-web3-sdk/actions/runs/34864115558).
-   macOS and additional architectures remain unverified.
+1. Verify contract ABI compatibility and successful settlement on every target network.
+   New operations have not been broadcast in this release preparation. Official
+   testnet was unavailable during read checks; no new testnet receipts are claimed.
+2. Test approval-dependent workflows, nonstandard permit domains and atomic routes
+   with compatible deployed tokens. Unsigned simulation cannot create allowance.
+3. Confirm indexed API schemas, complete wallet/stake discovery and withdrawal queues.
+   API deltas and timestamps alone do not prove withdrawable stake.
+4. Three legacy methods remain opt-in and absent from inspected current ABIs:
+   token.update_min_supply, decimal.apply_stake_penalty, decimal.apply_stake_penalties.
+5. Current reserveless NFT metadata uses refundable, not the older JS allowMint flag.
+   Pre-existing partial selectors and permit variants still need reconciliation.
 
 ## Official SDK Parity
+[Detailed comparison](upstream-parity.md): **JS 95 / Go 53 / Python 79** specialized
+EVM write entry points. Counts are neither unique protocol transaction types nor
+a parity percentage. Some counterparts remain partial despite having a typed method.
 
-[Detailed comparison](upstream-parity.md): JS 95, Go 53, Python 55 specialized
-EVM write entry points. These are neither unique protocol types nor a coverage
-percentage. Differences were found in buy/sell, updateDetails, mintByETH
-selectors and NFT routes. Those counterparts are marked partial, not equivalent.
-The official SDK has both EVM and legacy Cosmos/protobuf layers.
-This package is EVM-first. The following are outside its current high-level coverage:
-Safe multisig creation/signing/execution; legacy Cosmos transaction types and
-governance; full validator create/remove/meta/penalty administration; stake
-complete/penalty helpers; all NFT reserve/reset/complete variants; all exact-in/out
-token purchase/sale variants and reserve calculators; verification/IPFS tooling.
-Generic contract calls do not turn these into tested high-level workflows.
+Legacy Cosmos/protobuf/governance, mixed-asset multisend, all permit variants,
+reserve calculators and full verification/IPFS tooling are not complete SDK features.
+Safe and the new NFT/validator helpers now have offline coverage, not live assurance.
 
-Reference sources:
-[JS SDK](https://bitbucket.org/decimalteam/dsc-js-sdk/src/master/),
+Reference sources: [JS SDK](https://bitbucket.org/decimalteam/dsc-js-sdk/src/master/),
 [Go SDK](https://bitbucket.org/decimalteam/dsc-go-sdk/src/master/),
 [Python SDK](https://bitbucket.org/decimalteam/dsc-python-sdk/src/master/).
-The local JS endpoint/EVM interface reference was reviewed; this is not a claim
-to have downloaded and executed every current upstream release.
+Pinned upstream source snapshots are parsed, never executed by the comparison tool.

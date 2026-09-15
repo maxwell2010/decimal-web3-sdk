@@ -1,6 +1,6 @@
 {
-  "version": "0.1.2.dev0",
-  "published": false,
+  "version": "0.1.2",
+  "published_at_validation": false,
   "checked_on": "2026-09-15",
   "offline": {
     "tests_passed": 242,

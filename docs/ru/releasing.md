@@ -17,7 +17,7 @@ python -m pytest -q
 python -m ruff check src tests scripts examples
 python -m build
 python -m twine check dist/*.whl dist/*.tar.gz
-python scripts/audit_release.py dist/decimal_web3_sdk-0.1.1-py3-none-any.whl dist/decimal_web3_sdk-0.1.1.tar.gz
+python scripts/audit_release.py --dist
 python scripts/verify_artifacts.py
 ```
 
@@ -30,24 +30,39 @@ runtime-код, ресурсы и лицензии. Без dw, баз, отче�
 Основной источник: публичный GitHub `maxwell2010/decimal-web3-sdk`.
 После публикации установите wheel конкретной версии без Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
 ```
 Либо исходный архив по тегу, также без Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.1.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.2.zip"
 ```
 См. [требования и зависимости](install.md).
 
+Постоянная команда для последнего опубликованного предварительного релиза:
+```shell
+python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell2010/decimal-web3-sdk/main/requirements-latest.txt"
+```
+GitHub `releases/latest` не выбирает prerelease. Наш файл включает предварительные
+выпуски и ссылается на неизменяемый wheel, а не на исходники ветки main.
+Указатель меняется при публикации проверенной версии. pip не следит за обновлениями
+в фоне. Для контролируемого развертывания используйте фиксированную ссылку выше.
+
 ## Правила Версий
-Существующий тег `v0.1` содержит пакет `0.1.0` и сохраняется. Это обновление:
-пакет `0.1.1` / тег `v0.1.1` в запрошенной серии 0.1. Единственный источник
+Существующий тег `v0.1` содержит пакет `0.1.0` и сохраняется, как и `v0.1.1`. Это обновление:
+пакет `0.1.2` / тег `v0.1.2` в запрошенной серии 0.1. Единственный источник
 версии пакета: `_version.py`. Опубликованные теги и файлы не заменяются;
 исправления получают новую версию и SHA256SUMS. Для эксплуатации фиксируйте версии.
 На GitHub релиз отмечается prerelease, пока остаются открытые проверки.
-Это не меняет PEP 440: версия пакета `0.1.1` не содержит суффикса rc.
+Это не меняет PEP 440: версия пакета `0.1.2` не содержит суффикса rc.
 В релиз прикладываются только проверенные wheel, sdist и SHA256SUMS.
 Публичный экспорт использует историю публичного репозитория, не приватные коммиты.
 После публикации проверяются анонимная загрузка и установка через pip.
+
+При каждом выпуске обновите `_version.py`, затем документацию и
+`requirements-latest.txt` командой `scripts/generate_reference.py` и выполните проверки.
+Опубликуйте ветку релиза и дождитесь CI. Загрузите проверенные wheel, sdist и SHA256SUMS
+под новым тегом. Проверьте анонимную доступность файлов до обновления main и указателя
+latest. В main не должна появляться ссылка на еще не опубликованные файлы.
 
 ## Отдельная Публикация В PyPI
 Выберите свободную версию в src/decimal_web3_sdk/_version.py, пересоберите
@@ -61,7 +76,7 @@ python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/r
 В этой подготовке эти команды не исполняются.
 
 После публикации пользователи смогут выполнить
-`python -m pip install decimal-web3-sdk==0.1.1`.
+`python -m pip install decimal-web3-sdk==0.1.2`.
 Не рекламируйте команду до появления версии в индексе.
 Тег создается после проверки. Исходный приватный репозиторий остается приватным;
 публичный экспорт проверяется отдельно от старой приватной истории Git.

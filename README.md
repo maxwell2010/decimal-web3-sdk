@@ -4,7 +4,7 @@ Independent Decimal EVM SDK by [MintCandy](https://mintcandy.ru/) and
 [@Maxwell2019](https://t.me/Maxwell2019). MIT license, Python 3.10+.
 Package: `decimal-web3-sdk`; import: `decimal_web3_sdk`.
 
-**This branch is unpublished 0.1.2.dev0. The published package remains 0.1.1.**
+**Version 0.1.2 is a GitHub preview, not a stable/full-parity release.**
 79 high-level transaction entry points have offline encoding/signing coverage, not full live parity.
 New methods, legacy limitations and the updated NFT sources are described in the
 [development notes](docs/en/transaction-parity-development.md).
@@ -18,19 +18,27 @@ Requires Python 3.10+ and pip. Runtime dependencies install automatically:
 web3, eth-account, aiohttp, certifi and python-dotenv, plus their dependencies.
 [OS support and installation requirements](docs/en/install.md).
 
-The following installs the published 0.1.1, not the new development methods (no Git required):
+Install or upgrade to the latest published preview using the same command each time:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
+python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell2010/decimal-web3-sdk/main/requirements-latest.txt"
+```
+
+The manifest points to a versioned GitHub release wheel and changes with each
+reviewed release. It includes previews. Updates happen only when you run the
+command, never automatically inside the SDK. Git and GitHub login are not required.
+
+For a reproducible installation, pin this release:
+```shell
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
 ```
 
 Alternatively, from the same version's source archive:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.1.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.2.zip"
 ```
 
-These URLs require the corresponding GitHub release/tag to be published.
 GitHub is the primary distribution source; PyPI publication is separate.
-Pin a release version rather than installing a moving branch such as main.
+Use a pinned release for production; the latest manifest is an opt-in update channel.
 [Build and publishing instructions](docs/en/releasing.md).
 
 ## Read a Balance

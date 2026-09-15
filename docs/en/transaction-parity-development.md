@@ -1,6 +1,6 @@
 # Additional Transactions: Development
 
-Version **0.1.2.dev0**, unpublished. Release 0.1.1 is unchanged.
+Development history for **0.1.2**, a GitHub preview. Release 0.1.1 is preserved.
 No new operation was broadcast on mainnet or testnet. No real mnemonic/private key was used.
 
 ## Added Operations
@@ -193,10 +193,10 @@ clearly. Do not expose upload credentials or mnemonics in client code.
 
 ### Verified Client Trust Fix
 
-The unreleased SDK now uses certifi for owned REST/WSS sessions, with an explicit
+Version 0.1.2 uses certifi for owned REST/WSS sessions, with an explicit
 `tls_ca_file` override also passed to RPC. No Windows CA entries are deleted and
 no verification is disabled. Custom CA precedence is documented in
-[networks and wallets](networks-wallets.md#tls-trust-unreleased).
+[networks and wallets](networks-wallets.md#tls-trust).
 
 After this change, 242 offline tests pass, including 17 TLS tests. Real in-memory
 handshakes accept an explicitly trusted private CA and reject expired, untrusted
@@ -206,5 +206,5 @@ IPFS root with normal TLS validation and HTTP 404. Read-only mainnet RPC returne
 block 33644205. This is not a live WebSocket or upload/pinning test. No files or
 transactions were submitted and no public release was published.
 
-Deploy console updates only after their tests and rollback checks. This does
-not authorize publication of a new public SDK release.
+Deploy console updates only after their tests and rollback checks. Console deployment
+and SDK publication are separate operations; preserve previous SDK tags and assets.

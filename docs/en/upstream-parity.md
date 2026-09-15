@@ -8,7 +8,7 @@ Source snapshot checked on 2026-09-14. Counts are named high-level EVM write ent
 | --- | --- |
 | dsc-js-sdk | [6790d35e2dec](https://bitbucket.org/decimalteam/dsc-js-sdk/src/6790d35e2decb0cbb06a9149a9c476c834f99223/) |
 | dsc-go-sdk | [3ef4a089b602](https://bitbucket.org/decimalteam/dsc-go-sdk/src/3ef4a089b6020889e60783c2026df5725fb960e2/) |
-| Python (unreleased) | 0.1.2.dev0 |
+| Python (preview) | 0.1.2 |
 
 [Development notes](transaction-parity-development.md)
 

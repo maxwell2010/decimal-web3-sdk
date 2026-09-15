@@ -188,7 +188,7 @@ def extract(source_dir):
                               "nft.transfer_with_reset", "nft.hold_with_reset", "nft.complete_stake"}:
             row["group"] = "nft_staking"
     return {"checked_on": "2026-09-15", "python_version": VERSION, "commits": COMMITS,
-            "unreleased": True,
+            "release_channel": "prerelease",
             "additional_nft_source": "7dc2e4600ce4aa3dd8baf685d2f31b4f53bc08c7",
             "node_source": "9e6c6d718d662083c4a524376a66d2c50bd4bc77",
             "count_unit": "named high-level EVM write entry points; not unique protocol transaction types",
@@ -213,7 +213,7 @@ def render(report, lang):
              "| SDK | Commit / version |", "| --- | --- |"]
     for sdk, commit in COMMITS.items():
         lines.append(f"| {sdk} | [{commit[:12]}](https://bitbucket.org/decimalteam/{sdk}/src/{commit}/) |")
-    lines += [f"| Python (unreleased) | {VERSION} |", "", "[Development notes](transaction-parity-development.md)", "",
+    lines += [f"| Python (preview) | {VERSION} |", "", "[Development notes](transaction-parity-development.md)", "",
               "| Group | JS | Go | Python |", "| --- | ---: | ---: | ---: |"]
     counts = {sdk: Counter(row["group"] for row in report["operations"] if row["sdk"] == sdk) for sdk in COMMITS}
     py = Counter(row["group"] for row in report["python_operations"])

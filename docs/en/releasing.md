@@ -18,7 +18,7 @@ python -m pytest -q
 python -m ruff check src tests scripts examples
 python -m build
 python -m twine check dist/*.whl dist/*.tar.gz
-python scripts/audit_release.py dist/decimal_web3_sdk-0.1.1-py3-none-any.whl dist/decimal_web3_sdk-0.1.1.tar.gz
+python scripts/audit_release.py --dist
 python scripts/verify_artifacts.py
 ```
 
@@ -31,24 +31,40 @@ databases, reports with wallets, real dotenv, private keys or local node address
 Primary distribution is the public GitHub repository `maxwell2010/decimal-web3-sdk`.
 After publication, install the pinned wheel without Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
 ```
 Or install the tagged source archive, also without Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.1.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.2.zip"
 ```
 See [requirements and dependencies](install.md).
 
+For the latest published preview, use a permanent manifest URL:
+```shell
+python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell2010/decimal-web3-sdk/main/requirements-latest.txt"
+```
+GitHub's `releases/latest` does not select prereleases. This manifest deliberately
+includes our preview channel while referencing an immutable wheel, not source on main.
+It updates only when a maintainer publishes a reviewed version. pip does not monitor
+releases in the background. Use the pinned command above for controlled deployments.
+
 ## Version Policy
 The existing tag `v0.1` contains package `0.1.0` and is preserved. This update is
-package `0.1.1` / tag `v0.1.1` in the requested 0.1 series. `_version.py` is the
+also separate from the preserved `v0.1.1` release. The new version is
+package `0.1.2` / tag `v0.1.2` in the requested 0.1 series. `_version.py` is the
 single package-version source. Never overwrite published tags or artifacts;
 fixes receive a new version and SHA256SUMS. Do not install moving branches for production.
 GitHub marks this as a prerelease while the status gates remain open. That flag
-does not change PEP 440: package version `0.1.1` has no rc suffix.
+does not change PEP 440: package version `0.1.2` has no rc suffix.
 Only the reviewed wheel, sdist and SHA256SUMS are attached to a GitHub release.
 Public exports must use public repository history, never private Git ancestry.
 Verify anonymous downloads and pip installation after publication.
+
+For each release, update `_version.py`, regenerate documentation and
+`requirements-latest.txt` with `scripts/generate_reference.py`, then run all checks.
+Publish a release branch and wait for CI. Upload the reviewed wheel, sdist and
+SHA256SUMS under a new tag. Verify their anonymous availability before advancing
+main and its latest manifest. Never point main's manifest at missing release assets.
 
 ## Optional PyPI Publication
 Choose an unused version in src/decimal_web3_sdk/_version.py, rebuild and verify.
@@ -62,7 +78,7 @@ After verification, production upload is
 These are maintainer actions, not steps executed by this preparation.
 
 Once published, users can install the candidate with
-`python -m pip install decimal-web3-sdk==0.1.1`.
+`python -m pip install decimal-web3-sdk==0.1.2`.
 Do not advertise that command before the version exists.
 Tag only after verification. Keep the original private repository private.
 A public source export must be reviewed independently of old private Git history.

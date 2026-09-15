@@ -1,0 +1,2 @@
+# Latest published GitHub preview. Regenerate for each reviewed release.
+decimal-web3-sdk @ https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl

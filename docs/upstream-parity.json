@@ -1,11 +1,11 @@
 {
   "checked_on": "2026-09-15",
-  "python_version": "0.1.2.dev0",
+  "python_version": "0.1.2",
   "commits": {
     "dsc-js-sdk": "6790d35e2decb0cbb06a9149a9c476c834f99223",
     "dsc-go-sdk": "3ef4a089b6020889e60783c2026df5725fb960e2"
   },
-  "unreleased": true,
+  "release_channel": "prerelease",
   "additional_nft_source": "7dc2e4600ce4aa3dd8baf685d2f31b4f53bc08c7",
   "node_source": "9e6c6d718d662083c4a524376a66d2c50bd4bc77",
   "count_unit": "named high-level EVM write entry points; not unique protocol transaction types",

@@ -25,4 +25,4 @@ jobs:
       - run: python -m build
       - run: python -m twine check dist/*.whl dist/*.tar.gz
       - run: python scripts/verify_artifacts.py
-      - run: python scripts/audit_release.py dist/decimal_web3_sdk-0.1.1-py3-none-any.whl dist/decimal_web3_sdk-0.1.1.tar.gz
+      - run: python scripts/audit_release.py --dist

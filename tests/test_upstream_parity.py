@@ -47,9 +47,8 @@ def test_known_abi_differences_are_not_claimed_as_equivalent():
 def test_release_versions_and_github_install_urls_match():
     from decimal_web3_sdk import __version__
     assert REPORT["python_version"] == __version__
-    # The development branch must not advertise an unpublished wheel URL.
-    assert __version__ == "0.1.2.dev0"
-    assert REPORT["unreleased"] is True
-    url = "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
+    assert REPORT["release_channel"] == "prerelease"
+    url = ("https://github.com/maxwell2010/decimal-web3-sdk/releases/download/"
+           f"v{__version__}/decimal_web3_sdk-{__version__}-py3-none-any.whl")
     for name in ("README.md", "README.ru.md", "docs/en/releasing.md", "docs/ru/releasing.md"):
         assert url in (ROOT / name).read_text(encoding="utf-8")

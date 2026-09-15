@@ -24,7 +24,7 @@ Wheel SDK имеет формат `py3-none-any`: сам пакет не сод�
 | Другие архитектуры / Python 3.14+ | Не проверены; требуется проверить наличие wheel зависимостей. |
 
 [Проверенный запуск CI](https://github.com/maxwell2010/decimal-web3-sdk/actions/runs/34864115558)
-проверяет код релиза до этого изменения только документации. Это офлайн-тесты
+проверяет предыдущий релиз 0.1.1, а не подтверждает 0.1.2. Это офлайн-тесты
 и проверки сборки, не подтверждение транзакций в блокчейне.
 
 Используйте версию ОС, поддерживаемую выбранным дистрибутивом Python.
@@ -40,7 +40,7 @@ wheel отсутствует, pip может потребовать компил
 | web3 | >=7.13,<8 | EVM JSON-RPC, контракты и операции с ABI |
 | eth-account | >=0.13.7,<0.14 | Локальные аккаунты, получение ключей из сид-фразы и подпись |
 | aiohttp | >=3.12,<4 | Асинхронные HTTP- и WebSocket-клиенты |
-| certifi | >=2024.7.4 | Публичный набор CA для проверки HTTPS/WSS (версия разработки) |
+| certifi | >=2024.7.4 | Публичный набор CA для проверки HTTPS/WSS |
 | python-dotenv | >=1.0 | Поддержка необязательной локальной конфигурации dotenv |
 
 pip также установит их транзитивные зависимости, например eth-abi, eth-utils,
@@ -49,8 +49,8 @@ eth-keys, hexbytes, rlp и pydantic. Точные версии и полный �
 Устанавливать каждую библиотеку вручную не нужно. `pip check` проверяет согласованность.
 
 pytest, pytest-asyncio, Ruff, mypy, build и Twine ставятся только с `[dev]`.
-Версия разработки также объявляет cryptography для временных сертификатов TLS-тестов;
-certifi теперь прямая зависимость исполнения. Этого TLS-изменения нет в опубликованной 0.1.1.
+Версия 0.1.2 также объявляет cryptography для временных сертификатов TLS-тестов;
+certifi теперь прямая зависимость исполнения.
 Дополнительному скрипту сравнения upstream нужны парсеры tree-sitter;
 они не входят в зависимости исполнения и не ставятся при обычной установке SDK.
 
@@ -67,16 +67,26 @@ python -m venv .venv
 ```shell
 . .venv/bin/activate
 ```
-Затем установка прямо из версионного релиза GitHub:
+Затем установка или обновление до последнего предварительного релиза без Git:
 ```shell
 python -m pip install --upgrade pip
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
+python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell2010/decimal-web3-sdk/main/requirements-latest.txt"
+python -m pip check
+python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
+```
+
+Команда читает обновляемый файл со ссылкой на wheel конкретного релиза GitHub,
+включая предварительные. Повторите ее для обновления; SDK не обновляется сам.
+Указатель latest меняется только после появления файлов релиза. Для фиксации 0.1.2:
+
+```shell
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
 python -m pip check
 python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 python -m pip list
 ```
 
-Ожидаемая версия SDK: `0.1.1`. Для установки сид-фраза и приватный ключ не нужны.
+Фиксированная версия SDK: `0.1.2`; latest может обновляться. Для установки сид-фраза и приватный ключ не нужны.
 Клиент и CLI по умолчанию используют **mainnet**. Для тестов явно выбирайте
 `NetworkConfig.testnet()` либо `decimal-sdk --network testnet ...`.
 В примерах отправка отключена; установка пакета сама не отправляет транзакции.

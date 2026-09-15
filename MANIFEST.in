@@ -1,5 +1,6 @@
 include README.md README.ru.md LICENSE THIRD_PARTY_NOTICES.md SECURITY.md CHANGELOG.md
 include pyproject.toml .env.example
+include requirements-latest.txt
 recursive-include src/decimal_web3_sdk *.py *.json *.md
 recursive-include docs *.md *.json
 recursive-include examples *.py

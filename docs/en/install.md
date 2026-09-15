@@ -23,7 +23,7 @@ The SDK wheel is `py3-none-any`: no SDK-specific native binary or OS lock.
 | Other architectures / Python 3.14+ | Not verified; dependency wheel availability must be checked. |
 
 [Verified CI run](https://github.com/maxwell2010/decimal-web3-sdk/actions/runs/34864115558)
-checks the release code before this documentation-only update. These are offline
+checks the earlier 0.1.1 release. It does not certify 0.1.2. These are offline
 tests and packaging checks, not live blockchain transaction verification.
 
 Use an OS version supported by your chosen Python distribution. Some transitive
@@ -38,7 +38,7 @@ These are the direct runtime requirements from pyproject.toml:
 | web3 | >=7.13,<8 | EVM JSON-RPC, contracts and ABI operations |
 | eth-account | >=0.13.7,<0.14 | Local accounts, mnemonic derivation and signing |
 | aiohttp | >=3.12,<4 | Asynchronous HTTP and WebSocket clients |
-| certifi | >=2024.7.4 | Public CA bundle for verified HTTPS/WSS (development version) |
+| certifi | >=2024.7.4 | Public CA bundle for verified HTTPS/WSS |
 | python-dotenv | >=1.0 | Optional local dotenv configuration support |
 
 pip also resolves their transitive dependencies, such as eth-abi, eth-utils,
@@ -47,8 +47,8 @@ version, platform and resolver; no claim of a fixed complete dependency list is 
 Do not install each library manually. `pip check` verifies dependency consistency.
 
 pytest, pytest-asyncio, Ruff, mypy, build and Twine are only installed with `[dev]`.
-The development version also declares cryptography for ephemeral TLS test certificates;
-certifi is now a direct runtime dependency. This TLS change is not in published 0.1.1.
+Version 0.1.2 also declares cryptography for ephemeral TLS test certificates;
+certifi is now a direct runtime dependency.
 The optional upstream comparison tool additionally needs tree-sitter parsers;
 they are not runtime dependencies or installed by a normal SDK installation.
 
@@ -65,16 +65,26 @@ Or activate on Linux/macOS:
 ```shell
 . .venv/bin/activate
 ```
-Then install directly from the versioned GitHub release:
+Then install or upgrade to the latest published preview, without Git:
 ```shell
 python -m pip install --upgrade pip
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.1/decimal_web3_sdk-0.1.1-py3-none-any.whl"
+python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell2010/decimal-web3-sdk/main/requirements-latest.txt"
+python -m pip check
+python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
+```
+
+This command reads a maintained manifest pointing to a versioned GitHub release
+wheel, including previews. Run it again to update; the SDK never self-updates.
+The latest manifest is published only after its release assets exist. To pin 0.1.2:
+
+```shell
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
 python -m pip check
 python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 python -m pip list
 ```
 
-Expected SDK version: `0.1.1`. No mnemonic or private key is needed for installation.
+Pinned SDK version: `0.1.2`; latest may advance. No mnemonic or private key is needed for installation.
 Client and CLI default to **mainnet**. For testing select `NetworkConfig.testnet()`
 or `decimal-sdk --network testnet ...` explicitly. Transaction examples keep
 broadcast disabled; installing the package never submits transactions.
