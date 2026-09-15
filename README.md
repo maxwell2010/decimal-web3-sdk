@@ -15,7 +15,7 @@ New methods, legacy limitations and the updated NFT sources are described in the
 ## Install Without Git
 
 Requires Python 3.10+ and pip. Runtime dependencies install automatically:
-web3, eth-account, aiohttp and python-dotenv, plus their dependencies.
+web3, eth-account, aiohttp, certifi and python-dotenv, plus their dependencies.
 [OS support and installation requirements](docs/en/install.md).
 
 The following installs the published 0.1.1, not the new development methods (no Git required):

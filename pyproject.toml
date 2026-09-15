@@ -24,6 +24,7 @@ classifiers = [
 
 dependencies = [
     "aiohttp>=3.12,<4",
+    "certifi>=2024.7.4",
     "web3>=7.13,<8",
     "eth-account>=0.13.7,<0.14",
     "python-dotenv>=1.0",
@@ -38,6 +39,7 @@ Changelog = "https://github.com/maxwell2010/decimal-web3-sdk/blob/main/CHANGELOG
 
 [project.optional-dependencies]
 dev = [
+    "cryptography>=43",
     "build>=1.2",
     "pytest>=8.0",
     "pytest-asyncio>=0.23",

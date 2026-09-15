@@ -7,6 +7,7 @@ import aiohttp
 from web3 import Web3
 from web3.exceptions import TransactionNotFound
 
+from ._tls import create_client_ssl_context
 from .bridge import BridgeService
 from .checks import ChecksService
 from .config import NetworkConfig
@@ -33,6 +34,7 @@ class DecimalClient:
             self.config.web3_urls,
             min_interval_seconds=self.config.safety.rpc_min_interval_seconds,
             chain_id=self.config.chain_id,
+            ca_file=self.config.tls_ca_file,
         )
         self.abi = AbiRegistry()
         self.rest = RestClient(self)
@@ -184,7 +186,10 @@ class DecimalClient:
 
     async def _get_session(self) -> aiohttp.ClientSession:
         if self._session is None:
-            self._session = aiohttp.ClientSession()
+            connector = aiohttp.TCPConnector(
+                ssl=create_client_ssl_context(self.config.tls_ca_file),
+            )
+            self._session = aiohttp.ClientSession(connector=connector)
         return self._session
 
 

@@ -37,6 +37,36 @@ needed only for those services. For a custom network supply SystemContracts
 explicitly: its fallback is the mainnet snapshot, not discovery.
 Placeholder URLs are not functioning nodes.
 
+## TLS Trust (Unreleased)
+
+From development version `0.1.2.dev0`, SDK-owned REST and WebSocket sessions use
+certifi's CA bundle instead of automatically loading the Windows certificate cache.
+Certificate validity, trusted issuer and hostname checks remain enabled. Missing or
+invalid custom CA files fail closed; there is no retry with verification disabled.
+RPC already uses Requests' verified CA handling.
+
+For a private CA, set `tls_ca_file` to a PEM CA bundle containing all roots required
+for your endpoints. It replaces the default trust bundle for REST, WSS and RPC:
+
+```python
+import os
+from dataclasses import replace
+from decimal_web3_sdk import NetworkConfig
+
+config = replace(NetworkConfig.mainnet(), tls_ca_file=os.environ["MY_CA_BUNDLE"])
+```
+
+`NetworkConfig.custom(tls_ca_file=...)` is also supported. Presets read
+`DECIMAL_TLS_CA_FILE`; testnet/devnet first check `DECIMAL_TESTNET_TLS_CA_FILE` /
+`DECIMAL_DEVNET_TLS_CA_FILE`, then the shared variable. These do not change Windows
+or global Python settings. SDK-owned aiohttp sessions honor `SSL_CERT_FILE` and/or
+`SSL_CERT_DIR` when no `tls_ca_file` is specified; a custom-only directory does not
+implicitly add public roots. RPC retains Requests' `REQUESTS_CA_BUNDLE` /
+`CURL_CA_BUNDLE` behavior without an explicit SDK CA file. A caller-supplied
+`DecimalWsClient` session retains its own TLS policy and ownership.
+
+This follows [aiohttp's verified certifi configuration](https://docs.aiohttp.org/en/stable/client_advanced.html#ssl-control-for-tcp-sockets).
+
 ## Mnemonic and Address Indices
 ```python
 import getpass

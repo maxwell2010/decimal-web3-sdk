@@ -6,6 +6,7 @@ from typing import Any
 
 import aiohttp
 
+from ._tls import create_client_ssl_context
 
 @dataclass(frozen=True)
 class WsMessage:
@@ -94,5 +95,8 @@ class DecimalWsClient:
 
     async def _get_session(self) -> aiohttp.ClientSession:
         if self._session is None:
-            self._session = aiohttp.ClientSession()
+            connector = aiohttp.TCPConnector(
+                ssl=create_client_ssl_context(getattr(self.config, "tls_ca_file", None)),
+            )
+            self._session = aiohttp.ClientSession(connector=connector)
         return self._session

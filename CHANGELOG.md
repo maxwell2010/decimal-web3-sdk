@@ -2,6 +2,9 @@
 
 ## 0.1.2.dev0 (Unreleased)
 
+- Use certifi for SDK-owned REST/WSS TLS trust, with explicit custom CA configuration
+  shared with RPC. Keep certificate and hostname verification enabled; do not mutate
+  the Windows trust store or retry insecurely on certificate failures.
 - Add 23 typed methods covering the 24 previously missing JS operations; reserveless
   NFT collection variants share one method. Add the NFT feature-branch batch hold reset.
 - Add fee-only preparation for every new operation, without signing or approvals.

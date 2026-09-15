@@ -32,7 +32,7 @@ SystemContracts(contract_center: 'str' = '0xc108715a06f76caa96fa2c943ebf05159c29
 Networkconfig; types, defaults and return value are specified below.
 
 ```python
-NetworkConfig(chain_id: 'int' = 75, web3_urls: 'list[str]' = <factory>, rest_urls: 'list[str]' = <factory>, ws_urls: 'list[str]' = <factory>, api_root_url: 'str' = '', api_base_url: 'str' = '', api_fallback_base_urls: 'list[str]' = <factory>, api_key: 'str | None' = None, name: 'str' = 'decimal-mainnet', contracts: 'SystemContracts' = <factory>, safety: 'SafetyLimits' = <factory>) -> None
+NetworkConfig(chain_id: 'int' = 75, web3_urls: 'list[str]' = <factory>, rest_urls: 'list[str]' = <factory>, ws_urls: 'list[str]' = <factory>, api_root_url: 'str' = '', api_base_url: 'str' = '', api_fallback_base_urls: 'list[str]' = <factory>, api_key: 'str | None' = None, name: 'str' = 'decimal-mainnet', contracts: 'SystemContracts' = <factory>, safety: 'SafetyLimits' = <factory>, tls_ca_file: 'str | None' = None) -> None
 ```
 
 - `chain_id`: `int`; 75.
@@ -46,13 +46,14 @@ NetworkConfig(chain_id: 'int' = 75, web3_urls: 'list[str]' = <factory>, rest_url
 - `name`: `str`; 'decimal-mainnet'.
 - `contracts`: `SystemContracts`; factory: SystemContracts.
 - `safety`: `SafetyLimits`; factory: SafetyLimits.
+- `tls_ca_file`: `str | None`; None.
 
 ### custom
 
 Custom; types, defaults and return value are specified below.
 
 ```python
-custom(*, chain_id: 'int' = 75, web3_urls: 'list[str] | None' = None, rest_urls: 'list[str] | None' = None, ws_urls: 'list[str] | None' = None, api_root_url: 'str' = '', api_base_url: 'str' = '', api_fallback_base_urls: 'list[str] | None' = None, api_key: 'str | None' = None, name: 'str' = 'decimal-custom', contracts: 'SystemContracts | None' = None, safety: 'SafetyLimits | None' = None) -> "'NetworkConfig'"
+custom(*, chain_id: 'int' = 75, web3_urls: 'list[str] | None' = None, rest_urls: 'list[str] | None' = None, ws_urls: 'list[str] | None' = None, api_root_url: 'str' = '', api_base_url: 'str' = '', api_fallback_base_urls: 'list[str] | None' = None, api_key: 'str | None' = None, name: 'str' = 'decimal-custom', contracts: 'SystemContracts | None' = None, safety: 'SafetyLimits | None' = None, tls_ca_file: 'str | None' = None) -> "'NetworkConfig'"
 ```
 
 ### devnet

@@ -38,6 +38,7 @@ These are the direct runtime requirements from pyproject.toml:
 | web3 | >=7.13,<8 | EVM JSON-RPC, contracts and ABI operations |
 | eth-account | >=0.13.7,<0.14 | Local accounts, mnemonic derivation and signing |
 | aiohttp | >=3.12,<4 | Asynchronous HTTP and WebSocket clients |
+| certifi | >=2024.7.4 | Public CA bundle for verified HTTPS/WSS (development version) |
 | python-dotenv | >=1.0 | Optional local dotenv configuration support |
 
 pip also resolves their transitive dependencies, such as eth-abi, eth-utils,
@@ -46,6 +47,8 @@ version, platform and resolver; no claim of a fixed complete dependency list is 
 Do not install each library manually. `pip check` verifies dependency consistency.
 
 pytest, pytest-asyncio, Ruff, mypy, build and Twine are only installed with `[dev]`.
+The development version also declares cryptography for ephemeral TLS test certificates;
+certifi is now a direct runtime dependency. This TLS change is not in published 0.1.1.
 The optional upstream comparison tool additionally needs tree-sitter parsers;
 they are not runtime dependencies or installed by a normal SDK installation.
 

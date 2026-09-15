@@ -170,8 +170,41 @@ for images, multipart field `uploading_files`, and `GET /ipfs/{cid}` for retriev
 Keep upload base and gateway configurable separately, for example
 `DECIMAL_IPFS_API_URL` and `DECIMAL_IPFS_GATEWAY_URL`.
 A root HEAD request passed normal TLS validation and returned HTTP 404.
-No upload or persistence/pinning test was performed. Do not disable certificate
-verification or expose upload credentials or mnemonics in client code.
+This result applies only to that request and client stack, not to upload support.
+In a subsequent console integration check, Python 3.12/aiohttp on Windows rejected
+`POST /upload-image` before sending the body with `SSLCertVerificationError:
+certificate has expired`. This is a reported console result, not an independently
+repeated SDK test.
+
+Independent TLS diagnostics on 2026-09-15 reproduced the Python error and identified
+a stale cross-signed `ISRG Root X2` certificate in the local Windows `CA` store,
+issued by `ISRG Root X1`, expired on 2025-09-15 at 16:00:00 UTC. Its SHA-256 is
+`8B:05:B6:8C:C6:59:E5:ED:0F:CB:38:F2:C9:42:FB:FD:20:0E:6F:2F:F9:F8:5D:63:C6:99:4E:F5:E0:B0:27:01`.
+The server's domain certificate, issued by Let's Encrypt YE1, is valid from
+2026-07-22 05:31:02 UTC through 2026-10-20 05:31:01 UTC; all certificates delivered
+by the server were within their validity periods. Python passed validation with
+an in-memory copy of the same trust bundle excluding only that expired local CA,
+with `CERT_REQUIRED` and hostname checking enabled. It also passed with a certifi
+bundle. No persistent trust-store or application TLS settings were changed.
+The reproduced expiry error is therefore a local trust-chain issue, not evidence
+that Decimal's domain certificate has expired. Upload and persistence/pinning
+remain unverified. Keep certificate verification enabled and report upload failures
+clearly. Do not expose upload credentials or mnemonics in client code.
+
+### Verified Client Trust Fix
+
+The unreleased SDK now uses certifi for owned REST/WSS sessions, with an explicit
+`tls_ca_file` override also passed to RPC. No Windows CA entries are deleted and
+no verification is disabled. Custom CA precedence is documented in
+[networks and wallets](networks-wallets.md#tls-trust-unreleased).
+
+After this change, 242 offline tests pass, including 17 TLS tests. Real in-memory
+handshakes accept an explicitly trusted private CA and reject expired, untrusted
+and wrong-host server certificates. Ruff and generated-reference checks pass.
+On 2026-09-15 at 02:29 UTC, SDK REST and WS-owned HTTP sessions reached the Decimal
+IPFS root with normal TLS validation and HTTP 404. Read-only mainnet RPC returned
+block 33644205. This is not a live WebSocket or upload/pinning test. No files or
+transactions were submitted and no public release was published.
 
 Deploy console updates only after their tests and rollback checks. This does
 not authorize publication of a new public SDK release.

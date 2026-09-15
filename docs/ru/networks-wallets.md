@@ -38,6 +38,37 @@ NetworkConfig.custom требует web3_urls для работы клиента
 при отсутствии используется mainnet-снимок, а не поиск контрактов.
 Адрес-заглушка не является настоящей нодой.
 
+## Доверенные CA Для TLS (Не Опубликовано)
+
+Начиная с версии разработки `0.1.2.dev0`, собственные REST- и WebSocket-сессии SDK
+используют набор CA из certifi без автоматического чтения кеша сертификатов Windows.
+Проверки срока действия, доверенного издателя и имени домена остаются включенными.
+Отсутствующий или неверный CA-файл вызывает ошибку: повтора с отключенной проверкой
+нет. RPC уже использует штатную проверку сертификатов Requests.
+
+Для своего CA задайте `tls_ca_file`: PEM-набор должен содержать все корни, нужные
+вашим endpoints. Он заменяет набор по умолчанию для REST, WSS и RPC:
+
+```python
+import os
+from dataclasses import replace
+from decimal_web3_sdk import NetworkConfig
+
+config = replace(NetworkConfig.mainnet(), tls_ca_file=os.environ["MY_CA_BUNDLE"])
+```
+
+Поддерживается также `NetworkConfig.custom(tls_ca_file=...)`. Пресеты читают
+`DECIMAL_TLS_CA_FILE`; testnet/devnet сначала проверяют `DECIMAL_TESTNET_TLS_CA_FILE` /
+`DECIMAL_DEVNET_TLS_CA_FILE`, затем общую переменную. Настройки Windows и глобального
+Python не изменяются. При отсутствии `tls_ca_file` собственные aiohttp-сессии
+учитывают `SSL_CERT_FILE` и/или `SSL_CERT_DIR`; явно заданный отдельный каталог CA
+не дополняется публичными корнями автоматически. Для RPC без явного CA-файла SDK
+сохраняется поведение Requests с `REQUESTS_CA_BUNDLE` / `CURL_CA_BUNDLE`.
+Переданная пользователем сессия `DecimalWsClient` сохраняет свои TLS-настройки;
+SDK ее не закрывает.
+
+Используется [рекомендованная aiohttp настройка certifi с проверкой TLS](https://docs.aiohttp.org/en/stable/client_advanced.html#ssl-control-for-tcp-sockets).
+
 ## Сид-Фраза и Индексы
 ```python
 import getpass

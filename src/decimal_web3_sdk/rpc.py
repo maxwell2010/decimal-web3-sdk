@@ -6,17 +6,20 @@ from typing import TypeVar
 
 from web3 import Web3
 
+from ._tls import validate_ca_file
 from .limits import AsyncRateLimiter
 
 T = TypeVar("T")
 
 
 class RpcPool:
-    def __init__(self, urls: list[str], timeout: int = 10, min_interval_seconds: float = 0.05, *, chain_id: int | None = None) -> None:
+    def __init__(self, urls: list[str], timeout: int = 10, min_interval_seconds: float = 0.05, *, chain_id: int | None = None, ca_file: str | None = None) -> None:
         if not urls:
             raise ValueError("At least one Web3 RPC URL is required")
+        validate_ca_file(ca_file)
         self._urls = list(urls)
         self._chain_id = chain_id
+        self._ca_file = ca_file
         self._validated_web3: Web3 | None = None
         self._timeout = timeout
         self._index = 0
@@ -66,7 +69,10 @@ class RpcPool:
         raise RuntimeError(f"All Decimal Web3 RPC endpoints failed{detail}") from last_error
 
     def _create_web3(self, url: str) -> Web3:
-        provider = Web3.HTTPProvider(url, request_kwargs={"timeout": self._timeout})
+        request_kwargs: dict[str, object] = {"timeout": self._timeout}
+        if self._ca_file is not None:
+            request_kwargs["verify"] = self._ca_file
+        provider = Web3.HTTPProvider(url, request_kwargs=request_kwargs)
         return Web3(provider)
 
     async def _run(self, fn: Callable[[], T]) -> T:

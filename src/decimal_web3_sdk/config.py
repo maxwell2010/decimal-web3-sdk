@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+from ._tls import validate_ca_file
 from .limits import SafetyLimits
 
 
@@ -136,6 +137,10 @@ class NetworkConfig:
     name: str = "decimal-mainnet"
     contracts: SystemContracts = field(default_factory=SystemContracts)
     safety: SafetyLimits = field(default_factory=SafetyLimits)
+    tls_ca_file: str | None = None
+
+    def __post_init__(self) -> None:
+        validate_ca_file(self.tls_ca_file)
 
     @classmethod
     def mainnet(cls) -> "NetworkConfig":
@@ -152,6 +157,7 @@ class NetworkConfig:
             api_key=os.getenv("DECIMAL_API_KEY"),
             name=_env("DECIMAL_NETWORK_NAME", "decimal-mainnet"),
             safety=_safety_from_env("DECIMAL"),
+            tls_ca_file=_env("DECIMAL_TLS_CA_FILE") or None,
         )
 
     @classmethod
@@ -171,6 +177,7 @@ class NetworkConfig:
             name=_env("DECIMAL_TESTNET_NETWORK_NAME", "decimal-testnet"),
             contracts=TESTNET_SYSTEM_CONTRACTS,
             safety=_safety_from_env("DECIMAL_TESTNET"),
+            tls_ca_file=_env("DECIMAL_TESTNET_TLS_CA_FILE", _env("DECIMAL_TLS_CA_FILE")) or None,
         )
 
     @classmethod
@@ -190,6 +197,7 @@ class NetworkConfig:
             name=_env("DECIMAL_DEVNET_NETWORK_NAME", "decimal-devnet"),
             contracts=DEVNET_SYSTEM_CONTRACTS,
             safety=_safety_from_env("DECIMAL_DEVNET"),
+            tls_ca_file=_env("DECIMAL_DEVNET_TLS_CA_FILE", _env("DECIMAL_TLS_CA_FILE")) or None,
         )
 
     @classmethod
@@ -207,6 +215,7 @@ class NetworkConfig:
         name: str = "decimal-custom",
         contracts: SystemContracts | None = None,
         safety: SafetyLimits | None = None,
+        tls_ca_file: str | None = None,
     ) -> "NetworkConfig":
         return cls(
             chain_id=chain_id,
@@ -220,5 +229,6 @@ class NetworkConfig:
             name=name,
             contracts=contracts or SystemContracts(),
             safety=safety or SafetyLimits(),
+            tls_ca_file=tls_ca_file,
         )
 from .erc20 import parse_units

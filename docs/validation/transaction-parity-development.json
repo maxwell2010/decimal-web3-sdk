@@ -3,7 +3,7 @@
   "published": false,
   "checked_on": "2026-09-15",
   "offline": {
-    "tests_passed": 225,
+    "tests_passed": 242,
     "catalog_methods": 79,
     "new_methods": 24,
     "python": "3.12",
@@ -24,6 +24,19 @@
     "expected_chain_id": 202020,
     "status": "not_connected",
     "note": "Official endpoint unavailable or expected chain could not be confirmed; no testnet submission was attempted"
+  },
+  "tls_fix": {
+    "checked_at_utc": "2026-09-15T02:29:28Z",
+    "certifi_version": "2026.07.22",
+    "tls_tests_passed": 17,
+    "hostname_verification": true,
+    "certificate_verification": "CERT_REQUIRED",
+    "system_trust_store_modified": false,
+    "ipfs_rest_head_status": 404,
+    "ipfs_ws_session_http_control_status": 404,
+    "mainnet_rpc_block": 33644205,
+    "uploads_performed": 0,
+    "note": "HTTPS transport checks only; no upload, pinning or live WSS handshake was tested"
   },
   "limitations": [
     "Offline gas tests use mocked gas and price; not live fee quotes",
