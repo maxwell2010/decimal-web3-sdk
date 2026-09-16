@@ -166,8 +166,7 @@ class ChecksService:
         return await self._send(request.private_key, request.contract, data, 0, broadcast, wait_receipt)
 
     async def _nonce(self, contract_address: str) -> int:
-        contract = self._contract(contract_address)
-        return int(await self._client.rpc.call(lambda _w3: contract.functions.nonces().call()))
+        return int(await self._client.rpc.call(lambda w3: self._contract(contract_address, w3).functions.nonces().call()))
 
     async def _send(
         self,
@@ -183,5 +182,5 @@ class ChecksService:
         )
         return await self._client.tx.send_draft(draft, private_key, broadcast, wait_receipt)
 
-    def _contract(self, contract_address: str):
-        return self._client.web3.eth.contract(address=checksum(contract_address), abi=CHECKS_ABI)
+    def _contract(self, contract_address: str, web3=None):
+        return (web3 or self._client.web3).eth.contract(address=checksum(contract_address), abi=CHECKS_ABI)

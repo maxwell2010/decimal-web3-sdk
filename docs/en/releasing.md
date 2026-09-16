@@ -44,7 +44,7 @@ For the latest published preview, use a permanent manifest URL:
 python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell2010/decimal-web3-sdk/main/requirements-latest.txt"
 ```
 GitHub's `releases/latest` does not select prereleases. This manifest deliberately
-includes our preview channel while referencing an immutable wheel, not source on main.
+includes our preview channel while referencing a release wheel, not source on main.
 It updates only when a maintainer publishes a reviewed version. pip does not monitor
 releases in the background. Use the pinned command above for controlled deployments.
 
@@ -52,8 +52,13 @@ releases in the background. Use the pinned command above for controlled deployme
 The existing tag `v0.1` contains package `0.1.0` and is preserved. This update is
 also separate from the preserved `v0.1.1` release. The new version is
 package `0.1.2` / tag `v0.1.2` in the requested 0.1 series. `_version.py` is the
-single package-version source. Never overwrite published tags or artifacts;
-fixes receive a new version and SHA256SUMS. Do not install moving branches for production.
+single package-version source. Normally fixes receive a new version and SHA256SUMS;
+do not overwrite published tags or artifacts without explicit maintainer approval.
+Exception: the maintainer requested a same-version refresh of v0.1.2 on 2026-09-16.
+Its tag and wheel/sdist are replaced, with new SHA256SUMS and dated release notes.
+Back up the previous artifacts and tag commit locally before replacement.
+Existing installations require --force-reinstall --no-cache-dir; see install.md.
+Retain a wheel and its checksum for reproducibility. Do not install moving branches for production.
 GitHub marks this as a prerelease while the status gates remain open. That flag
 does not change PEP 440: package version `0.1.2` has no rc suffix.
 Only the reviewed wheel, sdist and SHA256SUMS are attached to a GitHub release.

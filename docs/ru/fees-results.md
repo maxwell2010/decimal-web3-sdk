@@ -63,6 +63,14 @@ effective_fee_del. fee_wei/fee_del описывают бюджет отправ�
 При локальной подписи хеша сети нет. Для workflow проверяйте primary,
 secondary, transaction_count, total_fee_del, extra_steps_required и оба receipt.
 
+Правка receipt в обновлении от 2026-09-16: если effectiveGasPrice отсутствует,
+для транзакций с фиксированной ценой type 0/1 допустим gasPrice из отправленного
+черновика. Для динамической цены (включая type 2) gasPrice/maxFeePerGas может быть
+только потолком. Без надежной фактической цены effective_gas_price_wei,
+effective_fee_wei и effective_fee_del остаются None, а не нулем. Успешный статус
+receipt при этом не меняется. Нельзя подставлять fee_del или maxFeePerGas вместо
+фактически списанной комиссии. Правка касается результата, не цены при подписи.
+
 Ожидание по умолчанию: 7 секунд, опрос 3 секунды. Таймаут означает pending,
 не неудачу. Показывайте user_message, не публикуйте технический error.
 Builders и чтение могут выбрасывать исключения.

@@ -5,6 +5,7 @@ recursive-include src/decimal_web3_sdk *.py *.json *.md
 recursive-include docs *.md *.json
 recursive-include examples *.py
 recursive-include tests *.py
+recursive-include tests/fixtures *.json
 recursive-include scripts *.py
 global-exclude *.py[cod] *.key *.pem *.p12 *.db *.sqlite *.log
 prune build

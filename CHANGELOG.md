@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.1.2 - Refreshed 2026-09-16
+
+Maintainer-requested replacement of the existing GitHub preview, without a package
+version change. The v0.1.2 tag and wheel/sdist are refreshed; SHA256SUMS changes.
+Existing 0.1.2 installations need --force-reinstall --no-cache-dir to receive this
+build. Releases v0.1 and v0.1.1 remain unchanged. This is not a PyPI upload.
+
+- Reuse seven mined mainnet examples in offline calldata/receipt regressions,
+  separating SDK sends from multisend-service and external protocol references.
+  Cover direct native memo, native multisend, withdrawWithReset, ERC20 transfer,
+  approve, and multisend through allowance, approve and permit routes.
+- Do not report an EIP-1559 fee ceiling as the actual fee when effectiveGasPrice
+  is absent. Keep actual fee fields unknown while preserving the successful
+  receipt status, hash and block. Fixed-price legacy/access-list fallback remains.
+- Avoid nested HTTP retries inside RpcPool so an unavailable endpoint does not
+  silently multiply the configured request timeout before fallback.
+- Rebind ERC20, fungible staking, validator, NFT ownership/approval, checks nonce and token
+  lookup reads to the selected RPC on each failover attempt. Preserve explicit
+  historical block identifiers for stake reads.
+- Add an opt-in unsigned wallet preflight script with dedicated mnemonic/address
+  validation, a read-only RPC allowlist and redacted error reports. No broadcast
+  or signing mode is exposed by the script.
+- Add a separate opt-in, budget-limited self-transfer runner. Validate the wallet,
+  network, nonce and payload before every signature, including fee retries; journal
+  transaction hashes before broadcast and reconcile receipts before resuming.
+- Confirm four authorized mainnet self-transfers with fee and balance reconciliation.
+  Testnet remains unavailable from the validation environment; broader live coverage
+  is still incomplete. Detailed limits are recorded in the bilingual status guides.
+
 ## 0.1.2 - 2026-09-15
 
 GitHub preview in the 0.1 series. New operations have offline coverage; live

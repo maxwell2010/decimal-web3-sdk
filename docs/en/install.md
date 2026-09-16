@@ -84,7 +84,16 @@ python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 python -m pip list
 ```
 
-Pinned SDK version: `0.1.2`; latest may advance. No mnemonic or private key is needed for installation.
+The maintainer requested an in-place refresh of 0.1.2 on 2026-09-16. Existing
+0.1.2 installations may be skipped by --upgrade. To receive the refreshed files:
+```shell
+python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
+python -m pip check
+```
+The package version is unchanged. For reproducibility retain the downloaded wheel
+and its checksum from the refreshed release's SHA256SUMS, not just the version.
+
+SDK version: `0.1.2`; latest may advance. No mnemonic or private key is needed for installation.
 Client and CLI default to **mainnet**. For testing select `NetworkConfig.testnet()`
 or `decimal-sdk --network testnet ...` explicitly. Transaction examples keep
 broadcast disabled; installing the package never submits transactions.

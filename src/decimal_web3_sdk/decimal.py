@@ -768,16 +768,12 @@ class DecimalService(ValidatorOperations):
         validator_address = checksum(validator)
         delegator_address = checksum(delegator)
         token_address = checksum(token)
-        call = self._delegation_contract().functions.getStake(
-            validator_address,
-            delegator_address,
-            token_address,
-        )
-        value = await self._client.rpc.call(
-            lambda _: call.call()
-            if block_identifier is None
-            else call.call(block_identifier=block_identifier)
-        )
+        def read(w3):
+            call = self._delegation_contract(w3).functions.getStake(
+                validator_address, delegator_address, token_address,
+            )
+            return call.call() if block_identifier is None else call.call(block_identifier=block_identifier)
+        value = await self._client.rpc.call(read)
         return _delegation_stake(
             value,
             expected_validator=validator_address,
@@ -803,17 +799,12 @@ class DecimalService(ValidatorOperations):
         validator_address = checksum(validator)
         delegator_address = checksum(delegator)
         token_address = checksum(token)
-        call = self._delegation_contract().functions.getHoldStake(
-            validator_address,
-            delegator_address,
-            token_address,
-            hold_key,
-        )
-        value = await self._client.rpc.call(
-            lambda _: call.call()
-            if block_identifier is None
-            else call.call(block_identifier=block_identifier)
-        )
+        def read(w3):
+            call = self._delegation_contract(w3).functions.getHoldStake(
+                validator_address, delegator_address, token_address, hold_key,
+            )
+            return call.call() if block_identifier is None else call.call(block_identifier=block_identifier)
+        value = await self._client.rpc.call(read)
         return _delegation_stake(
             value,
             expected_validator=validator_address,
@@ -1718,21 +1709,18 @@ class DecimalService(ValidatorOperations):
             return _workflow_exception("unpause_validator", exc)
 
     async def validator_status(self, validator: str) -> int:
-        contract = self._master_validator_contract()
         return await self._client.rpc.call(
-            lambda _w3: int(contract.functions.getValidatorStatus(checksum(validator)).call())
+            lambda w3: int(self._master_validator_contract(w3).functions.getValidatorStatus(checksum(validator)).call())
         )
 
     async def validator_is_active(self, validator: str) -> bool:
-        contract = self._master_validator_contract()
         return await self._client.rpc.call(
-            lambda _w3: bool(contract.functions.isActive(checksum(validator)).call())
+            lambda w3: bool(self._master_validator_contract(w3).functions.isActive(checksum(validator)).call())
         )
 
     async def validator_is_member(self, validator: str) -> bool:
-        contract = self._master_validator_contract()
         return await self._client.rpc.call(
-            lambda _w3: bool(contract.functions.isMember(checksum(validator)).call())
+            lambda w3: bool(self._master_validator_contract(w3).functions.isMember(checksum(validator)).call())
         )
 
     async def _erc20_stake_with_allowance(
@@ -2047,8 +2035,8 @@ class DecimalService(ValidatorOperations):
         )
         return await self._client.tx.send_draft(draft, private_key, broadcast, wait_receipt)
 
-    def _delegation_contract(self):
-        return self._client.web3.eth.contract(
+    def _delegation_contract(self, web3=None):
+        return (web3 or self._client.web3).eth.contract(
             address=checksum(self._client.config.contracts.delegation),
             abi=DELEGATION_ABI,
         )
@@ -2059,8 +2047,8 @@ class DecimalService(ValidatorOperations):
             abi=MULTICALL_ABI,
         )
 
-    def _master_validator_contract(self):
-        return self._client.web3.eth.contract(
+    def _master_validator_contract(self, web3=None):
+        return (web3 or self._client.web3).eth.contract(
             address=checksum(self._client.config.contracts.master_validator),
             abi=MASTER_VALIDATOR_ABI,
         )

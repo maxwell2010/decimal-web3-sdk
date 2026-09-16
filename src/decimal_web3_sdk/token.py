@@ -518,8 +518,8 @@ class TokenService(TokenOperations):
     def _token_contract(self, token: str):
         return self._client.web3.eth.contract(address=checksum(token), abi=DECIMAL_TOKEN_ABI)
 
-    def _token_center_contract(self):
-        return self._client.web3.eth.contract(
+    def _token_center_contract(self, web3=None):
+        return (web3 or self._client.web3).eth.contract(
             address=checksum(self._client.config.contracts.token_center),
             abi=TOKEN_CENTER_ABI,
         )
@@ -529,10 +529,9 @@ class TokenService(TokenOperations):
         normalized = str(symbol).strip()
         if not normalized:
             raise ValueError("Token symbol is required")
-        contract = self._token_center_contract()
         for candidate in (normalized, normalized.lower(), normalized.upper()):
             try:
-                address = await self._client.rpc.call(lambda _w3, item=candidate: contract.functions.tokens(item).call())
+                address = await self._client.rpc.call(lambda w3, item=candidate: self._token_center_contract(w3).functions.tokens(item).call())
             except Exception:
                 continue
             if address and int(str(address), 16) != 0:

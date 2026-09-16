@@ -257,7 +257,7 @@ async def test_direct_contract_reads_return_regular_and_held_token_stakes(monkey
     regular = (VALIDATOR_A, delegator, TOKEN_IN, 100 * 10**18, 0, 1, 0)
     held = (VALIDATOR_A, delegator, TOKEN_IN, 100 * 10**18, 0, 1, hold_timestamp)
     contract = _FakeDelegationContract(regular, held)
-    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+    monkeypatch.setattr(service, "_delegation_contract", lambda web3=None: contract)
 
     regular_stake = await service.get_stake(VALIDATOR_A, delegator, TOKEN_IN)
     held_stake = await service.get_hold_stake(
@@ -285,7 +285,7 @@ async def test_direct_del_reads_preserve_type_identity_and_exact_uint256_format(
     amount_raw = 123_456_789_012_345_678_901_234_567_890
     regular = (VALIDATOR_A, delegator, wdel, amount_raw, 0, 4, 0)
     contract = _FakeDelegationContract(regular, _empty_stake())
-    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+    monkeypatch.setattr(service, "_delegation_contract", lambda web3=None: contract)
 
     with localcontext() as context:
         context.prec = 8
@@ -321,12 +321,12 @@ async def test_direct_stake_read_rejects_identity_type_token_id_and_hold_key_mis
     ]
     for row in invalid_rows[:-1]:
         contract = _FakeDelegationContract(row, _empty_stake())
-        monkeypatch.setattr(service, "_delegation_contract", lambda contract=contract: contract)
+        monkeypatch.setattr(service, "_delegation_contract", lambda web3=None, contract=contract: contract)
         with pytest.raises(ValueError):
             await service.get_stake(VALIDATOR_A, delegator, TOKEN_IN)
 
     contract = _FakeDelegationContract(_empty_stake(), invalid_rows[-1])
-    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+    monkeypatch.setattr(service, "_delegation_contract", lambda web3=None: contract)
     with pytest.raises(ValueError, match="hold key"):
         await service.get_hold_stake(VALIDATOR_A, delegator, TOKEN_IN, hold_timestamp)
 
@@ -348,7 +348,7 @@ async def test_stake_snapshot_separates_regular_del_holds_and_missing_keys(monke
         second_key: (VALIDATOR_A, delegator, wdel, 96_157_970_214_999_998_595, 0, 4, second_key),
     }
     contract = _FakeDelegationContract(regular, holds)
-    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+    monkeypatch.setattr(service, "_delegation_contract", lambda web3=None: contract)
 
     snapshot = await service.get_stake_snapshot(
         VALIDATOR_A,
@@ -374,7 +374,7 @@ async def test_empty_contract_stake_is_absent_not_a_zero_position(monkeypatch) -
     service = DecimalService(client)
     delegator = "0x9000000000000000000000000000000000000009"
     contract = _FakeDelegationContract(_empty_stake(), _empty_stake())
-    monkeypatch.setattr(service, "_delegation_contract", lambda: contract)
+    monkeypatch.setattr(service, "_delegation_contract", lambda web3=None: contract)
 
     stake = await service.get_stake(VALIDATOR_A, delegator, TOKEN_IN)
 

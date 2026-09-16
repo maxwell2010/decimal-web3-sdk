@@ -33,7 +33,8 @@ def main():
     with tarfile.open(sdist, "r:gz") as handle:
         names = {item.name.split("/", 1)[1] for item in handle if "/" in item.name and item.isfile()}
         for name in ("README.md", "README.ru.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "pyproject.toml",
-                     "docs/en/README.md", "docs/ru/README.md", "scripts/generate_reference.py", "tests/test_transaction_catalog.py"):
+                     "docs/en/README.md", "docs/ru/README.md", "scripts/generate_reference.py", "tests/test_transaction_catalog.py",
+                     "tests/fixtures/transaction_sources.json", "tests/fixtures/mined_mainnet_transactions.json"):
             assert name in names, name
         assert all(not any(part in {".git", ".env", "dw", ".idea", "node_modules", "reports"} for part in Path(name).parts) for name in names)
     checksums = "".join(f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n" for path in (wheel, sdist))

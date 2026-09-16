@@ -27,10 +27,18 @@ The manifest points to a versioned GitHub release wheel and changes with each
 reviewed release. It includes previews. Updates happen only when you run the
 command, never automatically inside the SDK. Git and GitHub login are not required.
 
-For a reproducible installation, pin this release:
+For this release's wheel:
 ```shell
 python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
 ```
+
+**0.1.2 was refreshed in place on 2026-09-16.** If it is already installed,
+`--upgrade` alone may skip it. Reinstall the refreshed build without pip's cache:
+```shell
+python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
+```
+The version remains 0.1.2; the release's SHA256SUMS distinguishes the new artifacts.
+For reproducibility, retain the downloaded wheel and its verified checksum.
 
 Alternatively, from the same version's source archive:
 ```shell

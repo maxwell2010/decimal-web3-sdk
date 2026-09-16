@@ -981,7 +981,16 @@ def _result_from_draft(
 ) -> TransactionResult:
     details = _receipt_details(draft.receipt)
     effective_gas_price_wei = details["effective_gas_price_wei"]
-    if effective_gas_price_wei is None and details["gas_used"] is not None:
+    types = (draft.tx.get("type"), _receipt_get(draft.receipt or {}, "type"))
+    try:
+        fixed_gas_price = (
+            all(value is None or _int_or_none(value) in (0, 1) for value in types)
+            and not any(draft.tx.get(field) is not None for field in ("maxFeePerGas", "maxPriorityFeePerGas"))
+        )
+    except (TypeError, ValueError):
+        fixed_gas_price = False
+    # Some Decimal receipts omit the price; a dynamic-fee ceiling is not a paid fee.
+    if effective_gas_price_wei is None and details["gas_used"] is not None and fixed_gas_price:
         effective_gas_price_wei = draft.gas_price_wei
     effective_fee_wei = details["effective_fee_wei"]
     if effective_fee_wei is None and details["gas_used"] is not None and effective_gas_price_wei is not None:

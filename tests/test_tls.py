@@ -81,12 +81,17 @@ def test_rpc_keeps_requests_defaults_or_explicit_bundle(monkeypatch):
     monkeypatch.setattr("decimal_web3_sdk.rpc.Web3", web3_factory)
     pool = RpcPool(["https://rpc.example.invalid"])
     pool._create_web3(pool.current_url)
-    provider.assert_called_with(pool.current_url, request_kwargs={"timeout": 10})
+    provider.assert_called_with(
+        pool.current_url, request_kwargs={"timeout": 10}, exception_retry_configuration=None,
+    )
     client = DecimalClient(NetworkConfig.custom(
         web3_urls=["https://rpc.example.invalid"], tls_ca_file="custom.pem",
     ))
     client.rpc._create_web3(client.rpc.current_url)
-    provider.assert_called_with(pool.current_url, request_kwargs={"timeout": 10, "verify": "custom.pem"})
+    provider.assert_called_with(
+        pool.current_url, request_kwargs={"timeout": 10, "verify": "custom.pem"},
+        exception_retry_configuration=None,
+    )
 
 
 async def test_owned_rest_and_ws_sessions_use_verified_context(monkeypatch):

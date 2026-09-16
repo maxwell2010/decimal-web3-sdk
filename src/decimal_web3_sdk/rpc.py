@@ -72,7 +72,10 @@ class RpcPool:
         request_kwargs: dict[str, object] = {"timeout": self._timeout}
         if self._ca_file is not None:
             request_kwargs["verify"] = self._ca_file
-        provider = Web3.HTTPProvider(url, request_kwargs=request_kwargs)
+        # RpcPool owns failover; provider retries would multiply each endpoint timeout.
+        provider = Web3.HTTPProvider(
+            url, request_kwargs=request_kwargs, exception_retry_configuration=None,
+        )
         return Web3(provider)
 
     async def _run(self, fn: Callable[[], T]) -> T:

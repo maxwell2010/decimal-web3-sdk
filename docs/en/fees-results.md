@@ -62,6 +62,14 @@ effective_fee_del. fee_wei/fee_del are the submitted budget.
 Signed-only results have no network hash. For workflows inspect primary,
 secondary, transaction_count, total_fee_del, extra_steps_required and both receipts.
 
+Receipt correction in the 2026-09-16 refresh: when effectiveGasPrice is absent, fixed-price
+type 0/1 transactions may use their submitted gasPrice. For dynamic-fee transactions
+(including type 2), gasPrice/maxFeePerGas may be only a ceiling. Without a reliable
+effective price the effective_gas_price_wei, effective_fee_wei and effective_fee_del
+fields remain None, not zero. This does not change a confirmed transaction's
+success status. Do not substitute fee_del or maxFeePerGas as the actual charge.
+This correction affects result interpretation, not the gas price used for signing.
+
 Receipt defaults: 7 seconds, 3-second polling. Timeout means pending, not failure.
 Display user_message; do not expose raw technical error messages.
 Builders and read methods may raise exceptions directly.

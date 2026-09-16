@@ -1,0 +1,12 @@
+{
+  "chain_id": 75,
+  "cases": [
+    {"name": "sdk_del_memo", "source": "sdk", "hash": "0xf119a764fc998d1e684b5e07c916ef73addee6ebf85d564736ecc28a39b299c3"},
+    {"name": "sdk_withdraw_with_reset", "source": "sdk", "hash": "0xc1dac6b3c70b0c689c6d0f1cb19c5bba57e93bc7f254788128d860dc238b492a"},
+    {"name": "service_erc20_approve", "source": "service", "hash": "0x67db80a346b1ffcd63122283dc4185eee39564160a4afa1f9f96475db74322fd"},
+    {"name": "service_erc20_multisend", "source": "service", "hash": "0xe54d546cddf34fe3d1a3bd12cd139b1c3fde8f7d183fc2f02f49cba5f2726f35"},
+    {"name": "reference_permit_multisend", "source": "protocol_reference", "hash": "0x08203fc823f37083affde27b650b8eef24c0540b591192297546ac211363278d"},
+    {"name": "sdk_del_multisend", "source": "sdk", "hash": "0x727817ecf135777eaec2d6bc234fcc294203bed8d929f81d232deeda2f12a2f8"},
+    {"name": "sdk_erc20_transfer", "source": "sdk", "hash": "0x44a0bae55937696ba16db9a34929dfba2ed7d5c915644a5501f9c8b3f2e8330e"}
+  ]
+}

@@ -535,23 +535,19 @@ class NftService(NftOperations):
         self._client = client
 
     async def owner_of(self, nft: str, token_id: int) -> str:
-        contract = self._erc721_contract(nft)
-        return await self._client.rpc.call(lambda _w3: contract.functions.ownerOf(int(token_id)).call())
+        return await self._client.rpc.call(lambda w3: self._erc721_contract(nft, w3).functions.ownerOf(int(token_id)).call())
 
     async def balance_of(self, nft: str, owner: str, token_id: int | None = None, kind: NftKind = "erc721") -> int:
         if kind == "erc721":
-            contract = self._erc721_contract(nft)
-            return int(await self._client.rpc.call(lambda _w3: contract.functions.balanceOf(checksum(owner)).call()))
+            return int(await self._client.rpc.call(lambda w3: self._erc721_contract(nft, w3).functions.balanceOf(checksum(owner)).call()))
         if token_id is None:
             raise ValueError("token_id is required for ERC1155 balanceOf")
-        contract = self._erc1155_contract(nft)
-        return int(await self._client.rpc.call(lambda _w3: contract.functions.balanceOf(checksum(owner), int(token_id)).call()))
+        return int(await self._client.rpc.call(lambda w3: self._erc1155_contract(nft, w3).functions.balanceOf(checksum(owner), int(token_id)).call()))
 
     async def is_approved_for_all(self, kind: NftKind, nft: str, owner: str, operator: str) -> bool:
-        contract = self._nft_contract(kind, nft)
         return bool(
             await self._client.rpc.call(
-                lambda _w3: contract.functions.isApprovedForAll(checksum(owner), checksum(operator)).call()
+                lambda w3: self._nft_contract(kind, nft, w3).functions.isApprovedForAll(checksum(owner), checksum(operator)).call()
             )
         )
 
@@ -934,14 +930,14 @@ class NftService(NftOperations):
     def _delegation_nft_contract(self):
         return self._client.web3.eth.contract(address=checksum(self._client.config.contracts.delegation_nft), abi=DELEGATION_NFT_ABI)
 
-    def _nft_contract(self, kind: NftKind, nft: str):
-        return self._erc721_contract(nft) if kind == "erc721" else self._erc1155_contract(nft)
+    def _nft_contract(self, kind: NftKind, nft: str, web3=None):
+        return self._erc721_contract(nft, web3) if kind == "erc721" else self._erc1155_contract(nft, web3)
 
-    def _erc721_contract(self, nft: str):
-        return self._client.web3.eth.contract(address=checksum(nft), abi=ERC721_ABI)
+    def _erc721_contract(self, nft: str, web3=None):
+        return (web3 or self._client.web3).eth.contract(address=checksum(nft), abi=ERC721_ABI)
 
-    def _erc1155_contract(self, nft: str):
-        return self._client.web3.eth.contract(address=checksum(nft), abi=ERC1155_ABI)
+    def _erc1155_contract(self, nft: str, web3=None):
+        return (web3 or self._client.web3).eth.contract(address=checksum(nft), abi=ERC1155_ABI)
 
 
 def _workflow_error(name: str, error: str, extra_steps_required: bool = False) -> DecimalWorkflowResult:

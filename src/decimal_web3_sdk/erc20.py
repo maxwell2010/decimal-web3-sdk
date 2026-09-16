@@ -165,17 +165,15 @@ class Erc20Service:
 
     async def info(self, token_address: str) -> TokenInfo:
         address = checksum(token_address)
-        contract = self._contract(address)
-        decimals = await self._call(lambda: contract.functions.decimals().call())
-        name = await self._safe_call(lambda: contract.functions.name().call())
-        symbol = await self._safe_call(lambda: contract.functions.symbol().call())
+        decimals = await self._call(lambda w3: self._contract(address, w3).functions.decimals().call())
+        name = await self._safe_call(lambda w3: self._contract(address, w3).functions.name().call())
+        symbol = await self._safe_call(lambda w3: self._contract(address, w3).functions.symbol().call())
         return TokenInfo(address=address, name=name, symbol=symbol, decimals=int(decimals))
 
     async def balance(self, token_address: str, owner: str) -> TokenBalance:
         token = await self.info(token_address)
         owner_address = checksum(owner)
-        contract = self._contract(token.address)
-        raw = await self._call(lambda: contract.functions.balanceOf(owner_address).call())
+        raw = await self._call(lambda w3: self._contract(token.address, w3).functions.balanceOf(owner_address).call())
         return TokenBalance(
             token=token,
             owner=owner_address,
@@ -184,10 +182,9 @@ class Erc20Service:
         )
 
     async def allowance(self, token_address: str, owner: str, spender: str) -> int:
-        contract = self._contract(token_address)
         return int(
             await self._call(
-                lambda: contract.functions.allowance(checksum(owner), checksum(spender)).call()
+                lambda w3: self._contract(token_address, w3).functions.allowance(checksum(owner), checksum(spender)).call()
             )
         )
 
@@ -200,15 +197,14 @@ class Erc20Service:
         deadline: int,
         private_key: str,
     ) -> PermitSignature | None:
-        contract = self._contract(token_address)
         owner = checksum(owner)
         spender = checksum(spender)
         try:
-            nonce = int(await self._call(lambda: contract.functions.nonces(owner).call()))
+            nonce = int(await self._call(lambda w3: self._contract(token_address, w3).functions.nonces(owner).call()))
         except Exception:
             return None
-        name = await self._safe_call(lambda: contract.functions.name().call()) or "Token"
-        version = await self._safe_call(lambda: contract.functions.version().call()) or "1"
+        name = await self._safe_call(lambda w3: self._contract(token_address, w3).functions.name().call()) or "Token"
+        version = await self._safe_call(lambda w3: self._contract(token_address, w3).functions.version().call()) or "1"
         chain_id = int(self._client.config.chain_id)
         message = {
             "types": {
@@ -286,11 +282,11 @@ class Erc20Service:
             permit.s,
         )._encode_transaction_data()
 
-    def _contract(self, token_address: str):
-        return self._client.web3.eth.contract(address=checksum(token_address), abi=ERC20_ABI)
+    def _contract(self, token_address: str, web3=None):
+        return (web3 or self._client.web3).eth.contract(address=checksum(token_address), abi=ERC20_ABI)
 
     async def _call(self, fn):
-        return await self._client.rpc.call(lambda _w3: fn())
+        return await self._client.rpc.call(fn)
 
     async def _safe_call(self, fn):
         try:

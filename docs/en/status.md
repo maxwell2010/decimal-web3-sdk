@@ -16,7 +16,8 @@ security-audited replacement for the official JS/Go SDKs.
   These do not prove that every ABI method executes successfully.
 - Verified HTTPS to Decimal IPFS returned HTTP 404 at the root. This verifies TLS,
   not an upload, pinning or WebSocket round-trip.
-- No funded credentials loaded and no transactions broadcast in release QA.
+- Package build/offline QA does not load funded credentials or broadcast. The
+  separately authorized mainnet checks are listed below; they are not repeated for publishing.
 
 [Operation and TLS validation](../validation/transaction-parity-development.json)
 | [Detailed development results](transaction-parity-development.md)
@@ -27,6 +28,48 @@ the final release suite also checks the latest manifest and documentation typogr
 One upstream websockets.legacy deprecation warning remains.
 CI targets Windows/Ubuntu on Python 3.10, 3.12 and 3.13. macOS and additional
 architectures are not verified. Inspect the CI run for the release commit.
+
+## Post-Release Validation, 2026-09-16
+
+The working branch included in the 0.1.2 refresh confirmed four authorized mainnet transactions:
+native DEL, native DEL with a direct UTF-8 memo, two-row native DEL multisend with
+memo, and an ERC20 transfer. All recipients were the sender's own address.
+Native multisend required no approve. The ERC20 Transfer event and unchanged token
+balance were checked; the DEL balance decrease matched the total receipt fees.
+
+| Operation | Estimated gas | Used gas | Actual fee, DEL |
+| --- | ---: | ---: | ---: |
+| DEL self-transfer | 21000 | 21000 | 0.024999975 |
+| DEL self-transfer with memo | 21496 | 21496 | 0.0255904506 |
+| DEL multisend, two self-address rows | 46614 | 46614 | 0.05549280165 |
+| ERC20 self-transfer | 45119 | 44911 | 0.053465422725 |
+
+These transactions used 1190.475 gwei from the network, not a fixed gas-price cap.
+Total actual cost: 0.159548649975 DEL, within the approved 0.25 DEL test block.
+An estimate is not a fixed quote; the gas-limit buffer is not the gas actually used.
+Legacy receipts omitted effectiveGasPrice; the confirmed transaction's gasPrice
+was used for reconciliation. This fallback must not use an EIP-1559 maximum fee.
+
+The testnet read recheck timed out. No testnet balance or new testnet receipts are
+claimed. This is not evidence that every testnet endpoint is unavailable.
+These four cases do not verify different-recipient multisend, ERC20 multisend,
+permit, staking, NFT, Safe or validator lifecycles. The 2026-09-16 refresh includes
+RPC failover and receipt-fee fixes, with 329 offline tests passing locally.
+
+## Earlier Validation
+
+The [shared evidence register](../validation/transaction-evidence.md) includes
+earlier testnet DEL, mainnet direct DEL with memo and mainnet DEL withdrawWithReset.
+Do not repeat them just to populate a new report. Including the September 16 run,
+seven successful SDK receipts cover five scenario variants, not seven distinct
+methods or complete SDK coverage.
+
+Earlier service approve/multisend and an external permit/multisend transaction are
+also confirmed protocol references, not current Python SDK end-to-end sends.
+The historical token creation was a no-op; the historical testnet multisend has
+conflicting execution evidence and is not counted as a proven contract operation.
+Further checks start with history, read-only inspection and offline regression
+tests, avoiding routine paid repeats of already verified scenarios.
 
 ## Stable-Release Gates
 1. Verify contract ABI compatibility and successful settlement on every target network.
