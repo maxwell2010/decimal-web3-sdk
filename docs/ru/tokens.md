@@ -21,7 +21,10 @@ min_amount_out и min_amount_del_out_wei ограничивают проскал
 совместить разрешение и основную операцию, в том числе multisend с memo.
 Обычный approve внутри multicall не выдает разрешение от кошелька:
 msg.sender будет контрактом multicall. Отдельная комиссия approve должна быть видна.
-auto_approve=False передает управление разрешением приложению;
+auto_approve=False теперь значение по умолчанию для мультисенда, конвертации
+и делегирования. Если permit нет и allowance недостаточен, SDK вернет
+extra_steps_required без отправки approve. Только явный auto_approve=True
+разрешает два шага; при отправке нужен wait_receipt=True.
 prefer_permit управляет выбором permit. Задавайте короткий permit_deadline.
 
 Прямой ERC20 transfer не принимает memo, ERC20 multisend принимает.

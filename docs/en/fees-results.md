@@ -53,6 +53,10 @@ rejection can trigger one retry at the network-required price.
 Approve and the main operation have separate fees unless permit or existing
 allowance makes one transaction possible. Dry-run does not change allowance
 for the second simulation. An approval-only estimate is NOT a full workflow quote.
+The SDK does not automatically send a two-transaction approval workflow by
+default. Check extra_steps_required and user_message. NFT delegation also
+requires an existing operator approval; the reviewed NFT ABI has no permit
+route. Native DEL operations require no approve.
 
 ## Result
 TransactionResult.success describes the SDK step. is_successful means successful

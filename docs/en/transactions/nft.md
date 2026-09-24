@@ -4,6 +4,8 @@
 
 Complete examples below use testnet, require EXPECTED_ADDRESS and never broadcast. Other required environment variables appear in each example. They can sign locally; for unsigned fees use the fee guide. Auto-approval is disabled in examples. Contract-dependent methods require compatible deployed code and permissions.
 
+[Current creation, reserve and mint semantics](../nft-protocol.md)
+
 ## nft.add_del_reserve
 
 Add native DEL to an NFT reserve.
@@ -230,7 +232,7 @@ if __name__ == "__main__":
 
 ## nft.create_collection
 
-Create an ERC721 or ERC1155 NFT collection.
+Create a reserved ERC721 or ERC1155 collection; no NFT is minted or reserve deposited yet.
 
 [CreateNftCollectionRequest](../reference/nft.md#createnftcollectionrequest)
 
@@ -696,7 +698,7 @@ if __name__ == "__main__":
 
 ## nft.set_token_uri
 
-Update an NFT metadata URI; requires contract permissions.
+Legacy URI setter, absent from reviewed current NFT ABIs; explicit opt-in and compatible code required.
 
 [SetTokenUriNftRequest](../reference/nft.md#settokenurinftrequest)
 
@@ -724,6 +726,7 @@ async def main():
         nft=os.environ["NFT"],
         token_id=int(os.environ["TOKEN_ID"]),
         token_uri=os.environ["TOKEN_URI"],
+        allow_legacy=os.environ.get("ALLOW_LEGACY_CONTRACT", "0") == "1",
     )
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.

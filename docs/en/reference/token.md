@@ -52,7 +52,7 @@ from_mnemonic(*, mnemonic: 'str', passphrase: 'str' = '', account_path: 'str' = 
 Converttokenrequest; types, defaults and return value are specified below.
 
 ```python
-ConvertTokenRequest(token_in: 'str', token_out: 'str', amount_in: 'Decimal | str | int', min_amount_out: 'Decimal | str | int', private_key: 'str', token_in_decimals: 'int | None' = None, token_out_decimals: 'int | None' = None, auto_approve: 'bool' = True, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
+ConvertTokenRequest(token_in: 'str', token_out: 'str', amount_in: 'Decimal | str | int', min_amount_out: 'Decimal | str | int', private_key: 'str', token_in_decimals: 'int | None' = None, token_out_decimals: 'int | None' = None, auto_approve: 'bool' = False, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
 ```
 
 - `token_in`: `str`; required.
@@ -62,7 +62,7 @@ ConvertTokenRequest(token_in: 'str', token_out: 'str', amount_in: 'Decimal | str
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
 - `token_in_decimals`: `int | None`; None.
 - `token_out_decimals`: `int | None`; None.
-- `auto_approve`: `bool`; True.
+- `auto_approve`: `bool`; False.
 - `prefer_permit`: `bool`; True.
 - `permit_deadline`: `int`; 115792089237316195423570985008687907853269984665640564039457584007913129639935.
 

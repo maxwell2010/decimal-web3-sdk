@@ -4,7 +4,7 @@ Independent Decimal EVM SDK by [MintCandy](https://mintcandy.ru/) and
 [@Maxwell2019](https://t.me/Maxwell2019). MIT license, Python 3.10+.
 Package: `decimal-web3-sdk`; import: `decimal_web3_sdk`.
 
-**Version 0.1.2 is a GitHub preview, not a stable/full-parity release.**
+**Version 0.1.3 is a GitHub preview, not a stable/full-parity release.**
 79 high-level transaction entry points have offline encoding/signing coverage, not full live parity.
 New methods, legacy limitations and the updated NFT sources are described in the
 [development notes](docs/en/transaction-parity-development.md).
@@ -29,20 +29,16 @@ command, never automatically inside the SDK. Git and GitHub login are not requir
 
 For this release's wheel:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
 ```
 
-**0.1.2 was refreshed in place on 2026-09-16.** If it is already installed,
-`--upgrade` alone may skip it. Reinstall the refreshed build without pip's cache:
-```shell
-python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
-```
-The version remains 0.1.2; the release's SHA256SUMS distinguishes the new artifacts.
-For reproducibility, retain the downloaded wheel and its verified checksum.
+The 0.1.3 wheel includes testnet token and NFT lifecycle checks. See the
+[validation report](docs/validation/testnet-transaction-campaign-2026-09-24.md)
+for exact receipts and limits. Retain the wheel checksum for reproducibility.
 
 Alternatively, from the same version's source archive:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.2.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.3.zip"
 ```
 
 GitHub is the primary distribution source; PyPI publication is separate.

@@ -21,8 +21,12 @@ Existing sufficient allowance avoids a new approval. Compatible permit can combi
 authorization and the primary operation, including multisend memo, in one transaction.
 An ordinary ERC20 approve cannot authorize the wallet by calling it from multicall:
 msg.sender would be the multicall contract. Separate approval fees must remain visible.
-auto_approve=False allows callers to handle it explicitly; prefer_permit controls
-permit selection. Set a short permit_deadline instead of an unlimited deadline.
+auto_approve=False is the default for multisend, conversion and delegation.
+If permit is unsupported and allowance is insufficient, the SDK returns
+extra_steps_required without broadcasting an approval. Explicit auto_approve=True
+permits a two-transaction workflow and requires wait_receipt=True for broadcast.
+prefer_permit controls permit selection. Set a short permit_deadline instead of
+an unlimited deadline.
 
 Direct ERC20 transfer does not accept memo. ERC20 multisend does. DEL needs no
 token permission. Exact-in/out variants, some metadata setters and reserve

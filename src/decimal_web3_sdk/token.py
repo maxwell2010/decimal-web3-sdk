@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from decimal import Decimal
 from typing import Any
 
@@ -23,6 +24,7 @@ TOKEN_CREATION_COMMISSION_BY_SYMBOL_LENGTH: dict[int, Decimal] = {
     6: Decimal("2500"),
 }
 TOKEN_CREATION_DEFAULT_COMMISSION_DEL = Decimal("250")
+TESTNET_MIN_RESERVE_WEI = 10**18
 
 
 DECIMAL_TOKEN_ABI: list[dict[str, Any]] = [
@@ -65,13 +67,31 @@ DECIMAL_TOKEN_ABI: list[dict[str, Any]] = [
         "type": "function",
     },
     {
-        "inputs": [
-            {"internalType": "string", "name": "newIdentity", "type": "string"},
-            {"internalType": "uint256", "name": "newMaxTotalSupply", "type": "uint256"},
-        ],
-        "name": "updateDetails",
+        "inputs": [{"internalType": "string", "name": "identity", "type": "string"}],
+        "name": "updateIdentity",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function",
+    },
+    {
+        "inputs": [{"internalType": "uint256", "name": "maximum", "type": "uint256"}],
+        "name": "updateMaxTotalSupply",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function",
+    },
+    {
+        "inputs": [],
+        "name": "mintable",
+        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+        "stateMutability": "view",
+        "type": "function",
+    },
+    {
+        "inputs": [],
+        "name": "MIN_RESERVE",
+        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+        "stateMutability": "view",
         "type": "function",
     },
 ]
@@ -215,7 +235,7 @@ class ConvertTokenRequest(FromMnemonicMixin):
     private_key: str = field(repr=False)
     token_in_decimals: int | None = None
     token_out_decimals: int | None = None
-    auto_approve: bool = True
+    auto_approve: bool = False
     prefer_permit: bool = True
     permit_deadline: int = 2**256 - 1
 
@@ -386,7 +406,27 @@ class TokenService(TokenOperations):
                             result.error,
                         )
                 if not request.auto_approve:
-                    return _workflow_error("convert_erc20", f"ERC20 allowance is insufficient: allowance_raw={allowance}, required_raw={amount_raw}", True)
+                    return DecimalWorkflowResult(
+                        success=False,
+                        name="convert_erc20",
+                        steps=("approve_required",),
+                        expected_steps=2,
+                        actual_steps=0,
+                        extra_steps_required=True,
+                        error=f"ERC20 allowance is insufficient: allowance_raw={allowance}, required_raw={amount_raw}",
+                        user_message="Токен не поддерживает обмен за одну транзакцию без предварительного разрешения.",
+                    )
+                if broadcast and not wait_receipt:
+                    return DecimalWorkflowResult(
+                        success=False,
+                        name="convert_erc20",
+                        steps=("approve_required",),
+                        expected_steps=2,
+                        actual_steps=0,
+                        extra_steps_required=True,
+                        error="Two-step approval requires wait_receipt=True",
+                        user_message="Для двухшаговой операции дождитесь подтверждения разрешения.",
+                    )
                 approve_result = await self._client.tx.approve_erc20(
                     Erc20ApproveRequest(
                         token=request.token_in,
@@ -440,6 +480,15 @@ class TokenService(TokenOperations):
         return await self._send_contract(request.private_key, request.token, data, 0, broadcast, wait_receipt)
 
     async def mint(self, request: MintTokenRequest, broadcast: bool = False, wait_receipt: bool = False) -> TransactionResult:
+        try:
+            mintable = await self._client.rpc.call(
+                lambda w3: w3.eth.contract(address=checksum(request.token), abi=DECIMAL_TOKEN_ABI)
+                .functions.mintable().call()
+            )
+        except Exception as exc:
+            raise ValueError("Mint requires a verified reserveless token with mintable()") from exc
+        if not mintable:
+            raise ValueError("Token is not mintable")
         decimals = request.decimals
         if decimals is None:
             decimals = (await self._client.erc20.info(request.token)).decimals
@@ -448,11 +497,47 @@ class TokenService(TokenOperations):
         return await self._send_contract(request.private_key, request.token, data, 0, broadcast, wait_receipt)
 
     async def update_details(self, request: UpdateTokenDetailsRequest, broadcast: bool = False, wait_receipt: bool = False) -> TransactionResult:
-        data = self._token_contract(request.token).functions.updateDetails(
-            request.identity,
-            int(request.max_total_supply_raw),
-        )._encode_transaction_data()
-        return await self._send_contract(request.private_key, request.token, data, 0, broadcast, wait_receipt)
+        if broadcast and not wait_receipt:
+            raise ValueError("Updating both token fields requires wait_receipt=True when broadcasting")
+        if int(request.max_total_supply_raw) < 0:
+            raise ValueError("max_total_supply_raw must be non-negative")
+        try:
+            await self._client.rpc.call(
+                lambda w3: w3.eth.contract(address=checksum(request.token), abi=DECIMAL_TOKEN_ABI)
+                .functions.MIN_RESERVE().call()
+            )
+        except Exception as exc:
+            raise ValueError("Updating details requires a verified reserve token with MIN_RESERVE()") from exc
+        contract = self._token_contract(request.token)
+        identity_data = contract.functions.updateIdentity(request.identity)._encode_transaction_data()
+        identity_result = await self._send_contract(request.private_key, request.token, identity_data, 0, broadcast, wait_receipt)
+        if not identity_result.success:
+            return identity_result
+        supply_data = contract.functions.updateMaxTotalSupply(int(request.max_total_supply_raw))._encode_transaction_data()
+        supply_result = await self._send_contract(request.private_key, request.token, supply_data, 0, broadcast, wait_receipt)
+        events = dict(supply_result.events or {})
+        events["update_identity"] = {
+            "tx_hash": identity_result.tx_hash,
+            "status": identity_result.status,
+            "fee_wei": identity_result.fee_wei,
+        }
+        events["update_max_total_supply"] = {
+            "tx_hash": supply_result.tx_hash,
+            "status": supply_result.status,
+            "fee_wei": supply_result.fee_wei,
+        }
+        fee_wei = (
+            identity_result.fee_wei + supply_result.fee_wei
+            if identity_result.fee_wei is not None and supply_result.fee_wei is not None
+            else None
+        )
+        return _replace_transaction_result(
+            supply_result,
+            tx_hash=supply_result.tx_hash or identity_result.tx_hash,
+            fee_wei=fee_wei,
+            fee_del=Decimal(fee_wei) / Decimal(10**18) if fee_wei is not None else None,
+            events=events,
+        )
 
     async def create_reserveless(
         self,
@@ -460,6 +545,7 @@ class TokenService(TokenOperations):
         broadcast: bool = False,
         wait_receipt: bool = False,
     ) -> TransactionResult:
+        self._validate_creation_symbol(request.symbol)
         data = self._token_center_contract().functions.createTokenReserveless(
             request.name,
             request.symbol,
@@ -485,6 +571,17 @@ class TokenService(TokenOperations):
         broadcast: bool = False,
         wait_receipt: bool = False,
     ) -> TransactionResult:
+        self._validate_creation_symbol(request.symbol)
+        minimum_value_wei = (
+            TESTNET_MIN_RESERVE_WEI + _testnet_commission_wei(request.symbol)
+            if self._is_testnet else token_creation_required_reserve_wei(request.symbol)
+        )
+        reserve_value_wei = (
+            int(request.reserve_value_wei)
+            if request.reserve_value_wei is not None else minimum_value_wei
+        )
+        if self._is_testnet and reserve_value_wei < minimum_value_wei:
+            raise ValueError(f"Testnet reserve value must be at least {minimum_value_wei} wei")
         creator = checksum(request.creator or private_key_to_address(request.private_key))
         meta = (
             int(request.initial_mint_raw),
@@ -501,9 +598,7 @@ class TokenService(TokenOperations):
             request.private_key,
             self._client.config.contracts.token_center,
             data,
-            int(request.reserve_value_wei)
-            if request.reserve_value_wei is not None
-            else token_creation_required_reserve_wei(request.symbol),
+            reserve_value_wei,
             broadcast,
             wait_receipt,
         )
@@ -517,6 +612,14 @@ class TokenService(TokenOperations):
 
     def _token_contract(self, token: str):
         return self._client.web3.eth.contract(address=checksum(token), abi=DECIMAL_TOKEN_ABI)
+
+    @property
+    def _is_testnet(self) -> bool:
+        return "testnet" in self._client.config.name.lower()
+
+    def _validate_creation_symbol(self, symbol: str) -> None:
+        if self._is_testnet and not re.fullmatch(r"[a-z0-9]{3,10}", symbol):
+            raise ValueError("Testnet token symbol must be 3-10 lowercase letters or digits")
 
     def _token_center_contract(self, web3=None):
         return (web3 or self._client.web3).eth.contract(
@@ -582,6 +685,11 @@ def token_creation_commission_del(symbol: str) -> Decimal:
         len(normalized),
         TOKEN_CREATION_DEFAULT_COMMISSION_DEL,
     )
+
+
+def _testnet_commission_wei(symbol: str) -> int:
+    tiers = {3: Decimal("2500"), 4: Decimal("250"), 5: Decimal("25"), 6: Decimal("2.5")}
+    return _del_to_wei(tiers.get(len(symbol), Decimal("0.25")))
 
 
 def token_creation_commission_wei(symbol: str) -> int:

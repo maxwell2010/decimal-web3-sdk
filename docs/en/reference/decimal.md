@@ -133,7 +133,7 @@ MultisendErc20Recipient(to: 'str', amount: 'Decimal | str | int') -> None
 Multisenderc20request; types, defaults and return value are specified below.
 
 ```python
-MultisendErc20Request(token: 'str', recipients: 'list[MultisendErc20Recipient]', private_key: 'str', decimals: 'int | None' = None, memo: 'str | None' = None, auto_approve: 'bool' = True, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
+MultisendErc20Request(token: 'str', recipients: 'list[MultisendErc20Recipient]', private_key: 'str', decimals: 'int | None' = None, memo: 'str | None' = None, auto_approve: 'bool' = False, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
 ```
 
 - `token`: `str`; required.
@@ -141,7 +141,7 @@ MultisendErc20Request(token: 'str', recipients: 'list[MultisendErc20Recipient]',
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
 - `decimals`: `int | None`; None.
 - `memo`: `str | None`; None.
-- `auto_approve`: `bool`; True.
+- `auto_approve`: `bool`; False.
 - `prefer_permit`: `bool`; True.
 - `permit_deadline`: `int`; 115792089237316195423570985008687907853269984665640564039457584007913129639935.
 
@@ -158,7 +158,7 @@ from_mnemonic(*, mnemonic: 'str', passphrase: 'str' = '', account_path: 'str' = 
 Delegateerc20request; types, defaults and return value are specified below.
 
 ```python
-DelegateErc20Request(token: 'str', validator: 'str', amount: 'Decimal | str | int', private_key: 'str', decimals: 'int | None' = None, auto_approve: 'bool' = True, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
+DelegateErc20Request(token: 'str', validator: 'str', amount: 'Decimal | str | int', private_key: 'str', decimals: 'int | None' = None, auto_approve: 'bool' = False, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
 ```
 
 - `token`: `str`; required.
@@ -166,7 +166,7 @@ DelegateErc20Request(token: 'str', validator: 'str', amount: 'Decimal | str | in
 - `amount`: `Decimal | str | int`; required.
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
 - `decimals`: `int | None`; None.
-- `auto_approve`: `bool`; True.
+- `auto_approve`: `bool`; False.
 - `prefer_permit`: `bool`; True.
 - `permit_deadline`: `int`; 115792089237316195423570985008687907853269984665640564039457584007913129639935.
 
@@ -183,7 +183,7 @@ from_mnemonic(*, mnemonic: 'str', passphrase: 'str' = '', account_path: 'str' = 
 Holderc20request; types, defaults and return value are specified below.
 
 ```python
-HoldErc20Request(token: 'str', validator: 'str', amount: 'Decimal | str | int', hold_timestamp: 'int', private_key: 'str', decimals: 'int | None' = None, auto_approve: 'bool' = True, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
+HoldErc20Request(token: 'str', validator: 'str', amount: 'Decimal | str | int', hold_timestamp: 'int', private_key: 'str', decimals: 'int | None' = None, auto_approve: 'bool' = False, prefer_permit: 'bool' = True, permit_deadline: 'int' = 115792089237316195423570985008687907853269984665640564039457584007913129639935) -> None
 ```
 
 - `token`: `str`; required.
@@ -192,7 +192,7 @@ HoldErc20Request(token: 'str', validator: 'str', amount: 'Decimal | str | int', 
 - `hold_timestamp`: `int`; required.
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
 - `decimals`: `int | None`; None.
-- `auto_approve`: `bool`; True.
+- `auto_approve`: `bool`; False.
 - `prefer_permit`: `bool`; True.
 - `permit_deadline`: `int`; 115792089237316195423570985008687907853269984665640564039457584007913129639935.
 

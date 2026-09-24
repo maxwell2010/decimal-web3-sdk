@@ -4,9 +4,10 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from .decimal import DecimalWorkflowResult
+from .contracts import AbiRegistry
 from .mnemonic import FromMnemonicMixin
 from .nft_operations import NftOperations
-from ._contract_operations import ContractOperationRequest, uint
+from ._contract_operations import ContractOperationRequest, ZERO_ADDRESS, address, uint
 from .transactions import ContractCallRequest, TransactionDraft, TransactionResult
 from .wallet import checksum, private_key_to_address
 
@@ -14,48 +15,7 @@ from .wallet import checksum, private_key_to_address
 NftKind = Literal["erc721", "erc1155"]
 
 
-NFT_CENTER_ABI: list[dict[str, Any]] = [
-    {
-        "inputs": [
-            {
-                "components": [
-                    {"internalType": "address", "name": "creator", "type": "address"},
-                    {"internalType": "string", "name": "symbol", "type": "string"},
-                    {"internalType": "string", "name": "name", "type": "string"},
-                    {"internalType": "string", "name": "contractURI", "type": "string"},
-                    {"internalType": "bool", "name": "refundable", "type": "bool"},
-                ],
-                "internalType": "struct DecimalNFTCenter.NFT",
-                "name": "meta",
-                "type": "tuple",
-            }
-        ],
-        "name": "createERC721",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {"internalType": "address", "name": "creator", "type": "address"},
-                    {"internalType": "string", "name": "symbol", "type": "string"},
-                    {"internalType": "string", "name": "name", "type": "string"},
-                    {"internalType": "string", "name": "contractURI", "type": "string"},
-                    {"internalType": "bool", "name": "refundable", "type": "bool"},
-                ],
-                "internalType": "struct DecimalNFTCenter.NFT",
-                "name": "meta",
-                "type": "tuple",
-            }
-        ],
-        "name": "createERC1155",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-]
+NFT_CENTER_ABI = AbiRegistry().load("nft_center")
 
 
 DELEGATION_NFT_ABI: list[dict[str, Any]] = [
@@ -162,231 +122,8 @@ DELEGATION_NFT_ABI: list[dict[str, Any]] = [
 ]
 
 
-ERC721_ABI: list[dict[str, Any]] = [
-    {
-        "inputs": [{"internalType": "address", "name": "owner", "type": "address"}],
-        "name": "balanceOf",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function",
-    },
-    {
-        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-        "name": "ownerOf",
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "stateMutability": "view",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "owner", "type": "address"},
-            {"internalType": "address", "name": "operator", "type": "address"},
-        ],
-        "name": "isApprovedForAll",
-        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-        "stateMutability": "view",
-        "type": "function",
-    },
-    {
-        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-        "name": "getApproved",
-        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-        "stateMutability": "view",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "operator", "type": "address"},
-            {"internalType": "bool", "name": "approved", "type": "bool"},
-        ],
-        "name": "setApprovalForAll",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "to", "type": "address"},
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-        ],
-        "name": "approve",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "from", "type": "address"},
-            {"internalType": "address", "name": "to", "type": "address"},
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-        ],
-        "name": "safeTransferFrom",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "recipient", "type": "address"},
-            {"internalType": "string", "name": "tokenURI", "type": "string"},
-            {"internalType": "uint256", "name": "reserveAmount", "type": "uint256"},
-            {"internalType": "address", "name": "reserveToken", "type": "address"},
-        ],
-        "name": "mint",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "recipient", "type": "address"},
-            {"internalType": "string", "name": "tokenURI", "type": "string"},
-        ],
-        "name": "mintByETH",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "payable",
-        "type": "function",
-    },
-    {
-        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-        "name": "burn",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "string", "name": "tokenURI", "type": "string"},
-        ],
-        "name": "setTokenURI",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-        "name": "addReserveByDEL",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function",
-    },
-    {"inputs": [], "name": "disableMint", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
-]
-
-
-ERC1155_ABI: list[dict[str, Any]] = [
-    {
-        "inputs": [
-            {"internalType": "address", "name": "account", "type": "address"},
-            {"internalType": "uint256", "name": "id", "type": "uint256"},
-        ],
-        "name": "balanceOf",
-        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "account", "type": "address"},
-            {"internalType": "address", "name": "operator", "type": "address"},
-        ],
-        "name": "isApprovedForAll",
-        "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-        "stateMutability": "view",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "operator", "type": "address"},
-            {"internalType": "bool", "name": "approved", "type": "bool"},
-        ],
-        "name": "setApprovalForAll",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "from", "type": "address"},
-            {"internalType": "address", "name": "to", "type": "address"},
-            {"internalType": "uint256", "name": "id", "type": "uint256"},
-            {"internalType": "uint256", "name": "value", "type": "uint256"},
-            {"internalType": "bytes", "name": "data", "type": "bytes"},
-        ],
-        "name": "safeTransferFrom",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "from", "type": "address"},
-            {"internalType": "address", "name": "to", "type": "address"},
-            {"internalType": "uint256[]", "name": "ids", "type": "uint256[]"},
-            {"internalType": "uint256[]", "name": "values", "type": "uint256[]"},
-            {"internalType": "bytes", "name": "data", "type": "bytes"},
-        ],
-        "name": "safeBatchTransferFrom",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "recipient", "type": "address"},
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "uint256", "name": "amountToMint", "type": "uint256"},
-            {"internalType": "string", "name": "tokenURI", "type": "string"},
-            {"internalType": "uint256", "name": "reserveAmount", "type": "uint256"},
-            {"internalType": "address", "name": "reserveToken", "type": "address"},
-        ],
-        "name": "mint",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "address", "name": "recipient", "type": "address"},
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "uint256", "name": "amountToMint", "type": "uint256"},
-            {"internalType": "string", "name": "tokenURI", "type": "string"},
-        ],
-        "name": "mintByETH",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "uint256", "name": "amount", "type": "uint256"},
-        ],
-        "name": "burn",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
-            {"internalType": "string", "name": "tokenURI", "type": "string"},
-        ],
-        "name": "setTokenURI",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function",
-    },
-    {
-        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-        "name": "addReserveByDEL",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function",
-    },
-    {"inputs": [], "name": "disableMint", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
-]
+ERC721_ABI = AbiRegistry().load("nft_721")
+ERC1155_ABI = AbiRegistry().load("nft_1155")
 
 
 @dataclass(frozen=True)
@@ -398,6 +135,7 @@ class CreateNftCollectionRequest(FromMnemonicMixin):
     private_key: str = field(repr=False)
     refundable: bool = False
     creator: str | None = None
+    burnable: bool = True
 
 
 @dataclass(frozen=True)
@@ -475,6 +213,7 @@ class SetTokenUriNftRequest(FromMnemonicMixin):
     token_id: int
     token_uri: str
     private_key: str = field(repr=False)
+    allow_legacy: bool = False
 
 
 @dataclass(frozen=True)
@@ -494,7 +233,7 @@ class DelegateNftRequest(FromMnemonicMixin):
     token_id: int
     private_key: str = field(repr=False)
     amount: int = 1
-    auto_approve: bool = True
+    auto_approve: bool = False
 
 
 @dataclass(frozen=True)
@@ -506,7 +245,7 @@ class HoldNftRequest(FromMnemonicMixin):
     hold_timestamp: int
     private_key: str = field(repr=False)
     amount: int = 1
-    auto_approve: bool = True
+    auto_approve: bool = False
 
 
 @dataclass(frozen=True)
@@ -557,25 +296,76 @@ class NftService(NftOperations):
         broadcast: bool = False,
         wait_receipt: bool = False,
     ) -> TransactionResult:
-        creator = checksum(request.creator or private_key_to_address(request.private_key))
-        meta = (creator, request.symbol, request.name, request.contract_uri, bool(request.refundable))
-        contract = self._nft_center_contract()
-        function = contract.functions.createERC721 if request.kind == "erc721" else contract.functions.createERC1155
-        data = function(meta)._encode_transaction_data()
-        return await self._send_contract(
-            request.private_key,
-            self._client.config.contracts.nft_center,
-            data,
-            0,
-            broadcast,
-            wait_receipt,
+        draft = await self.build_create_collection(request)
+        return await self._client.tx.send_draft(draft, request.private_key, broadcast, wait_receipt)
+
+    async def build_create_collection(self, request: CreateNftCollectionRequest) -> TransactionDraft:
+        """Build reserved collection creation only; no NFT is minted or reserve deposited."""
+        self._validate_kind(request.kind)
+        if type(request.refundable) is not bool or type(request.burnable) is not bool:
+            raise TypeError("refundable and burnable must be bools")
+        if not all(isinstance(value, str) and value.strip() for value in (request.symbol, request.name, request.contract_uri)):
+            raise ValueError("symbol, name and contract_uri are required")
+        creator = address(request.creator or private_key_to_address(request.private_key))
+        meta = (creator, request.symbol, request.name, request.contract_uri, request.refundable, request.burnable)
+        function = "createDRC721" if request.kind == "erc721" else "createDRC1155"
+        data = self._nft_center_contract().get_function_by_name(function)(meta)._encode_transaction_data()
+        return await self._client.tx.build_contract_call(
+            ContractCallRequest(contract=self._client.config.contracts.nft_center, private_key=request.private_key, data=data)
         )
 
     async def mint(self, request: MintNftRequest, broadcast: bool = False, wait_receipt: bool = False) -> TransactionResult:
+        """Mint separately from creation/approval. Never automatically approve a token."""
+        draft = await self.build_mint(request)
+        return await self._client.tx.send_draft(draft, request.private_key, broadcast, wait_receipt)
+
+    async def build_mint(self, request: MintNftRequest) -> TransactionDraft:
+        """Validate reserve semantics and build mint without approvals, signing or broadcast."""
+        self._validate_kind(request.kind)
+        address(request.to)
+        address(request.nft)
+        quantity = uint(request.amount, "amount", positive=True)
+        value = uint(request.value_wei, "value_wei")
+        reserve = uint(request.reserve_amount_raw, "reserve_amount_raw")
+        token = checksum(request.reserve_token)
+        if not isinstance(request.token_uri, str) or not request.token_uri.strip():
+            raise ValueError("token_uri is required")
+        if request.kind == "erc721":
+            if quantity != 1 or request.token_id is not None:
+                raise ValueError("ERC721 mint creates one auto-assigned ID; amount must be 1 and token_id omitted")
+        else:
+            uint(request.token_id, "token_id")
+        if value and (reserve or token != ZERO_ADDRESS):
+            raise ValueError("Choose DEL value_wei or ERC20 reserve, not both")
+        state = await self.collection_state(request.nft)
+        if not state.active or state.kind != request.kind:
+            raise ValueError("NFT collection is inactive or has a different standard")
+        if not state.with_reserve:
+            if value or reserve or token != ZERO_ADDRESS:
+                raise ValueError("A reserveless collection cannot accept a reserve")
+        else:
+            total = value or reserve
+            reserve_type = 1 if value else 2
+            if not value:
+                address(token)
+                if not reserve:
+                    raise ValueError("A token reserve must be positive")
+                await self.check_reserve_token(token)
+            existing = await self.get_reserve(request.nft, request.token_id) if request.kind == "erc1155" else None
+            if existing is not None and existing.reserve_type:
+                if existing.reserve_type != reserve_type or existing.token != token:
+                    raise ValueError("An existing NFT ID must keep its reserve type and token address")
+                rate = await self._read_nft_call(request.nft, "nft_1155", "rate", [request.token_id])
+                if total != uint(rate, "reserve rate") * quantity:
+                    raise ValueError("Existing ID requires total reserve = rate(token_id) * amount")
+            else:
+                minimum = await self._read_nft_call(request.nft, "nft_721", "MIN_RESERVE")
+                if total // quantity < uint(minimum, "minimum reserve", positive=True):
+                    raise ValueError("Reserve per NFT is below the contract minimum in raw asset units")
         contract = self._nft_contract(request.kind, request.nft)
         if request.kind == "erc721":
             if request.value_wei:
-                data = contract.functions.mintByETH(checksum(request.to), request.token_uri)._encode_transaction_data()
+                data = contract.functions.mintByDEL(checksum(request.to), request.token_uri)._encode_transaction_data()
             else:
                 data = contract.functions.mint(
                     checksum(request.to),
@@ -587,7 +377,7 @@ class NftService(NftOperations):
             if request.token_id is None:
                 raise ValueError("token_id is required for ERC1155 mint")
             if request.value_wei:
-                data = contract.functions.mintByETH(
+                data = contract.functions.mintByDEL(
                     checksum(request.to),
                     int(request.token_id),
                     int(request.amount),
@@ -602,7 +392,9 @@ class NftService(NftOperations):
                     int(request.reserve_amount_raw),
                     checksum(request.reserve_token),
                 )._encode_transaction_data()
-        return await self._send_contract(request.private_key, request.nft, data, int(request.value_wei), broadcast, wait_receipt)
+        return await self._client.tx.build_contract_call(
+            ContractCallRequest(contract=request.nft, private_key=request.private_key, data=data, value_wei=value)
+        )
 
     async def transfer(
         self,
@@ -731,8 +523,12 @@ class NftService(NftOperations):
         broadcast: bool = False,
         wait_receipt: bool = False,
     ) -> TransactionResult:
-        data = self._nft_contract(request.kind, request.nft).functions.setTokenURI(
-            int(request.token_id),
+        if request.allow_legacy is not True:
+            raise ValueError("setTokenURI is absent from current reviewed NFT ABIs; legacy opt-in is required")
+        self._validate_kind(request.kind)
+        contract = self._client.web3.eth.contract(address=address(request.nft), abi=self._client.abi.load("legacy"))
+        data = contract.functions.setTokenURI(
+            uint(request.token_id, "token_id"),
             request.token_uri,
         )._encode_transaction_data()
         return await self._send_contract(request.private_key, request.nft, data, 0, broadcast, wait_receipt)
@@ -833,7 +629,11 @@ class NftService(NftOperations):
             contract=self._client.config.contracts.delegation_nft, private_key=request.private_key, data=data,
         ))
 
-    async def build_operation(self, request: ContractOperationRequest | WithdrawNftRequest | TransferNftStakeRequest) -> TransactionDraft:
+    async def build_operation(self, request: ContractOperationRequest | WithdrawNftRequest | TransferNftStakeRequest | CreateNftCollectionRequest | MintNftRequest) -> TransactionDraft:
+        if isinstance(request, CreateNftCollectionRequest):
+            return await self.build_create_collection(request)
+        if isinstance(request, MintNftRequest):
+            return await self.build_mint(request)
         if isinstance(request, WithdrawNftRequest):
             return await self.build_withdraw(request)
         if isinstance(request, TransferNftStakeRequest):
@@ -857,7 +657,27 @@ class NftService(NftOperations):
         steps: list[str] = []
         if not await self.is_approved_for_all(request.kind, request.nft, owner, operator):
             if not request.auto_approve:
-                return _workflow_error(name, "NFT approval is required for delegation contract", True)
+                return DecimalWorkflowResult(
+                    success=False,
+                    name=name,
+                    steps=("approval_required",),
+                    expected_steps=2,
+                    actual_steps=0,
+                    extra_steps_required=True,
+                    error="NFT approval is required for delegation contract",
+                    user_message="Для делегирования NFT сначала нужно разрешение оператору.",
+                )
+            if broadcast and not wait_receipt:
+                return DecimalWorkflowResult(
+                    success=False,
+                    name=name,
+                    steps=("approval_required",),
+                    expected_steps=2,
+                    actual_steps=0,
+                    extra_steps_required=True,
+                    error="Two-step NFT approval requires wait_receipt=True",
+                    user_message="Для двухшаговой операции дождитесь подтверждения разрешения.",
+                )
             approval_result = await self.set_approval_for_all(
                 NftApprovalRequest(
                     kind=request.kind,
@@ -931,7 +751,13 @@ class NftService(NftOperations):
         return self._client.web3.eth.contract(address=checksum(self._client.config.contracts.delegation_nft), abi=DELEGATION_NFT_ABI)
 
     def _nft_contract(self, kind: NftKind, nft: str, web3=None):
+        self._validate_kind(kind)
         return self._erc721_contract(nft, web3) if kind == "erc721" else self._erc1155_contract(nft, web3)
+
+    @staticmethod
+    def _validate_kind(kind):
+        if kind not in ("erc721", "erc1155"):
+            raise ValueError("kind must be erc721 or erc1155")
 
     def _erc721_contract(self, nft: str, web3=None):
         return (web3 or self._client.web3).eth.contract(address=checksum(nft), abi=ERC721_ABI)

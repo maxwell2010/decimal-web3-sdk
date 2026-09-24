@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.3 - 2026-09-24
+
+- Reconcile current reserved NFT collection creation with the six-field metadata
+  tuple and createDRC721/createDRC1155, and native-reserve mint with mintByDEL.
+- Add unsigned creation/mint preparation, registered collection/reserve reads and
+  NFTCreated decoding without assuming that a collection creation mints an NFT.
+- Validate exact per-copy reserve minimums and existing DRC1155 reserve type,
+  token and total rate. Approval and mint remain separate, explicit operations.
+- Generate the shared Console NFT profile from the same reviewed ABI snapshots.
+  The legacy URI setter now requires opt-in; it is absent from current NFT ABIs.
+- Resolve current testnet TokenCenter, Delegation, NFTCenter and related system
+  addresses from the public contract registry and verified on-chain code.
+- Match testnet token symbol rules, creation reserve tiers and live mint/update
+  selectors. Return both transaction references and total estimated fee when
+  changing token identity and maximum supply.
+- Prefer one-transaction permit routes; avoid implicit approve transactions by
+  default and require receipt waiting for explicitly requested two-step sends.
+- Confirm testnet DEL memo and multisend, token creation, transfer, allowance,
+  permit multisend, buy/sell/convert, staking requests and NFT721/1155 lifecycles.
+  Pending stake unbond/transfer is distinguished from final settlement.
+- Keep unverified methods clearly identified in the validation report. No
+  mainnet broadcasts were performed for this release.
+
 ## 0.1.2 - Refreshed 2026-09-16
 
 Maintainer-requested replacement of the existing GitHub preview, without a package

@@ -4,6 +4,8 @@
 
 Полные примеры ниже используют testnet, требуют EXPECTED_ADDRESS и не отправляют транзакции. Остальные обязательные переменные окружения указаны в коде. Возможна локальная подпись; для расчета без подписи используйте раздел комиссий. Автоматический approve в примерах отключен. Контрактные методы требуют совместимого развернутого контракта и прав.
 
+[Current creation, reserve and mint semantics](../nft-protocol.md)
+
 ## nft.add_del_reserve
 
 Пополнить резерв NFT нативным DEL.
@@ -230,7 +232,7 @@ if __name__ == "__main__":
 
 ## nft.create_collection
 
-Создать NFT-коллекцию ERC721 или ERC1155.
+Создать резервную NFT-коллекцию ERC721 или ERC1155; это еще не выпуск NFT и не внесение резерва.
 
 [CreateNftCollectionRequest](../reference/nft.md#createnftcollectionrequest)
 
@@ -696,7 +698,7 @@ if __name__ == "__main__":
 
 ## nft.set_token_uri
 
-Обновить URI метаданных NFT; нужны права контракта.
+Legacy-метод URI отсутствует в проверенных текущих ABI; нужны явный opt-in и совместимый контракт.
 
 [SetTokenUriNftRequest](../reference/nft.md#settokenurinftrequest)
 
@@ -724,6 +726,7 @@ async def main():
         nft=os.environ["NFT"],
         token_id=int(os.environ["TOKEN_ID"]),
         token_uri=os.environ["TOKEN_URI"],
+        allow_legacy=os.environ.get("ALLOW_LEGACY_CONTRACT", "0") == "1",
     )
     async with DecimalClient(NetworkConfig.testnet()) as client:
         # Signs locally when preflight passes. NEVER broadcasts in this example.

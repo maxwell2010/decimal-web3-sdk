@@ -1,6 +1,8 @@
 {
-  "source": "https://api.decimalchain.com/api/v1/contracts/compact/0xced55da70f42ab101b4ce10aa9e767607cef5146",
-  "retrieved": "2026-09-14",
+  "source": "https://api.decimalchain.com/api/v1/contracts/0xced55da70f42ab101b4ce10aa9e767607cef5146",
+  "retrieved": "2026-09-16",
+  "implementation": "0xced55da70f42ab101b4ce10aa9e767607cef5146",
+  "source_sha256": "ff066396dd34653cc17053ce8b2884182606222965f8c2a049bb16a225420b76",
   "abi": [
     {
       "anonymous": false,
@@ -58,6 +60,70 @@
       ],
       "name": "NFTCreated",
       "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        }
+      ],
+      "name": "checkToken",
+      "outputs": [],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "contractURI",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "refundable",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "burnable",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct IDecimalNFTCenter.NFT",
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
+      "name": "createDRC1155",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
       "inputs": [
@@ -150,6 +216,57 @@
           "type": "tuple"
         }
       ],
+      "name": "createDRC721",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "creator",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "contractURI",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "refundable",
+              "type": "bool"
+            },
+            {
+              "internalType": "bool",
+              "name": "burnable",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct IDecimalNFTCenter.NFT",
+          "name": "meta",
+          "type": "tuple"
+        }
+      ],
       "name": "createDRC721Reserveless",
       "outputs": [
         {
@@ -159,6 +276,55 @@
         }
       ],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getImpl",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "nft",
+          "type": "address"
+        }
+      ],
+      "name": "getNFTState",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "bool",
+              "name": "active",
+              "type": "bool"
+            },
+            {
+              "internalType": "enum NFTType",
+              "name": "nftType",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bool",
+              "name": "withReserve",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct NFTState",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {

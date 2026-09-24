@@ -9,7 +9,7 @@ Signatures are generated from the release source. Required fields have no defaul
 Createnftcollectionrequest; types, defaults and return value are specified below.
 
 ```python
-CreateNftCollectionRequest(kind: 'NftKind', symbol: 'str', name: 'str', contract_uri: 'str', private_key: 'str', refundable: 'bool' = False, creator: 'str | None' = None) -> None
+CreateNftCollectionRequest(kind: 'NftKind', symbol: 'str', name: 'str', contract_uri: 'str', private_key: 'str', refundable: 'bool' = False, creator: 'str | None' = None, burnable: 'bool' = True) -> None
 ```
 
 - `kind`: `NftKind`; required.
@@ -19,6 +19,7 @@ CreateNftCollectionRequest(kind: 'NftKind', symbol: 'str', name: 'str', contract
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
 - `refundable`: `bool`; False.
 - `creator`: `str | None`; None.
+- `burnable`: `bool`; True.
 
 ### from_mnemonic
 
@@ -192,7 +193,7 @@ from_mnemonic(*, mnemonic: 'str', passphrase: 'str' = '', account_path: 'str' = 
 Settokenurinftrequest; types, defaults and return value are specified below.
 
 ```python
-SetTokenUriNftRequest(kind: 'NftKind', nft: 'str', token_id: 'int', token_uri: 'str', private_key: 'str') -> None
+SetTokenUriNftRequest(kind: 'NftKind', nft: 'str', token_id: 'int', token_uri: 'str', private_key: 'str', allow_legacy: 'bool' = False) -> None
 ```
 
 - `kind`: `NftKind`; required.
@@ -200,6 +201,7 @@ SetTokenUriNftRequest(kind: 'NftKind', nft: 'str', token_id: 'int', token_uri: '
 - `token_id`: `int`; required.
 - `token_uri`: `str`; required.
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
+- `allow_legacy`: `bool`; False.
 
 ### from_mnemonic
 
@@ -236,7 +238,7 @@ from_mnemonic(*, mnemonic: 'str', passphrase: 'str' = '', account_path: 'str' = 
 Delegatenftrequest; types, defaults and return value are specified below.
 
 ```python
-DelegateNftRequest(kind: 'NftKind', nft: 'str', validator: 'str', token_id: 'int', private_key: 'str', amount: 'int' = 1, auto_approve: 'bool' = True) -> None
+DelegateNftRequest(kind: 'NftKind', nft: 'str', validator: 'str', token_id: 'int', private_key: 'str', amount: 'int' = 1, auto_approve: 'bool' = False) -> None
 ```
 
 - `kind`: `NftKind`; required.
@@ -245,7 +247,7 @@ DelegateNftRequest(kind: 'NftKind', nft: 'str', validator: 'str', token_id: 'int
 - `token_id`: `int`; required.
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
 - `amount`: `int`; 1.
-- `auto_approve`: `bool`; True.
+- `auto_approve`: `bool`; False.
 
 ### from_mnemonic
 
@@ -260,7 +262,7 @@ from_mnemonic(*, mnemonic: 'str', passphrase: 'str' = '', account_path: 'str' = 
 Holdnftrequest; types, defaults and return value are specified below.
 
 ```python
-HoldNftRequest(kind: 'NftKind', nft: 'str', validator: 'str', token_id: 'int', hold_timestamp: 'int', private_key: 'str', amount: 'int' = 1, auto_approve: 'bool' = True) -> None
+HoldNftRequest(kind: 'NftKind', nft: 'str', validator: 'str', token_id: 'int', hold_timestamp: 'int', private_key: 'str', amount: 'int' = 1, auto_approve: 'bool' = False) -> None
 ```
 
 - `kind`: `NftKind`; required.
@@ -270,7 +272,7 @@ HoldNftRequest(kind: 'NftKind', nft: 'str', validator: 'str', token_id: 'int', h
 - `hold_timestamp`: `int`; required.
 - `private_key`: `str`; use from_mnemonic; technical field, hidden in repr.
 - `amount`: `int`; 1.
-- `auto_approve`: `bool`; True.
+- `auto_approve`: `bool`; False.
 
 ### from_mnemonic
 
@@ -355,12 +357,28 @@ Balance of; types, defaults and return value are specified below.
 async balance_of(self, nft: 'str', owner: 'str', token_id: 'int | None' = None, kind: 'NftKind' = 'erc721') -> 'int'
 ```
 
+### build_create_collection
+
+Build transaction data/draft without broadcasting. See units and ABI constraints in the module guide.
+
+```python
+async build_create_collection(self, request: 'CreateNftCollectionRequest') -> 'TransactionDraft'
+```
+
+### build_mint
+
+Build transaction data/draft without broadcasting. See units and ABI constraints in the module guide.
+
+```python
+async build_mint(self, request: 'MintNftRequest') -> 'TransactionDraft'
+```
+
 ### build_operation
 
 Build transaction data/draft without broadcasting. See units and ABI constraints in the module guide.
 
 ```python
-async build_operation(self, request: 'ContractOperationRequest | WithdrawNftRequest | TransferNftStakeRequest') -> 'TransactionDraft'
+async build_operation(self, request: 'ContractOperationRequest | WithdrawNftRequest | TransferNftStakeRequest | CreateNftCollectionRequest | MintNftRequest') -> 'TransactionDraft'
 ```
 
 ### build_transfer_stake

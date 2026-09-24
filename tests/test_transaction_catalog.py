@@ -48,6 +48,7 @@ def offline_client(account):
     client.nft.owner_of = AsyncMock(return_value=owner)
     client.nft.balance_of = AsyncMock(return_value=100)
     client.nft.is_approved_for_all = AsyncMock(return_value=True)
+    client.nft.collection_state = AsyncMock(return_value=sdk.NftCollectionState(True, "erc721", False))
     client.checks._nonce = AsyncMock(return_value=1)
     client.multisig.state = AsyncMock(return_value=sdk.MultisigState(
         nonce=0, owners=(sdk.WeightedOwner(owner, 1),), weight_threshold=1, block_number=1,
@@ -96,8 +97,6 @@ def make_request(row, account, monkeypatch):
     context = {**vars(sdk), "os": os, "json": json, "time": time, "wallet": owner}
     # Only evaluate our generated fixed expressions, never runtime user input.
     kwargs = {name: eval(expr, context) for name, expr in reference.request_arguments(row["request"]).items()}
-    if row["request"] == "MintNftRequest":
-        kwargs["token_id"] = 1
     return getattr(sdk, row["request"]).from_mnemonic(mnemonic=mnemonic, **kwargs)
 
 
@@ -105,6 +104,9 @@ def make_request(row, account, monkeypatch):
 async def test_every_transaction_builds_signs_and_never_broadcasts(row, offline_client, account, monkeypatch):
     request = make_request(row, account, monkeypatch)
     service, method = row["method"].split(".")
+    token_read_required = row["method"] in {"token.mint", "token.update_details"}
+    if token_read_required:
+        offline_client.rpc.call = AsyncMock(return_value=True)
     result = await getattr(getattr(offline_client, service), method)(request, broadcast=False)
     assert result.success, result.user_message or result.error
     primary = result.primary if isinstance(result, sdk.DecimalWorkflowResult) else result
@@ -114,7 +116,10 @@ async def test_every_transaction_builds_signs_and_never_broadcasts(row, offline_
     assert primary.fee_wei > 0
     assert Account.recover_transaction(primary.raw_tx_hex).lower() == account[0].address.lower()
     offline_client.send_raw_transaction.assert_not_called()
-    offline_client.rpc.call.assert_not_called()
+    if token_read_required:
+        offline_client.rpc.call.assert_awaited_once()
+    else:
+        offline_client.rpc.call.assert_not_called()
 
 
 def test_all_transaction_examples_compile():

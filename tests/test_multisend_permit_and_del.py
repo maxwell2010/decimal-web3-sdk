@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import fields
 from decimal import Decimal
 
 import pytest
@@ -22,6 +23,9 @@ from decimal_web3_sdk.decimal import (
 from decimal_web3_sdk.erc20 import PermitSignature
 from decimal_web3_sdk.transactions import ContractCallRequest, TransactionDraft, TransactionResult
 from decimal_web3_sdk.wallet import checksum, private_key_to_address
+from decimal_web3_sdk.decimal import DelegateErc20Request, HoldErc20Request
+from decimal_web3_sdk.token import ConvertTokenRequest
+from decimal_web3_sdk.nft import DelegateNftRequest, HoldNftRequest
 
 
 PRIVATE_KEY = "0x" + Account.create().key.hex()
@@ -305,3 +309,38 @@ async def test_multisend_erc20_falls_back_to_approve_when_permit_unavailable() -
     assert result.steps == ("approve_erc20", "multisend_erc20")
     assert result.requires_secondary_transaction is True
     assert client.tx.approve_calls == 1
+
+
+def test_workflows_do_not_auto_approve_by_default() -> None:
+    for request_type in (
+        MultisendErc20Request,
+        DelegateErc20Request,
+        HoldErc20Request,
+        ConvertTokenRequest,
+        DelegateNftRequest,
+        HoldNftRequest,
+    ):
+        assert next(field.default for field in fields(request_type) if field.name == "auto_approve") is False
+
+
+@pytest.mark.asyncio
+async def test_multisend_without_permit_never_silently_approves() -> None:
+    client = _FakeClient(erc20=_FakeErc20Service(allowance=0, permit_available=False))
+    service = DecimalService(client)
+    base = dict(token=TOKEN, private_key=PRIVATE_KEY, decimals=18,
+                recipients=[MultisendErc20Recipient(RECIPIENT_A, "1")])
+
+    result = await service.multisend_erc20(MultisendErc20Request(**base), broadcast=True)
+    assert not result.success
+    assert result.requires_secondary_transaction
+    assert result.user_message
+    assert client.tx.approve_calls == 0
+    assert client.tx.last_request is None
+
+    result = await service.multisend_erc20(
+        MultisendErc20Request(**base, auto_approve=True), broadcast=True, wait_receipt=False,
+    )
+    assert not result.success
+    assert result.error == "Two-step approval requires wait_receipt=True"
+    assert client.tx.approve_calls == 0
+    assert client.tx.last_request is None

@@ -31,11 +31,11 @@ databases, reports with wallets, real dotenv, private keys or local node address
 Primary distribution is the public GitHub repository `maxwell2010/decimal-web3-sdk`.
 After publication, install the pinned wheel without Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
 ```
 Or install the tagged source archive, also without Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.2.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.3.zip"
 ```
 See [requirements and dependencies](install.md).
 
@@ -49,18 +49,12 @@ It updates only when a maintainer publishes a reviewed version. pip does not mon
 releases in the background. Use the pinned command above for controlled deployments.
 
 ## Version Policy
-The existing tag `v0.1` contains package `0.1.0` and is preserved. This update is
-also separate from the preserved `v0.1.1` release. The new version is
-package `0.1.2` / tag `v0.1.2` in the requested 0.1 series. `_version.py` is the
-single package-version source. Normally fixes receive a new version and SHA256SUMS;
-do not overwrite published tags or artifacts without explicit maintainer approval.
-Exception: the maintainer requested a same-version refresh of v0.1.2 on 2026-09-16.
-Its tag and wheel/sdist are replaced, with new SHA256SUMS and dated release notes.
-Back up the previous artifacts and tag commit locally before replacement.
-Existing installations require --force-reinstall --no-cache-dir; see install.md.
-Retain a wheel and its checksum for reproducibility. Do not install moving branches for production.
+The current package is `0.1.3`, tag `v0.1.3`. `_version.py` is the single
+package-version source. Preserve earlier tags, including the historical 0.1.2
+refresh; new fixes normally receive a new version and SHA256SUMS. Retain a wheel
+and its checksum for reproducibility. Do not install moving branches for production.
 GitHub marks this as a prerelease while the status gates remain open. That flag
-does not change PEP 440: package version `0.1.2` has no rc suffix.
+does not change PEP 440: package version `0.1.3` has no rc suffix.
 Only the reviewed wheel, sdist and SHA256SUMS are attached to a GitHub release.
 Public exports must use public repository history, never private Git ancestry.
 Verify anonymous downloads and pip installation after publication.

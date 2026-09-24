@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal
+from hexbytes import HexBytes
+from web3 import Web3
 
 from ._contract_operations import (
     ContractOperationRequest,
@@ -246,8 +248,97 @@ class FrozenNftStake:
         }
 
 
+@dataclass(frozen=True)
+class NftCollectionState:
+    active: bool
+    kind: Literal["erc721", "erc1155"]
+    with_reserve: bool
+
+
+@dataclass(frozen=True)
+class NftReserve:
+    token: str
+    amount_raw: int
+    reserve_type: int
+
+
+@dataclass(frozen=True)
+class CreatedNftCollection:
+    nft_address: str
+    kind: Literal["erc721", "erc1155"]
+    creator: str
+    symbol: str
+    name: str
+    contract_uri: str
+    refundable: bool
+    burnable: bool
+
+
 class NftOperations(ContractOperations):
     _operation_domain = "nft"
+
+    async def _read_nft_call(self, target, abi_name, function, args=(), block_identifier="latest"):
+        abi = self._client.abi.load(abi_name)
+        target = address(target)
+        return await self._client.rpc.call(
+            lambda w3: w3.eth.contract(address=target, abi=abi)
+            .get_function_by_name(function)(*args).call(block_identifier=block_identifier)
+        )
+
+    async def collection_state(self, nft: str, *, block_identifier="latest") -> NftCollectionState:
+        """Read collection registration, standard and reserve mode, not minted balance."""
+        active, kind, reserved = await self._read_nft_call(
+            self._client.config.contracts.nft_center, "nft_center", "getNFTState",
+            [address(nft)], block_identifier,
+        )
+        if type(active) is not bool or type(reserved) is not bool or type(kind) is not int or kind not in (0, 1):
+            raise ValueError("Unsupported NFT collection state")
+        return NftCollectionState(active, "erc721" if kind == 0 else "erc1155", reserved)
+
+    async def check_reserve_token(self, token: str, *, block_identifier="latest") -> bool:
+        """Check NFTCenter eligibility; reverts and RPC errors propagate, never imply success."""
+        await self._read_nft_call(
+            self._client.config.contracts.nft_center, "nft_center", "checkToken",
+            [address(token)], block_identifier,
+        )
+        return True
+
+    async def get_reserve(self, nft: str, token_id: int, *, block_identifier="latest") -> NftReserve:
+        """Read reserve type, token address and exact total raw amount for an ID."""
+        token, amount, kind = await self._read_nft_call(
+            nft, "nft_721", "getReserve", [uint(token_id, "token_id")], block_identifier,
+        )
+        if type(kind) is not int or kind not in (0, 1, 2):
+            raise ValueError("Unsupported NFT reserve type")
+        return NftReserve(Web3.to_checksum_address(token), uint(amount, "reserve amount"), kind)
+
+    def created_collections(self, receipt: dict) -> tuple[CreatedNftCollection, ...]:
+        """Decode NFTCenter creation events. These identify collections, not minted IDs."""
+        status = receipt.get("status")
+        if (int(status, 0) if isinstance(status, str) else status) != 1:
+            raise ValueError("A successful receipt is required")
+        contract = self._client.web3.eth.contract(abi=self._client.abi.load("nft_center"))
+        event = contract.events.NFTCreated()
+        topic = Web3.keccak(text="NFTCreated(address,uint8,(address,string,string,string,bool,bool))")
+        result = []
+        for log in receipt.get("logs", []):
+            if log["address"].lower() != self._client.config.contracts.nft_center.lower():
+                continue
+            if not log.get("topics") or HexBytes(log["topics"][0]) != topic:
+                continue
+            normalized = {field: receipt.get(field) for field in ("blockHash", "blockNumber", "transactionHash", "transactionIndex")}
+            normalized.update(log)
+            normalized.setdefault("logIndex", 0)
+            args = event.process_log(normalized)["args"]
+            if args["nftType"] not in (0, 1):
+                raise ValueError("Unsupported NFT collection type in receipt")
+            meta = args["nft"]
+            result.append(CreatedNftCollection(
+                address(args["tokenAddress"]), "erc721" if args["nftType"] == 0 else "erc1155",
+                address(meta["creator"]), meta["symbol"], meta["name"], meta["contractURI"],
+                meta["refundable"], meta["burnable"],
+            ))
+        return tuple(result)
 
     async def create_reserveless_collection(
         self,

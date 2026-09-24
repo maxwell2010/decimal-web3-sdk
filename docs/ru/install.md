@@ -77,25 +77,20 @@ python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 
 Команда читает обновляемый файл со ссылкой на wheel конкретного релиза GitHub,
 включая предварительные. Повторите ее для обновления; SDK не обновляется сам.
-Указатель latest меняется только после появления файлов релиза. Для фиксации 0.1.2:
+Указатель latest меняется только после появления файлов релиза. Для фиксации 0.1.3:
 
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
 python -m pip check
 python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 python -m pip list
 ```
 
-По запросу автора 0.1.2 обновлен на месте 2026-09-16. Уже установленную версию
-0.1.2 pip может пропустить при --upgrade. Для получения обновленных файлов:
-```shell
-python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
-python -m pip check
-```
-Версия пакета не изменилась. Для воспроизводимости сохраняйте загруженный wheel
-и его сумму из SHA256SUMS обновленного релиза, а не только номер версии.
+Версия 0.1.3 следует за ранее обновленным 0.1.2. Обычный `--upgrade`
+выбирает новую версию; принудительная переустановка не требуется.
+Для воспроизводимости сохраняйте wheel и его сумму из SHA256SUMS.
 
-Версия SDK: `0.1.2`; latest может обновляться. Для установки сид-фраза и приватный ключ не нужны.
+Версия SDK: `0.1.3`; latest может обновляться. Для установки сид-фраза и приватный ключ не нужны.
 Клиент и CLI по умолчанию используют **mainnet**. Для тестов явно выбирайте
 `NetworkConfig.testnet()` либо `decimal-sdk --network testnet ...`.
 В примерах отправка отключена; установка пакета сама не отправляет транзакции.

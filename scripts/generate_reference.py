@@ -76,7 +76,7 @@ DESCRIPTIONS = {
     "update_details": ("Update token identity and supply cap; requires issuer rights.", "Обновить identity и предел эмиссии токена; нужны права эмитента."),
     "create_reserveless": ("Create a token without reserve, with mint/burn flags and cap.", "Создать безрезервный токен с флагами выпуска/сжигания и пределом эмиссии."),
     "create": ("Create a reserve token; initial reserve and creation commission are not gas fees.", "Создать резервный токен; начальный резерв и комиссия создания не являются gas-комиссией."),
-    "create_collection": ("Create an ERC721 or ERC1155 NFT collection.", "Создать NFT-коллекцию ERC721 или ERC1155."),
+    "create_collection": ("Create a reserved ERC721 or ERC1155 collection; no NFT is minted or reserve deposited yet.", "Создать резервную NFT-коллекцию ERC721 или ERC1155; это еще не выпуск NFT и не внесение резерва."),
     "nft.mint": ("Mint an NFT with optional reserve; requires collection permissions.", "Выпустить NFT с необязательным резервом; нужны права коллекции."),
     "transfer": ("Transfer an ERC721 or ERC1155 NFT to a recipient.", "Передать NFT ERC721 или ERC1155 получателю."),
     "transfer_batch_erc1155": ("Transfer parallel lists of ERC1155 IDs and amounts in one call.", "Передать списки ID и количеств ERC1155 одним вызовом."),
@@ -84,7 +84,7 @@ DESCRIPTIONS = {
     "approve": ("Approve an operator for a single ERC721 ID.", "Разрешить оператору работу с одним ERC721 ID."),
     "nft.burn": ("Burn owned NFTs; refundable reserves depend on the collection contract.", "Сжечь NFT; возврат резерва зависит от контракта коллекции."),
     "disable_mint": ("Disable collection minting; may be irreversible.", "Отключить выпуск в коллекции; операция может быть необратимой."),
-    "set_token_uri": ("Update an NFT metadata URI; requires contract permissions.", "Обновить URI метаданных NFT; нужны права контракта."),
+    "set_token_uri": ("Legacy URI setter, absent from reviewed current NFT ABIs; explicit opt-in and compatible code required.", "Legacy-метод URI отсутствует в проверенных текущих ABI; нужны явный opt-in и совместимый контракт."),
     "add_del_reserve": ("Add native DEL to an NFT reserve.", "Пополнить резерв NFT нативным DEL."),
     "delegate": ("Delegate NFT stake; may require collection operator approval.", "Делегировать NFT; может потребоваться разрешение оператору коллекции."),
     "hold": ("Delegate NFT with a hold end; may require operator approval.", "Делегировать NFT в hold; может потребоваться разрешение оператору."),
@@ -316,6 +316,8 @@ def generated_files():
             content = [f"# {group}", "", "[Guide](../README.md)", "",
                        ("Complete examples below use testnet, require EXPECTED_ADDRESS and never broadcast. Other required environment variables appear in each example. They can sign locally; for unsigned fees use the fee guide. Auto-approval is disabled in examples. Contract-dependent methods require compatible deployed code and permissions."
                         if lang == "en" else "Полные примеры ниже используют testnet, требуют EXPECTED_ADDRESS и не отправляют транзакции. Остальные обязательные переменные окружения указаны в коде. Возможна локальная подпись; для расчета без подписи используйте раздел комиссий. Автоматический approve в примерах отключен. Контрактные методы требуют совместимого развернутого контракта и прав."), ""]
+            if group == "nft":
+                content += ["[Current creation, reserve and mint semantics](../nft-protocol.md)", ""]
             for row in rows:
                 if row["group"] != group: continue
                 module = getattr(sdk, row["request"]).__module__.rsplit(".", 1)[1]

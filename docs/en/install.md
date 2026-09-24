@@ -75,25 +75,20 @@ python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 
 This command reads a maintained manifest pointing to a versioned GitHub release
 wheel, including previews. Run it again to update; the SDK never self-updates.
-The latest manifest is published only after its release assets exist. To pin 0.1.2:
+The latest manifest is published only after its release assets exist. To pin 0.1.3:
 
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
 python -m pip check
 python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 python -m pip list
 ```
 
-The maintainer requested an in-place refresh of 0.1.2 on 2026-09-16. Existing
-0.1.2 installations may be skipped by --upgrade. To receive the refreshed files:
-```shell
-python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
-python -m pip check
-```
-The package version is unchanged. For reproducibility retain the downloaded wheel
-and its checksum from the refreshed release's SHA256SUMS, not just the version.
+Version 0.1.3 follows the previously refreshed 0.1.2. A normal `--upgrade`
+selects the new version; no forced reinstall is needed. Retain the downloaded
+wheel and its checksum from SHA256SUMS for reproducibility.
 
-SDK version: `0.1.2`; latest may advance. No mnemonic or private key is needed for installation.
+SDK version: `0.1.3`; latest may advance. No mnemonic or private key is needed for installation.
 Client and CLI default to **mainnet**. For testing select `NetworkConfig.testnet()`
 or `decimal-sdk --network testnet ...` explicitly. Transaction examples keep
 broadcast disabled; installing the package never submits transactions.

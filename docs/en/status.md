@@ -1,8 +1,14 @@
 # Release Status
 [Guide](README.md) | [Transaction catalog](../transaction-catalog.json)
 
-Version **0.1.2**, GitHub preview. This is not a stable, full-parity or independently
+Version **0.1.3**, GitHub preview. This is not a stable, full-parity or independently
 security-audited replacement for the official JS/Go SDKs.
+
+## Testnet Validation
+The [testnet transaction campaign](../validation/testnet-transaction-campaign-2026-09-24.md)
+confirms funded DRC721 and DRC1155 creation, mint, transfer and burn, plus token
+and staking operations. Pending unbond/transfer is not final settlement. This
+does not establish full parity or mainnet compatibility for every operation.
 
 ## Verified Scope
 - 79 high-level transaction entry points with offline request construction,

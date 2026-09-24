@@ -367,8 +367,8 @@
     "method": "nft.create_collection",
     "request": "CreateNftCollectionRequest",
     "group": "nft",
-    "en": "Create an ERC721 or ERC1155 NFT collection.",
-    "ru": "Создать NFT-коллекцию ERC721 или ERC1155."
+    "en": "Create a reserved ERC721 or ERC1155 collection; no NFT is minted or reserve deposited yet.",
+    "ru": "Создать резервную NFT-коллекцию ERC721 или ERC1155; это еще не выпуск NFT и не внесение резерва."
   },
   {
     "method": "nft.create_reserveless_collection",
@@ -437,8 +437,8 @@
     "method": "nft.set_token_uri",
     "request": "SetTokenUriNftRequest",
     "group": "nft",
-    "en": "Update an NFT metadata URI; requires contract permissions.",
-    "ru": "Обновить URI метаданных NFT; нужны права контракта."
+    "en": "Legacy URI setter, absent from reviewed current NFT ABIs; explicit opt-in and compatible code required.",
+    "ru": "Legacy-метод URI отсутствует в проверенных текущих ABI; нужны явный opt-in и совместимый контракт."
   },
   {
     "method": "nft.stake_to_hold",

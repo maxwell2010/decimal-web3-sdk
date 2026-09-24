@@ -366,6 +366,47 @@ FrozenNftStake(index: 'int', stake: 'NftStake', freeze_status: 'int', freeze_typ
 as_dict(self) -> 'dict'
 ```
 
+## NftCollectionState
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+NftCollectionState(active: 'bool', kind: "Literal['erc721', 'erc1155']", with_reserve: 'bool') -> None
+```
+
+- `active`: `bool`; required.
+- `kind`: `Literal['erc721', 'erc1155']`; required.
+- `with_reserve`: `bool`; required.
+
+## NftReserve
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+NftReserve(token: 'str', amount_raw: 'int', reserve_type: 'int') -> None
+```
+
+- `token`: `str`; required.
+- `amount_raw`: `int`; required.
+- `reserve_type`: `int`; required.
+
+## CreatedNftCollection
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+CreatedNftCollection(nft_address: 'str', kind: "Literal['erc721', 'erc1155']", creator: 'str', symbol: 'str', name: 'str', contract_uri: 'str', refundable: 'bool', burnable: 'bool') -> None
+```
+
+- `nft_address`: `str`; required.
+- `kind`: `Literal['erc721', 'erc1155']`; required.
+- `creator`: `str`; required.
+- `symbol`: `str`; required.
+- `name`: `str`; required.
+- `contract_uri`: `str`; required.
+- `refundable`: `bool`; required.
+- `burnable`: `bool`; required.
+
 ## NftOperations
 
 Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
@@ -376,6 +417,22 @@ as_dict(self) -> 'dict'
 
 ```python
 async add_token_reserve(self, request: 'AddTokenReserveNftRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
+```
+
+### check_reserve_token
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+async check_reserve_token(self, token: 'str', *, block_identifier='latest') -> 'bool'
+```
+
+### collection_state
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+async collection_state(self, nft: 'str', *, block_identifier='latest') -> 'NftCollectionState'
 ```
 
 ### complete_stake
@@ -392,6 +449,14 @@ async complete_stake(self, request: 'CompleteNftStakeRequest', broadcast: 'bool'
 
 ```python
 async create_reserveless_collection(self, request: 'CreateReservelessNftCollectionRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
+```
+
+### created_collections
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+created_collections(self, receipt: 'dict') -> 'tuple[CreatedNftCollection, ...]'
 ```
 
 ### get_freeze_time
@@ -424,6 +489,14 @@ async get_frozen_stakes(self, indexes: 'tuple[int, ...]', *, block_identifier='l
 
 ```python
 async get_hold_stake(self, validator: 'str', delegator: 'str', nft: 'str', token_id: 'int', hold_timestamp: 'int', *, block_identifier='latest') -> 'NftStake'
+```
+
+### get_reserve
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+async get_reserve(self, nft: 'str', token_id: 'int', *, block_identifier='latest') -> 'NftReserve'
 ```
 
 ### get_stake

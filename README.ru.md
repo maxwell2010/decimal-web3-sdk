@@ -4,7 +4,7 @@
 [@Maxwell2019](https://t.me/Maxwell2019). Лицензия MIT, Python 3.10+.
 Пакет: `decimal-web3-sdk`; импорт: `decimal_web3_sdk`.
 
-**Версия 0.1.2 - предварительный релиз GitHub, не stable и не полное совпадение с официальными SDK.**
+**Версия 0.1.3 - предварительный релиз GitHub, не stable и не полное совпадение с официальными SDK.**
 79 транзакционных методов проверяются офлайн, это не полное сетевое совпадение с JS/Go SDK.
 Новые операции, legacy-ограничения и обновления NFT описаны в
 [журнале разработки](docs/ru/transaction-parity-development.md).
@@ -29,20 +29,16 @@ python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell201
 
 Для установки wheel этого релиза:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
 ```
 
-**Релиз 0.1.2 обновлен без смены версии 2026-09-16.** Если он уже установлен,
-одного `--upgrade` может быть недостаточно. Переустановите пакет без кеша pip:
-```shell
-python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.2/decimal_web3_sdk-0.1.2-py3-none-any.whl"
-```
-Версия остается 0.1.2; новые файлы отличаются контрольными суммами в SHA256SUMS.
-Для воспроизводимости сохраняйте загруженный wheel вместе с проверенной суммой.
+В 0.1.3 проверены операции с токенами и NFT в тестовой сети. Точные результаты
+и ограничения приведены в [отчете](docs/validation/testnet-transaction-campaign-2026-09-24.ru.md).
+Для воспроизводимости сохраняйте загруженный wheel и его контрольную сумму.
 
 Либо из исходного архива той же версии:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.2.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.3.zip"
 ```
 
 Основной источник установки: GitHub; публикация в PyPI выполняется отдельно.

@@ -396,7 +396,7 @@ class MultisendErc20Request(FromMnemonicMixin):
     private_key: str = field(repr=False)
     decimals: int | None = None
     memo: str | None = None
-    auto_approve: bool = True
+    auto_approve: bool = False
     prefer_permit: bool = True
     permit_deadline: int = 2**256 - 1
 
@@ -408,7 +408,7 @@ class DelegateErc20Request(FromMnemonicMixin):
     amount: Decimal | str | int
     private_key: str = field(repr=False)
     decimals: int | None = None
-    auto_approve: bool = True
+    auto_approve: bool = False
     prefer_permit: bool = True
     permit_deadline: int = 2**256 - 1
 
@@ -421,7 +421,7 @@ class HoldErc20Request(FromMnemonicMixin):
     hold_timestamp: int
     private_key: str = field(repr=False)
     decimals: int | None = None
-    auto_approve: bool = True
+    auto_approve: bool = False
     prefer_permit: bool = True
     permit_deadline: int = 2**256 - 1
 
@@ -1143,6 +1143,18 @@ class DecimalService(ValidatorOperations):
                             actual_steps=0,
                             extra_steps_required=True,
                             error=f"ERC20 allowance is insufficient: allowance_raw={allowance}, required_raw={total_raw}",
+                            user_message="Токен не поддерживает обмен за одну транзакцию без предварительного разрешения.",
+                        )
+                    if broadcast and not wait_receipt:
+                        return DecimalWorkflowResult(
+                            success=False,
+                            name="multisend_erc20",
+                            steps=("approve_required",),
+                            expected_steps=2,
+                            actual_steps=0,
+                            extra_steps_required=True,
+                            error="Two-step approval requires wait_receipt=True",
+                            user_message="Для двухшаговой операции дождитесь подтверждения разрешения.",
                         )
                     approve_result = await self._client.tx.approve_erc20(
                         Erc20ApproveRequest(
@@ -1824,6 +1836,18 @@ class DecimalService(ValidatorOperations):
                         actual_steps=0,
                         extra_steps_required=True,
                         error=f"ERC20 allowance is insufficient: allowance_raw={allowance}, required_raw={amount_raw}",
+                        user_message="Токен не поддерживает делегирование за одну транзакцию без предварительного разрешения.",
+                    )
+                if broadcast and not wait_receipt:
+                    return DecimalWorkflowResult(
+                        success=False,
+                        name=name,
+                        steps=("approve_required",),
+                        expected_steps=2,
+                        actual_steps=0,
+                        extra_steps_required=True,
+                        error="Two-step approval requires wait_receipt=True",
+                        user_message="Для двухшаговой операции дождитесь подтверждения разрешения.",
                     )
                 approve_result = await self._client.tx.approve_erc20(
                     Erc20ApproveRequest(

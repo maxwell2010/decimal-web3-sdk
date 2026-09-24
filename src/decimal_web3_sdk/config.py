@@ -86,7 +86,13 @@ class SystemContracts:
 
 
 TESTNET_SYSTEM_CONTRACTS = SystemContracts(
+    contract_center="0xbc96b61f137f28f0da47cc4ef06e5f984b565a2e",
+    delegation="0x0d8e8ce36dade42682dd8cc6288d6a8d324bac2c",
     delegation_nft="0x07e2ad4dfc91412de09e33e4650254948b21a20c",
+    master_validator="0x5dbe5eb59d73f596e19a8f64f226c71bbc8ea36f",
+    nft_center="0x11ae5297d0b5886914661938fcb8aedc08622194",
+    token_center="0xb8f9c4a26b91a65ac0d3f34e230a4c9ad09aef4a",
+    wdel="0x0e7c2cd8dc3a8ae787a8142f45b268ec27feeb8b",
     multicall="0x81FD5FAe106dFD0343B0435a1bc0ef89BB14C317",
     checks="0xb6161CAA8Bd7167C2fa67b93b041FF9a94d6a735",
     gas_center="0xB32439bF0C3742D0a227BFEc78276F7bA15F8Aa1",

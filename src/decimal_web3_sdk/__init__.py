@@ -11,6 +11,7 @@ from .nft_operations import (
     CreateReservelessNftCollectionRequest, AddTokenReserveNftRequest, StakeNftToHoldRequest,
     ResetNftStakeHoldRequest, ResetNftStakeHoldsRequest, WithdrawNftWithResetRequest,
     TransferNftWithResetRequest, HoldNftWithResetRequest, CompleteNftStakeRequest, NftStake, FrozenNftStake,
+    NftCollectionState, NftReserve, CreatedNftCollection,
 )
 from .multisig import (
     MultisigService, MultisigState, WeightedOwner, SafeTransaction, SafeSignature,
@@ -262,6 +263,9 @@ __all__ = [
     "CreateReservelessTokenRequest",
     "CreateTokenRequest",
     "CreateNftCollectionRequest",
+    "NftCollectionState",
+    "NftReserve",
+    "CreatedNftCollection",
     "DelegateNftRequest",
     "DisableMintNftRequest",
     "EstimateGasAgent",
