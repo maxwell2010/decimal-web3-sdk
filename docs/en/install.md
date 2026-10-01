@@ -84,9 +84,16 @@ python -c "import decimal_web3_sdk; print(decimal_web3_sdk.__version__)"
 python -m pip list
 ```
 
-Version 0.1.3 follows the previously refreshed 0.1.2. A normal `--upgrade`
-selects the new version; no forced reinstall is needed. Retain the downloaded
-wheel and its checksum from SHA256SUMS for reproducibility.
+The v0.1.3 GitHub preview was refreshed without changing its package version.
+For an existing 0.1.3 installation, a normal `--upgrade` may keep the old
+wheel. Reinstall the refreshed artifact explicitly:
+
+```shell
+python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
+```
+
+Retain the downloaded wheel and its new checksum from SHA256SUMS for
+reproducibility.
 
 SDK version: `0.1.3`; latest may advance. No mnemonic or private key is needed for installation.
 Client and CLI default to **mainnet**. For testing select `NetworkConfig.testnet()`

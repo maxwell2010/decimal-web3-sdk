@@ -19,7 +19,7 @@ from web3 import Web3
 from decimal_web3_sdk import decimal as decimal_module, transactions as tx_module
 from decimal_web3_sdk.config import NetworkConfig
 from decimal_web3_sdk.decimal import (
-    DecimalService, MultisendDelRequest, MultisendErc20Request,
+    DecimalService, DecimalWorkflowResult, MultisendDelRequest, MultisendErc20Request,
     MultisendErc20Recipient, MultisendRecipient, WithdrawDelStakeWithResetRequest,
 )
 from decimal_web3_sdk.erc20 import Erc20Service, PermitSignature, format_units_string
@@ -275,6 +275,59 @@ def test_dynamic_fee_uses_explicit_receipt_price_not_maximum():
         receipt={"status": "0x1", "gasUsed": "0x5208", "effectiveGasPrice": "0xa"},
     )
     assert _result_from_draft(draft, None, broadcast=True).effective_fee_wei == 210000
+
+
+def test_delegation_fee_budget_is_not_the_mined_fee():
+    gas_price = 1190475000000
+    gas_limit = 228556
+    draft = TransactionDraft(
+        tx={"type": 0, "gas": gas_limit, "gasPrice": gas_price},
+        from_address="0x" + "11" * 20,
+        to_address="0x" + "22" * 20,
+        value_wei=0,
+        gas=gas_limit,
+        gas_price_wei=gas_price,
+        fee_wei=gas_limit * gas_price,
+        receipt={"status": 1, "gasUsed": 205011, "blockNumber": 33846497},
+    )
+    result = _result_from_draft(draft, None, broadcast=True)
+    assert str(result.fee_budget_del) == "0.2720902041"
+    assert str(result.actual_fee_del) == "0.244060470225"
+    assert result.actual_fee_wei == 205011 * gas_price
+    assert result.fee_budget_wei == gas_limit * gas_price
+    assert result.actual_fee_del < result.fee_budget_del
+
+    pending = _result_from_draft(
+        TransactionDraft(
+            tx=draft.tx, from_address=draft.from_address, to_address=draft.to_address,
+            value_wei=0, gas=gas_limit, gas_price_wei=gas_price, fee_wei=draft.fee_wei,
+        ),
+        None,
+        broadcast=True,
+    )
+    assert pending.actual_fee_wei is None
+    assert pending.fee_budget_wei == draft.fee_wei
+
+
+def test_workflow_actual_fee_requires_all_receipts():
+    confirmed = TransactionResult(success=True, status="success", fee_wei=300, effective_fee_wei=200)
+    pending = TransactionResult(success=True, status="pending", fee_wei=500)
+    workflow = DecimalWorkflowResult(
+        success=True, name="approval_and_delegate", steps=("approve", "delegate"),
+        expected_steps=2, actual_steps=2, extra_steps_required=True,
+        primary=confirmed, secondary=pending,
+    )
+    assert workflow.total_fee_wei == 800
+    assert workflow.total_actual_fee_wei is None
+    assert workflow.total_actual_fee_del is None
+    complete = DecimalWorkflowResult(
+        success=True, name=workflow.name, steps=workflow.steps,
+        expected_steps=2, actual_steps=2, extra_steps_required=True,
+        primary=confirmed,
+        secondary=TransactionResult(success=True, status="success", fee_wei=500, effective_fee_wei=400),
+    )
+    assert complete.total_actual_fee_wei == 600
+    assert format(complete.total_actual_fee_del, "f") == "0.0000000000000006"
 
 
 @pytest.mark.parametrize("method", ["eth_sendRawTransaction", "eth_sendTransaction", "eth_sign", "personal_sign", "eth_signTypedData_v4", "eth_call"])

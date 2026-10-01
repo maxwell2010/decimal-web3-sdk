@@ -714,6 +714,18 @@ class DecimalWorkflowResult:
         return format_units(self.total_fee_wei, 18)
 
     @property
+    def total_actual_fee_wei(self) -> int | None:
+        results = [item for item in (self.primary, self.secondary) if item is not None]
+        if not results or any(item.actual_fee_wei is None for item in results):
+            return None
+        return sum(item.actual_fee_wei for item in results)
+
+    @property
+    def total_actual_fee_del(self) -> Decimal | None:
+        total = self.total_actual_fee_wei
+        return format_units(total, 18) if total is not None else None
+
+    @property
     def tx_hash(self) -> str | None:
         return self.primary.tx_hash if self.primary else None
 

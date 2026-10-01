@@ -2,13 +2,31 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from eth_account import Account
+from eth_account.messages import encode_defunct
+from hexbytes import HexBytes
+from web3 import Web3
+
 from .erc20 import PermitSignature
 from .mnemonic import FromMnemonicMixin
 from .transactions import ContractCallRequest, TransactionResult
-from .wallet import checksum
+from .wallet import checksum, mnemonic_to_private_key
 
 
 CHECKS_ABI = [
+    {
+        "anonymous": False,
+        "inputs": [
+            {"indexed": False, "name": "checkHash", "type": "bytes32"},
+            {"indexed": False, "name": "check", "type": "tuple", "components": [
+                {"name": "checkDetails", "type": "bytes32"},
+                {"name": "signer", "type": "address"},
+                {"name": "status", "type": "uint8"},
+            ]},
+        ],
+        "name": "CreatedCheck",
+        "type": "event",
+    },
     {
         "inputs": [],
         "name": "nonces",
@@ -104,6 +122,44 @@ class RedeemChecksRequest(FromMnemonicMixin):
 class ChecksService:
     def __init__(self, client) -> None:
         self._client = client
+
+    def created_check_hashes(
+        self, receipt: dict, *, contract: str | None = None,
+    ) -> tuple[str, ...]:
+        status = receipt.get("status")
+        if (int(status, 0) if isinstance(status, str) else status) != 1:
+            raise ValueError("A successful receipt is required")
+        target = checksum(contract or self._client.config.contracts.checks)
+        event = self._client.web3.eth.contract(abi=CHECKS_ABI).events.CreatedCheck()
+        topic = Web3.keccak(text="CreatedCheck(bytes32,(bytes32,address,uint8))")
+        hashes = []
+        for log in receipt.get("logs", []):
+            if checksum(log["address"]) != target or not log.get("topics"):
+                continue
+            if HexBytes(log["topics"][0]) != topic:
+                continue
+            normalized = {key: receipt.get(key) for key in (
+                "blockHash", "blockNumber", "transactionHash", "transactionIndex",
+            )}
+            normalized.update(log)
+            normalized.setdefault("logIndex", 0)
+            hashes.append(Web3.to_hex(event.process_log(normalized)["args"]["checkHash"]))
+        return tuple(hashes)
+
+    @staticmethod
+    def sign_redemption(
+        check_hash: str, redeemer: str, mnemonic: str, *,
+        account_index: int = 0, passphrase: str = "",
+    ) -> str:
+        check = HexBytes(check_hash)
+        if len(check) != 32:
+            raise ValueError("check_hash must be 32 bytes")
+        digest = Web3.solidity_keccak(["bytes32", "address"], [check, checksum(redeemer)])
+        private_key = mnemonic_to_private_key(
+            mnemonic, passphrase=passphrase, account_index=account_index,
+        )
+        signature = Account.sign_message(encode_defunct(primitive=digest), private_key).signature
+        return Web3.to_hex(signature)
 
     async def create_del(
         self,

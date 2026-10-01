@@ -93,10 +93,26 @@ Create token; types, defaults and return value are specified below.
 async create_token(self, request: 'CreateChecksTokenRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
 ```
 
+### created_check_hashes
+
+Created check hashes; types, defaults and return value are specified below.
+
+```python
+created_check_hashes(self, receipt: 'dict', *, contract: 'str | None' = None) -> 'tuple[str, ...]'
+```
+
 ### redeem
 
 Redeem; types, defaults and return value are specified below.
 
 ```python
 async redeem(self, request: 'RedeemChecksRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
+```
+
+### sign_redemption
+
+Sign redemption; types, defaults and return value are specified below.
+
+```python
+sign_redemption(check_hash: 'str', redeemer: 'str', mnemonic: 'str', *, account_index: 'int' = 0, passphrase: 'str' = '') -> 'str'
 ```

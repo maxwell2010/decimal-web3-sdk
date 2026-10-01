@@ -737,6 +737,22 @@ Requires secondary transaction; types, defaults and return value are specified b
 requires_secondary_transaction: bool
 ```
 
+### total_actual_fee_del
+
+Total actual fee del; types, defaults and return value are specified below.
+
+```python
+total_actual_fee_del: Decimal | None
+```
+
+### total_actual_fee_wei
+
+Total actual fee wei; types, defaults and return value are specified below.
+
+```python
+total_actual_fee_wei: int | None
+```
+
 ### total_fee_del
 
 Total fee del; types, defaults and return value are specified below.

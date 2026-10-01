@@ -89,6 +89,10 @@ class NftStakeOperationRequest(ContractOperationRequest):
         return [address(self.validator), address(self.nft), uint(self.token_id, "token_id")]
 
     def _stake_call(self, client, function, args):
+        if client.config.contracts.delegation_nft.lower() == client.config.contracts.delegation.lower():
+            raise NotImplementedError(
+                "This legacy NFT staking operation is not available on the unified Delegation contract"
+            )
         return self._encode(
             client, "delegation_nft", client.config.contracts.delegation_nft, function, args
         )
@@ -209,9 +213,14 @@ class CompleteNftStakeRequest(ContractOperationRequest):
     domain = "nft"
 
     def to_contract_call(self, client):
+        abi = (
+            "delegation_nft_unified"
+            if client.config.contracts.delegation_nft.lower() == client.config.contracts.delegation.lower()
+            else "delegation_nft"
+        )
         return self._encode(
             client,
-            "delegation_nft",
+            abi,
             client.config.contracts.delegation_nft,
             "complete",
             [uint_list(self.indexes, "indexes")],
@@ -419,7 +428,8 @@ class NftOperations(ContractOperations):
         )
 
     async def _read_stake_call(self, function: str, args: list, block_identifier="latest"):
-        abi = self._client.abi.load("delegation_nft")
+        abi_name = "delegation_nft_unified" if self._unified_delegation else "delegation_nft"
+        abi = self._client.abi.load(abi_name)
         target = address(self._client.config.contracts.delegation_nft)
         return await self._client.rpc.call(
             lambda w3: (
@@ -432,19 +442,29 @@ class NftOperations(ContractOperations):
     async def get_stake(
         self, validator: str, delegator: str, nft: str, token_id: int, *, block_identifier="latest"
     ) -> NftStake:
+        function = "getNFTStake" if self._unified_delegation else "getStake"
+        args = (
+            [address(nft), uint(token_id, "token_id"), address(delegator), address(validator), 0]
+            if self._unified_delegation
+            else [address(validator), address(delegator), address(nft), uint(token_id, "token_id")]
+        )
         values = await self._read_stake_call(
-            "getStake",
-            [address(validator), address(delegator), address(nft), uint(token_id, "token_id")],
+            function, args,
             block_identifier,
         )
-        return self._checked_stake(values, validator, delegator, nft, token_id, 0, block_identifier)
+        return self._checked_stake(values, validator, delegator, nft, token_id, 0, block_identifier, self._unified_delegation)
 
     async def get_stake_id(
         self, validator: str, delegator: str, nft: str, token_id: int, *, block_identifier="latest"
     ) -> str:
+        function = "getNFTStakeId" if self._unified_delegation else "getStakeId"
+        args = (
+            [address(nft), uint(token_id, "token_id"), address(delegator), address(validator), 0]
+            if self._unified_delegation
+            else [address(validator), address(delegator), address(nft), uint(token_id, "token_id")]
+        )
         value = await self._read_stake_call(
-            "getStakeId",
-            [address(validator), address(delegator), address(nft), uint(token_id, "token_id")],
+            function, args,
             block_identifier,
         )
         return "0x" + bytes(value).hex()
@@ -459,26 +479,32 @@ class NftOperations(ContractOperations):
         *,
         block_identifier="latest",
     ) -> NftStake:
-        values = await self._read_stake_call(
-            "getHoldStake",
-            [
-                address(validator),
-                address(delegator),
-                address(nft),
-                uint(token_id, "token_id"),
-                uint(hold_timestamp, "hold_timestamp"),
-            ],
-            block_identifier,
+        hold_key = uint(hold_timestamp, "hold_timestamp", positive=True)
+        function = "getNFTStake" if self._unified_delegation else "getHoldStake"
+        args = (
+            [address(nft), uint(token_id, "token_id"), address(delegator), address(validator), hold_key]
+            if self._unified_delegation
+            else [address(validator), address(delegator), address(nft), uint(token_id, "token_id"), hold_key]
         )
+        values = await self._read_stake_call(function, args, block_identifier)
         return self._checked_stake(
-            values, validator, delegator, nft, token_id, hold_timestamp, block_identifier
+            values, validator, delegator, nft, token_id, hold_timestamp, block_identifier, self._unified_delegation
         )
 
     @staticmethod
     def _checked_stake(
-        values, validator, delegator, nft, token_id, hold_timestamp, block_identifier
+        values, validator, delegator, nft, token_id, hold_timestamp, block_identifier,
+        unified=False,
     ):
-        if len(values) != 7:
+        if unified:
+            if len(values) != 10 or type(values[9]) is not bool:
+                raise ValueError("Unsupported unified NFT stake format")
+            values = (
+                (values[5], values[4], values[0], values[2], values[1], values[3], values[8])
+                if values[9]
+                else (ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, 0, 0, 0, 0)
+            )
+        elif len(values) != 7:
             raise ValueError("Unsupported NFT stake format")
         stake = NftStake(
             *values, block_number=block_identifier if type(block_identifier) is int else None
@@ -504,7 +530,7 @@ class NftOperations(ContractOperations):
         values = await self._read_stake_call(
             "getFrozenStake", [uint(index, "index")], block_identifier
         )
-        return self._frozen_stake(index, values)
+        return self._frozen_stake(index, values, self._unified_delegation)
 
     async def get_frozen_stakes(
         self, indexes: tuple[int, ...], *, block_identifier="latest"
@@ -513,7 +539,7 @@ class NftOperations(ContractOperations):
         values = await self._read_stake_call("getFrozenStakes", [indexes], block_identifier)
         if len(values) != len(indexes):
             raise ValueError("Unexpected number of frozen stakes in the contract response")
-        return tuple(self._frozen_stake(index, value) for index, value in zip(indexes, values))
+        return tuple(self._frozen_stake(index, value, self._unified_delegation) for index, value in zip(indexes, values))
 
     async def get_freeze_time(
         self, freeze_type: Literal[1, 2], *, block_identifier="latest"
@@ -523,10 +549,14 @@ class NftOperations(ContractOperations):
         return int(await self._read_stake_call("getFreezeTime", [freeze_type], block_identifier))
 
     @staticmethod
-    def _frozen_stake(index, values):
+    def _frozen_stake(index, values, unified=False):
         if len(values) != 4:
             raise ValueError(
                 "Unsupported frozen stake format; expected stake, status, type, timestamp"
             )
         stake, status, kind, timestamp = values
+        if unified:
+            if len(stake) != 8:
+                raise ValueError("Unsupported unified frozen NFT stake format")
+            stake = stake[:7]
         return FrozenNftStake(index, NftStake(*stake), int(status), int(kind), int(timestamp))

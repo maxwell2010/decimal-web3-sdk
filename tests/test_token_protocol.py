@@ -1,6 +1,7 @@
 """Token protocol guards and calldata, without live signing or broadcasting."""
 
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from decimal import Decimal
 
 import pytest
@@ -14,12 +15,66 @@ from decimal_web3_sdk.token import (
     UpdateTokenDetailsRequest,
     token_creation_required_reserve_wei,
 )
+from decimal_web3_sdk.erc20 import TokenInfo
 from decimal_web3_sdk.transactions import TransactionResult
 
 
 KEY = "0x" + "11" * 32
 TOKEN = "0x1000000000000000000000000000000000000001"
 CENTER = "0x2000000000000000000000000000000000000002"
+
+
+@pytest.mark.asyncio
+async def test_reserve_properties_keep_minimum_above_current_supply_exact():
+    token, client = service()
+    client.erc20.info = AsyncMock(return_value=TokenInfo(TOKEN, "Baron", "BARON", 18))
+    values = {
+        "minTotalSupply": 100_000_000 * 10**18,
+        "maxTotalSupply": 10_000_000_000 * 10**18,
+        "totalSupply": 44_700_070_663_894_964_849_192_929,
+        "creator": CENTER,
+        "identity": "ipfs://example",
+    }
+    token._read_token_property = AsyncMock(side_effect=lambda address, name: values[name])
+    result = await token.properties(TOKEN)
+    assert result.kind == "reserve" and result.owner is None
+    assert result.min_total_supply_raw > result.total_supply_raw
+    assert result.as_dict()["min_total_supply"]["raw"] == str(values["minTotalSupply"])
+    assert result.as_dict()["total_supply"]["raw"] == str(values["totalSupply"])
+
+
+@pytest.mark.asyncio
+async def test_reserveless_properties_use_owner_cap_and_no_reserve_fields():
+    token, client = service()
+    client.erc20.info = AsyncMock(return_value=TokenInfo(TOKEN, "Revolutes", "REVOLUTES", 18))
+    values = {
+        "owner": CENTER,
+        "cap": 2**256 - 1,
+        "mintable": True,
+        "burnable": True,
+        "totalSupply": 25_670_131_708_404_964_400,
+        "identity": "identity-hash",
+    }
+    def read(address, name):
+        if name == "minTotalSupply":
+            raise ValueError("method unavailable")
+        return values[name]
+    token._read_token_property = AsyncMock(side_effect=read)
+    result = await token.properties(TOKEN)
+    assert result.kind == "reserveless" and result.creator is None
+    assert result.min_total_supply_raw is None and result.max_total_supply_raw is None
+    assert result.unlimited_cap
+    assert result.as_dict()["total_supply"]["formatted"] == "25.6701317084049644"
+    assert result.as_dict()["cap"]["raw"] == str(2**256 - 1)
+
+
+@pytest.mark.asyncio
+async def test_properties_do_not_replace_rpc_failure_with_zero():
+    token, client = service()
+    client.erc20.info = AsyncMock(return_value=TokenInfo(TOKEN, "Unknown", "UNK", 18))
+    token._read_token_property = AsyncMock(side_effect=ConnectionError("RPC unavailable"))
+    with pytest.raises(ConnectionError):
+        await token.properties(TOKEN)
 
 
 class FakeTx:

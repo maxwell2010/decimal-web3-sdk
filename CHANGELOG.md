@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.1.3 - Refreshed 2026-10-01
+
+Maintainer-requested replacement of the existing GitHub preview without a
+package version change. The v0.1.3 tag, wheel and sdist are refreshed;
+SHA256SUMS changes. Existing 0.1.3 installations need
+`--force-reinstall --no-cache-dir` to receive this build. This is not a PyPI upload.
+
+- Read reserve and reserveless token properties through their respective live
+  ABI methods. Keep supply, redemption minimum and spendable wallet balance
+  distinct; represent every amount exactly without floats.
+- Expose actual receipt fees separately from preflight gas budgets and include
+  actual fees across multi-step workflows.
+- Update testnet NFT staking to the active unified Delegation contract. Confirm
+  DRC1155 delegation, stake transfer, withdrawal and both matured completions.
+- Confirm testnet one-owner Safe creation and execution plus DEL check creation
+  and redemption. Token-check creation still reverts during unsigned preflight;
+  validator administration and bridge remain outside live coverage.
+- Keep unsupported NFT reset calls explicit, and add check-hash extraction plus
+  mnemonic-based redemption signing. No mainnet transaction was broadcast for
+  this refresh.
+
 ## 0.1.3 - 2026-09-24
 
 - Reconcile current reserved NFT collection creation with the six-field metadata

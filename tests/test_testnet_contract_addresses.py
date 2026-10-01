@@ -6,6 +6,7 @@ def test_testnet_system_contracts_use_testnet_deployments():
     mainnet = NetworkConfig.mainnet()
 
     assert config.chain_id == 202020
+    assert config.contracts.delegation_nft.lower() == config.contracts.delegation.lower()
     expected = {
         "contract_center": "0xbc96b61f137f28f0da47cc4ef06e5f984b565a2e",
         "delegation": "0x0d8e8ce36dade42682dd8cc6288d6a8d324bac2c",

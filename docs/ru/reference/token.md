@@ -4,6 +4,42 @@
 
 Сигнатуры сформированы из кода релиза. Обязательные поля не имеют значения по умолчанию.
 
+## TokenProperties
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+TokenProperties(token: 'TokenInfo', kind: 'str', total_supply_raw: 'int', identity: 'str', creator: 'str | None' = None, owner: 'str | None' = None, min_total_supply_raw: 'int | None' = None, max_total_supply_raw: 'int | None' = None, cap_raw: 'int | None' = None, mintable: 'bool | None' = None, burnable: 'bool | None' = None) -> None
+```
+
+- `token`: `TokenInfo`; required.
+- `kind`: `str`; required.
+- `total_supply_raw`: `int`; required.
+- `identity`: `str`; required.
+- `creator`: `str | None`; None.
+- `owner`: `str | None`; None.
+- `min_total_supply_raw`: `int | None`; None.
+- `max_total_supply_raw`: `int | None`; None.
+- `cap_raw`: `int | None`; None.
+- `mintable`: `bool | None`; None.
+- `burnable`: `bool | None`; None.
+
+### as_dict
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+as_dict(self) -> 'dict[str, object]'
+```
+
+### unlimited_cap
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+unlimited_cap: bool
+```
+
 ## BuyTokenRequest
 
 Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
@@ -240,6 +276,14 @@ async create_reserveless(self, request: 'CreateReservelessTokenRequest', broadca
 
 ```python
 async mint(self, request: 'MintTokenRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
+```
+
+### properties
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+async properties(self, token: 'str') -> 'TokenProperties'
 ```
 
 ### sell

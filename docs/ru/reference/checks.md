@@ -93,10 +93,26 @@ async create_del(self, request: 'CreateChecksDelRequest', broadcast: 'bool' = Fa
 async create_token(self, request: 'CreateChecksTokenRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
 ```
 
+### created_check_hashes
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+created_check_hashes(self, receipt: 'dict', *, contract: 'str | None' = None) -> 'tuple[str, ...]'
+```
+
 ### redeem
 
 Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
 
 ```python
 async redeem(self, request: 'RedeemChecksRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
+```
+
+### sign_redemption
+
+Публичная операция/свойство SDK. Ниже приведены точные типы, значения по умолчанию и тип результата; контекст использования дан в руководстве раздела.
+
+```python
+sign_redemption(check_hash: 'str', redeemer: 'str', mnemonic: 'str', *, account_index: 'int' = 0, passphrase: 'str' = '') -> 'str'
 ```

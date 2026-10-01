@@ -64,8 +64,25 @@ TransactionResult.success описывает шаг SDK; is_successful озна�
 receipt, is_pending означает отправку без подтверждения. Поля сети:
 tx_hash, block_number, gas_used, effective_gas_price_wei, effective_fee_wei,
 effective_fee_del. fee_wei/fee_del описывают бюджет отправки.
+Явные синонимы: actual_fee_wei/actual_fee_del - фактически списанная
+комиссия, fee_budget_wei/fee_budget_del - максимальный бюджет отправки.
+actual_fee_del равна None до receipt либо когда сеть не дала надежную цену газа.
 При локальной подписи хеша сети нет. Для workflow проверяйте primary,
 secondary, transaction_count, total_fee_del, extra_steps_required и оба receipt.
+total_fee_del - сумма бюджетов; total_actual_fee_del - фактическая сумма,
+которая доступна только после подтверждения всех шагов.
+
+```python
+result = await client.decimal.delegate_erc20(request, broadcast=True, wait_receipt=True)
+step = result.primary
+print("Резерв DEL:", step.fee_budget_del)
+print("Списано DEL:", step.actual_fee_del)  # None, если receipt еще не получен
+```
+
+Например, при gasLimit 228556 и gasUsed 205011 по цене 1190.475 gwei
+резерв равен 0.2720902041 DEL, а фактическая комиссия 0.244060470225 DEL.
+Разница не списывается. Эксплорер, умножающий gasLimit на gasPrice,
+может ошибочно показать резерв как комиссию.
 
 Правка receipt в обновлении от 2026-09-16: если effectiveGasPrice отсутствует,
 для транзакций с фиксированной ценой type 0/1 допустим gasPrice из отправленного

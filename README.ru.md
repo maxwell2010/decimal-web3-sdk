@@ -26,6 +26,12 @@ python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell201
 Файл указывает на wheel конкретного релиза GitHub и обновляется при каждом
 проверенном выпуске, включая предварительные. Обновление происходит только при
 запуске команды, не внутри SDK автоматически. Git и вход в GitHub не требуются.
+Предварительный релиз v0.1.3 обновлен без смены версии пакета. Если 0.1.3 уже
+установлена, переустановите ее без кеша pip:
+
+```shell
+python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
+```
 
 Для установки wheel этого релиза:
 ```shell

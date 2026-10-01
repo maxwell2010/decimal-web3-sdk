@@ -63,8 +63,26 @@ TransactionResult.success describes the SDK step. is_successful means successful
 receipt; is_pending means broadcast without confirmation. Receipt fields:
 tx_hash, block_number, gas_used, effective_gas_price_wei, effective_fee_wei,
 effective_fee_del. fee_wei/fee_del are the submitted budget.
+Explicit aliases: actual_fee_wei/actual_fee_del are the amount charged,
+while fee_budget_wei/fee_budget_del are the submitted maximum budget.
+actual_fee_del is None until a receipt is available, or when the network does
+not provide a reliable effective gas price.
 Signed-only results have no network hash. For workflows inspect primary,
 secondary, transaction_count, total_fee_del, extra_steps_required and both receipts.
+total_fee_del sums budgets; total_actual_fee_del sums mined charges and is
+available only when every workflow step has a known actual fee.
+
+```python
+result = await client.decimal.delegate_erc20(request, broadcast=True, wait_receipt=True)
+step = result.primary
+print("Budget DEL:", step.fee_budget_del)
+print("Charged DEL:", step.actual_fee_del)  # None if the receipt is unavailable
+```
+
+For example, a gas limit of 228556 and gas used of 205011 at 1190.475 gwei
+give a budget of 0.2720902041 DEL but an actual charge of 0.244060470225 DEL.
+The difference is not charged. An explorer that multiplies gas limit by gas
+price can incorrectly display the budget as the fee.
 
 Receipt correction in the 2026-09-16 refresh: when effectiveGasPrice is absent, fixed-price
 type 0/1 transactions may use their submitted gasPrice. For dynamic-fee transactions

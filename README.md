@@ -26,6 +26,12 @@ python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell201
 The manifest points to a versioned GitHub release wheel and changes with each
 reviewed release. It includes previews. Updates happen only when you run the
 command, never automatically inside the SDK. Git and GitHub login are not required.
+The v0.1.3 preview was refreshed without changing its package version. If you
+already installed 0.1.3, use the reinstall command below to bypass pip's cache:
+
+```shell
+python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
+```
 
 For this release's wheel:
 ```shell

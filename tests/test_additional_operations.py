@@ -15,6 +15,7 @@ from web3.providers.base import BaseProvider
 
 import decimal_web3_sdk as sdk
 from decimal_web3_sdk._contract_operations import ZERO_ADDRESS
+from decimal_web3_sdk.nft_operations import NftCollectionState, NftStake
 from test_transaction_catalog import account, offline_client, make_request, reference
 
 
@@ -496,7 +497,7 @@ async def test_nft_operation_wraps_in_safe_without_signing(offline_client, accou
 
 def test_testnet_nft_target_is_not_mainnet():
     config = sdk.NetworkConfig.testnet()
-    assert config.contracts.delegation_nft.lower() == "0x07e2ad4dfc91412de09e33e4650254948b21a20c"
+    assert config.contracts.delegation_nft.lower() == config.contracts.delegation.lower()
     assert config.contracts.delegation_nft != sdk.SystemContracts().delegation_nft
 
 
@@ -531,6 +532,61 @@ async def test_nft_empty_stake_is_an_empty_sentinel(offline_client):
         ADDRESS, OTHER, ADDRESS, 10, 1800000000, block_identifier=15
     )
     assert not stake.exists and stake.block_number == 15 and stake.amount_raw == 0
+
+
+async def test_testnet_unified_nft_stake_read_maps_current_contract_tuple():
+    client = sdk.DecimalClient(sdk.NetworkConfig.testnet())
+    client.nft._read_stake_call = AsyncMock(return_value=(
+        ADDRESS, 7, 2, 3, OTHER, ADDRESS, ZERO_ADDRESS, 0, 0, True,
+    ))
+    stake = await client.nft.get_stake(ADDRESS, OTHER, ADDRESS, 7)
+    assert stake.validator == ADDRESS and stake.delegator == OTHER
+    assert stake.amount_raw == 2 and stake.token_id == 7 and stake.token_type == 3
+    client.nft._read_stake_call.assert_awaited_once_with(
+        "getNFTStake", [ADDRESS, 7, OTHER, ADDRESS, 0], "latest",
+    )
+
+
+async def test_testnet_unified_nft_uses_current_selectors_without_signing(account):
+    client = sdk.DecimalClient(sdk.NetworkConfig.testnet())
+    contract = client.nft._delegation_nft_contract()
+    assert HexBytes(contract.encode_abi("delegateNFT1155", args=[ADDRESS, OTHER, 7, 1]))[:4] == Web3.keccak(
+        text="delegateNFT1155(address,address,uint256,uint256)"
+    )[:4]
+    request = sdk.CompleteNftStakeRequest.from_mnemonic(mnemonic=account[1], indexes=(2,))
+    call = request.to_contract_call(client)
+    assert call.contract.lower() == client.config.contracts.delegation.lower()
+    assert HexBytes(call.data)[:4] == Web3.keccak(text="complete(uint256[])")[:4]
+
+
+async def test_testnet_unified_nft_withdraw_and_transfer_move_entire_stake(account):
+    client = sdk.DecimalClient(sdk.NetworkConfig.testnet())
+    owner = account[0].address
+    client.nft.collection_state = AsyncMock(return_value=NftCollectionState(True, "erc1155", True))
+    client.nft.get_stake = AsyncMock(return_value=NftStake(
+        ADDRESS, owner, OTHER, 2, 7, 3, 0,
+    ))
+    client.tx.build_contract_call = AsyncMock(side_effect=lambda call: call)
+
+    withdraw = sdk.WithdrawNftRequest.from_mnemonic(
+        mnemonic=account[1], nft=OTHER, validator=ADDRESS, token_id=7, amount=2,
+    )
+    call = await client.nft.build_withdraw(withdraw)
+    assert HexBytes(call.data)[:4] == Web3.keccak(
+        text="withdrawNFT1155(address,address,uint256)"
+    )[:4]
+    transfer = sdk.TransferNftStakeRequest.from_mnemonic(
+        mnemonic=account[1], nft=OTHER, validator=ADDRESS, new_validator=owner,
+        token_id=7, amount=2,
+    )
+    call = await client.nft.build_transfer_stake(transfer)
+    assert HexBytes(call.data)[:4] == Web3.keccak(
+        text="transferNFT1155(address,address,uint256,address)"
+    )[:4]
+    with pytest.raises(ValueError, match="entire stake"):
+        await client.nft.build_withdraw(sdk.WithdrawNftRequest.from_mnemonic(
+            mnemonic=account[1], nft=OTHER, validator=ADDRESS, token_id=7, amount=1,
+        ))
 
 
 async def test_wrong_request_cannot_change_the_operation(offline_client, account):

@@ -9,7 +9,7 @@ from web3 import Web3
 from web3.logs import DISCARD
 
 from .decimal import DecimalWorkflowResult
-from .erc20 import parse_units
+from .erc20 import TokenInfo, format_units_string, parse_units
 from .mnemonic import FromMnemonicMixin
 from .token_operations import TokenOperations
 from .transactions import ContractCallRequest, Erc20ApproveRequest, TransactionResult, _token_preflight_failure
@@ -25,6 +25,62 @@ TOKEN_CREATION_COMMISSION_BY_SYMBOL_LENGTH: dict[int, Decimal] = {
 }
 TOKEN_CREATION_DEFAULT_COMMISSION_DEL = Decimal("250")
 TESTNET_MIN_RESERVE_WEI = 10**18
+
+
+_TOKEN_PROPERTY_TYPES = {
+    "owner": "address",
+    "creator": "address",
+    "cap": "uint256",
+    "mintable": "bool",
+    "burnable": "bool",
+    "minTotalSupply": "uint256",
+    "maxTotalSupply": "uint256",
+    "totalSupply": "uint256",
+    "identity": "string",
+}
+
+
+@dataclass(frozen=True)
+class TokenProperties:
+    token: TokenInfo
+    kind: str
+    total_supply_raw: int
+    identity: str
+    creator: str | None = None
+    owner: str | None = None
+    min_total_supply_raw: int | None = None
+    max_total_supply_raw: int | None = None
+    cap_raw: int | None = None
+    mintable: bool | None = None
+    burnable: bool | None = None
+
+    @property
+    def unlimited_cap(self) -> bool:
+        return self.cap_raw == 2**256 - 1
+
+    def as_dict(self) -> dict[str, object]:
+        decimals = self.token.decimals
+        def amount(value: int | None) -> dict[str, str] | None:
+            return None if value is None else {
+                "raw": str(value), "formatted": format_units_string(value, decimals),
+            }
+        return {
+            "token": {
+                "address": self.token.address, "name": self.token.name,
+                "symbol": self.token.symbol, "decimals": decimals,
+            },
+            "kind": self.kind,
+            "identity": self.identity,
+            "creator": self.creator,
+            "owner": self.owner,
+            "total_supply": amount(self.total_supply_raw),
+            "min_total_supply": amount(self.min_total_supply_raw),
+            "max_total_supply": amount(self.max_total_supply_raw),
+            "cap": amount(self.cap_raw),
+            "unlimited_cap": self.unlimited_cap,
+            "mintable": self.mintable,
+            "burnable": self.burnable,
+        }
 
 
 DECIMAL_TOKEN_ABI: list[dict[str, Any]] = [
@@ -294,6 +350,46 @@ class CreateTokenRequest(FromMnemonicMixin):
 class TokenService(TokenOperations):
     def __init__(self, client) -> None:
         self._client = client
+
+    async def properties(self, token: str) -> TokenProperties:
+        """Read reserve or reserveless contract properties without inferring a wallet balance."""
+        info = await self._client.erc20.info(token)
+        try:
+            minimum = int(await self._read_token_property(info.address, "minTotalSupply"))
+        except Exception:
+            owner = checksum(await self._read_token_property(info.address, "owner"))
+            cap = int(await self._read_token_property(info.address, "cap"))
+            mintable = bool(await self._read_token_property(info.address, "mintable"))
+            burnable = bool(await self._read_token_property(info.address, "burnable"))
+            kind = "reserveless"
+            creator = None
+            maximum = None
+        else:
+            creator = checksum(await self._read_token_property(info.address, "creator"))
+            maximum = int(await self._read_token_property(info.address, "maxTotalSupply"))
+            owner = None
+            cap = None
+            mintable = None
+            burnable = None
+            kind = "reserve"
+        total = int(await self._read_token_property(info.address, "totalSupply"))
+        identity = str(await self._read_token_property(info.address, "identity"))
+        return TokenProperties(
+            token=info, kind=kind, total_supply_raw=total, identity=identity,
+            creator=creator, owner=owner, min_total_supply_raw=minimum if kind == "reserve" else None,
+            max_total_supply_raw=maximum, cap_raw=cap, mintable=mintable, burnable=burnable,
+        )
+
+    async def _read_token_property(self, token: str, name: str):
+        output_type = _TOKEN_PROPERTY_TYPES[name]
+        abi = [{
+            "type": "function", "name": name, "stateMutability": "view", "inputs": [],
+            "outputs": [{"name": "", "type": output_type}],
+        }]
+        target = checksum(token)
+        return await self._client.rpc.call(
+            lambda w3: getattr(w3.eth.contract(address=target, abi=abi).functions, name)().call()
+        )
 
     async def buy(
         self,

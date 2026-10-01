@@ -4,6 +4,42 @@
 
 Signatures are generated from the release source. Required fields have no default.
 
+## TokenProperties
+
+Tokenproperties; types, defaults and return value are specified below.
+
+```python
+TokenProperties(token: 'TokenInfo', kind: 'str', total_supply_raw: 'int', identity: 'str', creator: 'str | None' = None, owner: 'str | None' = None, min_total_supply_raw: 'int | None' = None, max_total_supply_raw: 'int | None' = None, cap_raw: 'int | None' = None, mintable: 'bool | None' = None, burnable: 'bool | None' = None) -> None
+```
+
+- `token`: `TokenInfo`; required.
+- `kind`: `str`; required.
+- `total_supply_raw`: `int`; required.
+- `identity`: `str`; required.
+- `creator`: `str | None`; None.
+- `owner`: `str | None`; None.
+- `min_total_supply_raw`: `int | None`; None.
+- `max_total_supply_raw`: `int | None`; None.
+- `cap_raw`: `int | None`; None.
+- `mintable`: `bool | None`; None.
+- `burnable`: `bool | None`; None.
+
+### as_dict
+
+As dict; types, defaults and return value are specified below.
+
+```python
+as_dict(self) -> 'dict[str, object]'
+```
+
+### unlimited_cap
+
+Unlimited cap; types, defaults and return value are specified below.
+
+```python
+unlimited_cap: bool
+```
+
 ## BuyTokenRequest
 
 Buytokenrequest; types, defaults and return value are specified below.
@@ -240,6 +276,14 @@ Mint; types, defaults and return value are specified below.
 
 ```python
 async mint(self, request: 'MintTokenRequest', broadcast: 'bool' = False, wait_receipt: 'bool' = False) -> 'TransactionResult'
+```
+
+### properties
+
+Properties; types, defaults and return value are specified below.
+
+```python
+async properties(self, token: 'str') -> 'TokenProperties'
 ```
 
 ### sell

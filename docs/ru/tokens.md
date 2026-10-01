@@ -5,6 +5,27 @@
 Чтение ERC20: info(address) возвращает name/symbol/decimals; balance(token, owner)
 возвращает TokenBalance с raw/formatted и точным as_dict();
 allowance(token, owner, spender) возвращает лимит в минимальных единицах.
+`client.token.properties(token)` читает свойства резервного или безрезервного
+контракта. Для резервного токена возвращаются `creator`, `min_total_supply_raw`
+и `max_total_supply_raw`; минимальная эмиссия - порог погашения и может быть
+больше текущего `total_supply_raw`. Для безрезервного токена возвращаются
+`owner`, `cap_raw`, `mintable` и `burnable`; `uint256.max` в `cap_raw` означает
+отсутствие ограничения (`unlimited_cap=True`). `owner` отражает текущие права,
+а не обязательно исторического создателя. `as_dict()` сохраняет все суммы
+строками, без `float`.
+
+```python
+properties = await client.token.properties(token_address)
+balance = await client.erc20.balance(token_address, wallet_address)
+print(properties.as_dict()["total_supply"]["raw"])  # эмиссия, не баланс
+print(balance.raw_string)                         # доступно кошельку
+```
+
+Для поиска полученных безрезервных токенов требуется перечень адресов контрактов
+из каталога сети; SDK не выводит владение из `creator` или `totalSupply`.
+Неудачный RPC-запрос или ошибка чтения `decimals()` не означают нулевой баланс.
+Изменение `identity` у существующего безрезервного токена не гарантируется:
+вызывайте setter только после проверки ABI конкретной реализации.
 build_transfer_data, build_transfer_from_data, build_approve_data,
 build_permit_data только кодируют ABI. permit_signature создает типизированную
 подпись EIP-2612, не транзакцию сети. Одного наличия nonces недостаточно для

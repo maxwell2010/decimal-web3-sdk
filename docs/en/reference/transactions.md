@@ -260,6 +260,38 @@ TransactionResult(success: 'bool', tx_hash: 'str | None' = None, status: 'str | 
 - `token_allowance_required_raw`: `int | None`; None.
 - `token_allowance_missing_raw`: `int | None`; None.
 
+### actual_fee_del
+
+Actual fee del; types, defaults and return value are specified below.
+
+```python
+actual_fee_del: Decimal | None
+```
+
+### actual_fee_wei
+
+Actual fee wei; types, defaults and return value are specified below.
+
+```python
+actual_fee_wei: int | None
+```
+
+### fee_budget_del
+
+Fee budget del; types, defaults and return value are specified below.
+
+```python
+fee_budget_del: Decimal | None
+```
+
+### fee_budget_wei
+
+Fee budget wei; types, defaults and return value are specified below.
+
+```python
+fee_budget_wei: int | None
+```
+
 ### is_confirmed
 
 Is confirmed; types, defaults and return value are specified below.

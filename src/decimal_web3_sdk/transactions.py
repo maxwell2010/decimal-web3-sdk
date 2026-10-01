@@ -384,6 +384,22 @@ class TransactionResult:
     def is_pending(self) -> bool:
         return self.status == "pending"
 
+    @property
+    def fee_budget_wei(self) -> int | None:
+        return self.fee_wei
+
+    @property
+    def fee_budget_del(self) -> Decimal | None:
+        return self.fee_del
+
+    @property
+    def actual_fee_wei(self) -> int | None:
+        return self.effective_fee_wei
+
+    @property
+    def actual_fee_del(self) -> Decimal | None:
+        return self.effective_fee_del
+
 
 @dataclass(frozen=True)
 class FeePreflight:

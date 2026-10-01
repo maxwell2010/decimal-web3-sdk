@@ -578,6 +578,24 @@ class NftService(NftOperations):
 
     async def build_transfer_stake(self, request: TransferNftStakeRequest) -> TransactionDraft:
         contract = self._delegation_nft_contract()
+        if self._unified_delegation:
+            kind = (await self.collection_state(request.nft)).kind
+            if kind == "erc721" and request.amount != 1:
+                raise ValueError("ERC721 stake amount must be 1")
+            await self._check_unified_stake_amount(request)
+            name = "transferNFT" if kind == "erc721" else "transferNFT1155"
+            if request.hold_timestamp is not None:
+                name = "transferNFTHold" if kind == "erc721" else "transferNFT1155Hold"
+            args = [checksum(request.validator), checksum(request.nft),
+                    uint(request.token_id, "token_id")]
+            if request.hold_timestamp is not None:
+                args.append(uint(request.hold_timestamp, "hold_timestamp", positive=True))
+            args.append(checksum(request.new_validator))
+            data = contract.encode_abi(name, args=args)
+            return await self._client.tx.build_contract_call(ContractCallRequest(
+                contract=self._client.config.contracts.delegation_nft,
+                private_key=request.private_key, data=data,
+            ))
         if request.hold_timestamp is None:
             data = contract.functions.transfer(
                 checksum(request.validator),
@@ -610,6 +628,23 @@ class NftService(NftOperations):
 
     async def build_withdraw(self, request: WithdrawNftRequest) -> TransactionDraft:
         contract = self._delegation_nft_contract()
+        if self._unified_delegation:
+            kind = (await self.collection_state(request.nft)).kind
+            if kind == "erc721" and request.amount != 1:
+                raise ValueError("ERC721 stake amount must be 1")
+            await self._check_unified_stake_amount(request)
+            name = "withdrawNFT" if kind == "erc721" else "withdrawNFT1155"
+            if request.hold_timestamp is not None:
+                name = "withdrawNFTHold" if kind == "erc721" else "withdrawNFT1155Hold"
+            args = [checksum(request.validator), checksum(request.nft),
+                    uint(request.token_id, "token_id")]
+            if request.hold_timestamp is not None:
+                args.append(uint(request.hold_timestamp, "hold_timestamp", positive=True))
+            data = contract.encode_abi(name, args=args)
+            return await self._client.tx.build_contract_call(ContractCallRequest(
+                contract=self._client.config.contracts.delegation_nft,
+                private_key=request.private_key, data=data,
+            ))
         if request.hold_timestamp is None:
             data = contract.functions.withdraw(
                 checksum(request.validator),
@@ -694,6 +729,21 @@ class NftService(NftOperations):
                 return DecimalWorkflowResult(False, name, tuple(steps), 1, len(steps), True, None, approval_result, approval_result.error)
 
         contract = self._delegation_nft_contract()
+        if self._unified_delegation:
+            if request.kind == "erc721" and request.amount != 1:
+                return _workflow_error(name, "ERC721 stake amount must be 1")
+            function = ("delegateNFT" if hold_timestamp is None else "delegateNFTHold")
+            if request.kind == "erc1155":
+                function = "delegateNFT1155" if hold_timestamp is None else "delegateNFT1155Hold"
+            args = [checksum(request.validator), checksum(request.nft), int(request.token_id)]
+            if request.kind == "erc1155":
+                args.append(uint(request.amount, "amount", positive=True))
+            if hold_timestamp is not None:
+                args.append(uint(hold_timestamp, "hold_timestamp", positive=True))
+            data = contract.encode_abi(function, args=args)
+            result = await self._send_contract(request.private_key, operator, data, 0, broadcast, wait_receipt)
+            steps.append(name)
+            return DecimalWorkflowResult(result.success, name, tuple(steps), 1, len(steps), len(steps) > 1, result, approval_result, result.error)
         if request.kind == "erc721":
             if hold_timestamp is None:
                 data = contract.functions.delegateDRC721(
@@ -748,7 +798,30 @@ class NftService(NftOperations):
         return self._client.web3.eth.contract(address=checksum(self._client.config.contracts.nft_center), abi=NFT_CENTER_ABI)
 
     def _delegation_nft_contract(self):
-        return self._client.web3.eth.contract(address=checksum(self._client.config.contracts.delegation_nft), abi=DELEGATION_NFT_ABI)
+        abi = self._client.abi.load("delegation_nft_unified") if self._unified_delegation else DELEGATION_NFT_ABI
+        return self._client.web3.eth.contract(address=checksum(self._client.config.contracts.delegation_nft), abi=abi)
+
+    async def _check_unified_stake_amount(
+        self, request: WithdrawNftRequest | TransferNftStakeRequest,
+    ) -> None:
+        amount = uint(request.amount, "amount", positive=True)
+        owner = private_key_to_address(request.private_key)
+        stake = (
+            await self.get_stake(request.validator, owner, request.nft, request.token_id)
+            if request.hold_timestamp is None
+            else await self.get_hold_stake(
+                request.validator, owner, request.nft, request.token_id, request.hold_timestamp,
+            )
+        )
+        if not stake.exists or stake.amount_raw != amount:
+            raise ValueError(
+                "Unified NFT transfer/withdraw moves the entire stake; amount must equal the current stake"
+            )
+
+    @property
+    def _unified_delegation(self) -> bool:
+        contracts = self._client.config.contracts
+        return contracts.delegation_nft.lower() == contracts.delegation.lower()
 
     def _nft_contract(self, kind: NftKind, nft: str, web3=None):
         self._validate_kind(kind)
