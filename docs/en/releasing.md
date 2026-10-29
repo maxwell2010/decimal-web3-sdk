@@ -31,11 +31,11 @@ databases, reports with wallets, real dotenv, private keys or local node address
 Primary distribution is the public GitHub repository `maxwell2010/decimal-web3-sdk`.
 After publication, install the pinned wheel without Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.4/decimal_web3_sdk-0.1.4-py3-none-any.whl"
 ```
 Or install the tagged source archive, also without Git:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.3.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.4.zip"
 ```
 See [requirements and dependencies](install.md).
 
@@ -49,12 +49,12 @@ It updates only when a maintainer publishes a reviewed version. pip does not mon
 releases in the background. Use the pinned command above for controlled deployments.
 
 ## Version Policy
-The current package is `0.1.3`, tag `v0.1.3`. `_version.py` is the single
+The current package is `0.1.4`, tag `v0.1.4`. `_version.py` is the single
 package-version source. Preserve earlier tags, including the historical 0.1.2
 refresh; new fixes normally receive a new version and SHA256SUMS. Retain a wheel
 and its checksum for reproducibility. Do not install moving branches for production.
 GitHub marks this as a prerelease while the status gates remain open. That flag
-does not change PEP 440: package version `0.1.3` has no rc suffix.
+does not change PEP 440: package version `0.1.4` has no rc suffix.
 Only the reviewed wheel, sdist and SHA256SUMS are attached to a GitHub release.
 Public exports must use public repository history, never private Git ancestry.
 Verify anonymous downloads and pip installation after publication.

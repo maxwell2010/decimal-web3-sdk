@@ -4,7 +4,7 @@ Independent Decimal EVM SDK by [MintCandy](https://mintcandy.ru/) and
 [@Maxwell2019](https://t.me/Maxwell2019). MIT license, Python 3.10+.
 Package: `decimal-web3-sdk`; import: `decimal_web3_sdk`.
 
-**Version 0.1.3 is a GitHub preview, not a stable/full-parity release.**
+**Version 0.1.4 is a GitHub preview, not a stable/full-parity release.**
 79 high-level transaction entry points have offline encoding/signing coverage, not full live parity.
 New methods, legacy limitations and the updated NFT sources are described in the
 [development notes](docs/en/transaction-parity-development.md).
@@ -26,16 +26,9 @@ python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell201
 The manifest points to a versioned GitHub release wheel and changes with each
 reviewed release. It includes previews. Updates happen only when you run the
 command, never automatically inside the SDK. Git and GitHub login are not required.
-The v0.1.3 preview was refreshed without changing its package version. If you
-already installed 0.1.3, use the reinstall command below to bypass pip's cache:
-
-```shell
-python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
-```
-
 For this release's wheel:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.4/decimal_web3_sdk-0.1.4-py3-none-any.whl"
 ```
 
 The 0.1.3 wheel includes testnet token and NFT lifecycle checks. See the
@@ -44,7 +37,7 @@ for exact receipts and limits. Retain the wheel checksum for reproducibility.
 
 Alternatively, from the same version's source archive:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.3.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.4.zip"
 ```
 
 GitHub is the primary distribution source; PyPI publication is separate.

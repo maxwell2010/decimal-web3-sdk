@@ -4,7 +4,7 @@
 [@Maxwell2019](https://t.me/Maxwell2019). Лицензия MIT, Python 3.10+.
 Пакет: `decimal-web3-sdk`; импорт: `decimal_web3_sdk`.
 
-**Версия 0.1.3 - предварительный релиз GitHub, не stable и не полное совпадение с официальными SDK.**
+**Версия 0.1.4 - предварительный релиз GitHub, не stable и не полное совпадение с официальными SDK.**
 79 транзакционных методов проверяются офлайн, это не полное сетевое совпадение с JS/Go SDK.
 Новые операции, legacy-ограничения и обновления NFT описаны в
 [журнале разработки](docs/ru/transaction-parity-development.md).
@@ -26,16 +26,9 @@ python -m pip install --upgrade -r "https://raw.githubusercontent.com/maxwell201
 Файл указывает на wheel конкретного релиза GitHub и обновляется при каждом
 проверенном выпуске, включая предварительные. Обновление происходит только при
 запуске команды, не внутри SDK автоматически. Git и вход в GitHub не требуются.
-Предварительный релиз v0.1.3 обновлен без смены версии пакета. Если 0.1.3 уже
-установлена, переустановите ее без кеша pip:
-
-```shell
-python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
-```
-
 Для установки wheel этого релиза:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.3/decimal_web3_sdk-0.1.3-py3-none-any.whl"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/download/v0.1.4/decimal_web3_sdk-0.1.4-py3-none-any.whl"
 ```
 
 В 0.1.3 проверены операции с токенами и NFT в тестовой сети. Точные результаты
@@ -44,7 +37,7 @@ python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/releases/
 
 Либо из исходного архива той же версии:
 ```shell
-python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.3.zip"
+python -m pip install "https://github.com/maxwell2010/decimal-web3-sdk/archive/refs/tags/v0.1.4.zip"
 ```
 
 Основной источник установки: GitHub; публикация в PyPI выполняется отдельно.

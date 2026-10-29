@@ -13,6 +13,26 @@ Read the generated request fields: raw reserve units, native value_wei and NFT
 quantity are different. Approved operator access may require a separate transaction.
 There is no general promise of NFT permit support.
 
+## ERC-1155 Reserve
+
+For the reviewed Decimal implementation, mint takes the total reserve, not the
+amount per NFT. For a new ID, the contract checks the minimum using integer
+division of the total by the quantity. For an existing ID, the exact total is
+`rate(token_id) * amount`; `rate` is the ID reserve divided by `totalSupply`,
+rounded down. Use integer base units, not `float`. `value_wei` is the total DEL;
+`reserve_amount_raw` is the total ERC-20 reserve. Do not set both reserve types.
+
+Validation on 2026-10-29: on a local mainnet fork (block 34334329), collection
+`0x40C3341CBEfE853ed5fdA22c95440DD43427994a`, ID 1, had a nonzero rate of
+`8333333333333333333333` base units. For three NFTs, the exact ERC-20 reserve
+was `24999999999999999999999` base units. After funding and approval only on
+the fork, the exact `eth_call` succeeded; one unit less returned
+`InvalidReserve`. The preparation transfers and approval were not sent to
+mainnet. A new ID was also checked with DEL in a mainnet `eth_call` and ERC-20
+on the fork; a below-minimum amount returned `InvalidMinReserve`. These checks
+do not establish compatibility with every collection or a successful mainnet
+mint transaction.
+
 Mainnet NFT addresses were aligned with the reviewed protocol profile and code
 presence checked. Legacy typed NFT ABIs and current deployed variants still need
 method-by-method live compatibility tests. Reserve mint variants, resets and

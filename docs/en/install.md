@@ -95,7 +95,7 @@ python -m pip install --force-reinstall --no-cache-dir "https://github.com/maxwe
 Retain the downloaded wheel and its new checksum from SHA256SUMS for
 reproducibility.
 
-SDK version: `0.1.3`; latest may advance. No mnemonic or private key is needed for installation.
+SDK version: `0.1.4`; latest may advance. No mnemonic or private key is needed for installation.
 Client and CLI default to **mainnet**. For testing select `NetworkConfig.testnet()`
 or `decimal-sdk --network testnet ...` explicitly. Transaction examples keep
 broadcast disabled; installing the package never submits transactions.
